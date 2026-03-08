@@ -58,12 +58,19 @@ const timezones = [
   { value: "GMT-8", label: "GMT-8 (Los Angeles)" },
 ];
 
-const MOCK_BOOKINGS = [
-  { id: "CON-2024-001", type: "Online Video Consultation", topic: "Work Permits", date: "Mar 10, 2024", time: "10:00 AM", duration: "45 min", status: "upcoming" as const, price: "$50" },
-  { id: "CON-2024-002", type: "Phone Consultation", topic: "Visa Assistance", date: "Feb 25, 2024", time: "02:30 PM", duration: "30 min", status: "completed" as const, price: "$30" },
-];
+interface ConsultationBooking {
+  id: string;
+  type: string;
+  topic: string | null;
+  date: string;
+  time: string;
+  duration: number;
+  status: "upcoming" | "completed" | "cancelled";
+  price: number;
+}
 
 const Consultation = () => {
+  const { user, isAuthenticated } = useAuth();
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("");
