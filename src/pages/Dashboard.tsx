@@ -62,19 +62,30 @@ const MOCK_DOCUMENTS: { name: string; type: string; uploaded: string; size: stri
 ];
 
 const Dashboard = () => {
-  const { user, isAuthenticated, logout, updateProfile, applications } = useAuth();
+  const { user, isAuthenticated, loading, logout, updateProfile, applications } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ fullName: user?.fullName || "", phone: user?.phone || "", email: user?.email || "" });
 
-  if (!isAuthenticated) {
-    navigate("/login");
-    return null;
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      navigate("/login");
+    }
+  }, [loading, isAuthenticated, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
   }
 
-  const handleSave = () => {
-    updateProfile(form);
+  if (!isAuthenticated) return null;
+
+  const handleSave = async () => {
+    await updateProfile(form);
     setEditing(false);
     toast({ title: "Profile updated!" });
   };
