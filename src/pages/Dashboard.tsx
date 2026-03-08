@@ -441,28 +441,37 @@ function BookingsTab() {
   return (
     <div className="space-y-6">
       <h2 className="font-display text-xl font-bold text-foreground">My Bookings</h2>
-      <div className="space-y-3">
-        {MOCK_BOOKINGS.map((b) => (
-          <div key={b.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl border bg-background hover:shadow-md transition-shadow gap-3">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                {b.type === "Flight" ? <Plane className="w-5 h-5 text-primary" /> : <CalendarDays className="w-5 h-5 text-primary" />}
+      {MOCK_BOOKINGS.length === 0 ? (
+        <div className="bg-background rounded-xl border p-12 text-center">
+          <Plane className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+          <h3 className="font-display font-semibold text-foreground mb-1">No bookings yet</h3>
+          <p className="text-sm text-muted-foreground mb-4">Book flights or hotels to see them here.</p>
+          <Button size="sm" asChild><Link to="/travel">Browse Travel Services</Link></Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {MOCK_BOOKINGS.map((b) => (
+            <div key={b.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl border bg-background hover:shadow-md transition-shadow gap-3">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+                  {b.type === "Flight" ? <Plane className="w-5 h-5 text-primary" /> : <CalendarDays className="w-5 h-5 text-primary" />}
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">{b.route}</p>
+                  <p className="text-sm text-muted-foreground">{b.airline}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{b.id} · {b.date}</p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-foreground">{b.route}</p>
-                <p className="text-sm text-muted-foreground">{b.airline}</p>
-                <p className="text-xs text-muted-foreground mt-1">{b.id} · {b.date}</p>
+              <div className="flex items-center gap-3">
+                <Badge className={b.status === "confirmed" ? "bg-emerald-100 text-emerald-800 border-emerald-200 border" : "bg-amber-100 text-amber-800 border-amber-200 border"}>
+                  {b.status === "confirmed" ? "Confirmed" : "Pending"}
+                </Badge>
+                <Button variant="outline" size="sm">Manage</Button>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Badge className={b.status === "confirmed" ? "bg-emerald-100 text-emerald-800 border-emerald-200 border" : "bg-amber-100 text-amber-800 border-amber-200 border"}>
-                {b.status === "confirmed" ? "Confirmed" : "Pending"}
-              </Badge>
-              <Button variant="outline" size="sm">Manage</Button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
