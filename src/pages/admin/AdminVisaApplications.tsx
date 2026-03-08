@@ -8,10 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, Globe, MoreHorizontal, Eye, Pencil, Inbox, CheckCircle, Clock, XCircle, FileText, LayoutGrid, List } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Search, Globe, MoreHorizontal, Eye, Pencil, Inbox, CheckCircle, Clock, XCircle, FileText, LayoutGrid, List, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import KanbanBoard from "@/components/admin/KanbanBoard";
 
 const APP_STATUSES = ["pending", "in-review", "processing", "approved", "rejected"];
@@ -31,8 +32,11 @@ const KANBAN_COLUMNS = [
   { id: "rejected", label: "Rejected", color: "bg-destructive" },
 ];
 
+const VISA_TYPES = ["Tourist Visa", "Business Visa", "Student Visa", "Work Visa", "Transit Visa"];
+
 const AdminVisaApplications = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [apps, setApps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -45,6 +49,8 @@ const AdminVisaApplications = () => {
   const [editingApp, setEditingApp] = useState<any>(null);
   const [editStatus, setEditStatus] = useState("");
   const [editNotes, setEditNotes] = useState("");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({ title: "", type: "Tourist Visa", details: "", status: "pending" });
 
   useEffect(() => { fetchApps(); }, []);
 
@@ -67,6 +73,22 @@ const AdminVisaApplications = () => {
     fetchApps();
   };
 
+  const handleCreate = async () => {
+    if (!createForm.title) { toast({ title: "Please enter a title", variant: "destructive" }); return; }
+    const { error } = await supabase.from("applications").insert({
+      title: createForm.title, type: createForm.type, details: createForm.details || null,
+      status: createForm.status, user_id: user?.id || "",
+    });
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Application Created" }); setCreateDialogOpen(false);
+    setCreateForm({ title: "", type: "Tourist Visa", details: "", status: "pending" }); fetchApps();
+  };
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from("applications").delete().eq("id", id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Application Deleted" }); fetchApps();
+  };
   const handleKanbanMove = async (itemId: string, newStatus: string) => {
     const { error } = await supabase.from("applications").update({ status: newStatus }).eq("id", itemId);
     if (error) {
@@ -94,8 +116,12 @@ const AdminVisaApplications = () => {
             <h2 className="text-[22px] font-sans font-bold text-foreground tracking-tight">Visa & Immigration Applications</h2>
             <p className="text-[13px] text-muted-foreground mt-0.5">Manage all visa applications and immigration cases.</p>
           </div>
-          <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5 border border-border/60">
-            <Button
+          <div className="flex items-center gap-2">
+            <Button size="sm" className="gap-1.5 h-8 text-[12px]" onClick={() => { setCreateForm({ title: "", type: "Tourist Visa", details: "", status: "pending" }); setCreateDialogOpen(true); }}>
+              <Plus className="w-3.5 h-3.5" /> Add Application
+            </Button>
+            <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5 border border-border/60">
+              <Button
               variant={viewMode === "table" ? "default" : "ghost"}
               size="sm"
               className="h-8 gap-1.5 text-[12px]"
@@ -111,6 +137,7 @@ const AdminVisaApplications = () => {
             >
               <LayoutGrid className="w-3.5 h-3.5" /> Kanban
             </Button>
+            </div>
           </div>
         </div>
 
@@ -214,6 +241,8 @@ const AdminVisaApplications = () => {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => { setViewingApp(app); setViewDialogOpen(true); }}><Eye className="w-4 h-4 mr-2" /> View Details</DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => { setEditingApp(app); setEditStatus(app.status); setEditNotes(app.details || ""); setEditDialogOpen(true); }}><Pencil className="w-4 h-4 mr-2" /> Update Status</DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleDelete(app.id)} className="text-destructive"><Trash2 className="w-4 h-4 mr-2" /> Delete</DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
@@ -273,6 +302,42 @@ const AdminVisaApplications = () => {
           <DialogFooter>
             <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
             <Button onClick={handleUpdateApp}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Create Application Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader><DialogTitle>Add Visa Application</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Title *</Label>
+              <Input placeholder="e.g. Tourist Visa - John Doe" value={createForm.title} onChange={e => setCreateForm(f => ({ ...f, title: e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Visa Type</Label>
+                <Select value={createForm.type} onValueChange={v => setCreateForm(f => ({ ...f, type: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{VISA_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={createForm.status} onValueChange={v => setCreateForm(f => ({ ...f, status: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{APP_STATUSES.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Details / Notes</Label>
+              <Textarea value={createForm.details} onChange={e => setCreateForm(f => ({ ...f, details: e.target.value }))} placeholder="Add details..." rows={3} />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+            <Button onClick={handleCreate}>Create Application</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

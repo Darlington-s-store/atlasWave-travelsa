@@ -9,14 +9,15 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import {
   Search, Briefcase, MoreHorizontal, Eye, Pencil, Inbox, Clock,
-  CheckCircle, XCircle, FileText, Globe, Calculator, LayoutGrid, List,
+  CheckCircle, XCircle, FileText, Globe, Calculator, LayoutGrid, List, Plus, Trash2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import KanbanBoard from "@/components/admin/KanbanBoard";
 
 const PROGRAMMES = ["Schengen Work Permit", "Canada LMIA", "Germany Opportunity Card", "USA NCLEX"];
@@ -64,6 +65,7 @@ const calculateScore = (s: EligibilityScore) => s.qualification + s.experience +
 
 const AdminWorkPermits = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -78,6 +80,8 @@ const AdminWorkPermits = () => {
   const [editForm, setEditForm] = useState({ status: "", details: "" });
   const [scorerOpen, setScorerOpen] = useState(false);
   const [score, setScore] = useState<EligibilityScore>({ qualification: 0, experience: 0, language: 0, age: 0, germanConnection: 0 });
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({ title: "", type: PROGRAMMES[0], details: "", status: "submitted" });
 
   useEffect(() => { fetchApps(); }, []);
 
@@ -104,6 +108,22 @@ const AdminWorkPermits = () => {
     fetchApps();
   };
 
+  const handleCreate = async () => {
+    if (!createForm.title) { toast({ title: "Please enter a title", variant: "destructive" }); return; }
+    const { error } = await supabase.from("applications").insert({
+      title: createForm.title, type: createForm.type, details: createForm.details || null,
+      status: createForm.status, user_id: user?.id || "",
+    });
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Work Permit Application Created" }); setCreateDialogOpen(false);
+    setCreateForm({ title: "", type: PROGRAMMES[0], details: "", status: "submitted" }); fetchApps();
+  };
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from("applications").delete().eq("id", id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Application Deleted" }); fetchApps();
+  };
   const handleKanbanMove = async (itemId: string, newStatus: string) => {
     const { error } = await supabase.from("applications").update({ status: newStatus }).eq("id", itemId);
     if (error) {
@@ -133,6 +153,9 @@ const AdminWorkPermits = () => {
             <p className="text-[13px] text-muted-foreground mt-0.5">Manage all work permit and immigration programme applications.</p>
           </div>
           <div className="flex items-center gap-2">
+            <Button size="sm" className="gap-1.5 h-8 text-[12px]" onClick={() => { setCreateForm({ title: "", type: PROGRAMMES[0], details: "", status: "submitted" }); setCreateDialogOpen(true); }}>
+              <Plus className="w-3.5 h-3.5" /> Add Application
+            </Button>
             <Button variant="outline" size="sm" className="gap-1.5 h-8 text-[12px]" onClick={() => setScorerOpen(true)}>
               <Calculator className="w-3.5 h-3.5" /> Scorer
             </Button>
@@ -278,6 +301,8 @@ const AdminWorkPermits = () => {
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => { setViewingApp(app); setViewDialogOpen(true); }}><Eye className="w-4 h-4 mr-2" /> View Details</DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => { setEditingApp(app); setEditForm({ status: app.status, details: app.details || "" }); setEditDialogOpen(true); }}><Pencil className="w-4 h-4 mr-2" /> Update Stage</DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => handleDelete(app.id)} className="text-destructive"><Trash2 className="w-4 h-4 mr-2" /> Delete</DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </TableCell>
@@ -450,6 +475,42 @@ const AdminWorkPermits = () => {
             </Card>
           </div>
           <DialogFooter><DialogClose asChild><Button variant="outline">Close</Button></DialogClose></DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Create Work Permit Application Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader><DialogTitle>Add Work Permit Application</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Title *</Label>
+              <Input placeholder="e.g. Schengen Work Permit - Jane Doe" value={createForm.title} onChange={e => setCreateForm(f => ({ ...f, title: e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Programme</Label>
+                <Select value={createForm.type} onValueChange={v => setCreateForm(f => ({ ...f, type: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{PROGRAMMES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Stage</Label>
+                <Select value={createForm.status} onValueChange={v => setCreateForm(f => ({ ...f, status: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{STAGES.map(s => <SelectItem key={s} value={s} className="capitalize">{s.replace(/-/g, " ")}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Details / Notes</Label>
+              <Textarea value={createForm.details} onChange={e => setCreateForm(f => ({ ...f, details: e.target.value }))} placeholder="Add details..." rows={3} />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+            <Button onClick={handleCreate}>Create Application</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </AdminLayout>
