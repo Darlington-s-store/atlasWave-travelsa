@@ -398,31 +398,42 @@ function ApplicationsTab({ applications }: { applications: Application[] }) {
   return (
     <div className="space-y-6">
       <h2 className="font-display text-xl font-bold text-foreground">My Applications</h2>
-      <div className="space-y-3">
-        {applications.map((app) => {
-          const cfg = statusConfig[app.status];
-          return (
-            <div key={app.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl border bg-background hover:shadow-md transition-shadow gap-3">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                  {app.type === "work-permit" ? <FileText className="w-5 h-5 text-primary" /> :
-                   app.type === "logistics" ? <Package className="w-5 h-5 text-primary" /> :
-                   app.type === "travel" ? <Plane className="w-5 h-5 text-primary" /> :
-                   <Eye className="w-5 h-5 text-primary" />}
+      {applications.length === 0 ? (
+        <div className="bg-background rounded-xl border p-12 text-center">
+          <FileText className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+          <h3 className="font-display font-semibold text-foreground mb-1">No applications yet</h3>
+          <p className="text-sm text-muted-foreground mb-4">Start a new application to track your immigration or travel services.</p>
+          <Button size="sm">New Application</Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {applications.map((app) => {
+            const cfg = statusConfig[app.status];
+            return (
+              <div key={app.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl border bg-background hover:shadow-md transition-shadow gap-3">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+                    {app.type === "work-permit" ? <FileText className="w-5 h-5 text-primary" /> :
+                     app.type === "logistics" ? <Package className="w-5 h-5 text-primary" /> :
+                     app.type === "travel" ? <Plane className="w-5 h-5 text-primary" /> :
+                     <Eye className="w-5 h-5 text-primary" />}
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">{app.title}</p>
+                    <p className="text-sm text-muted-foreground">{app.details}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{app.id} · {app.date}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-foreground">{app.title}</p>
-                  <p className="text-sm text-muted-foreground">{app.details}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{app.id} · {app.date}</p>
-                </div>
+                <Badge className={cfg.color + " border shrink-0"}>
+                  <cfg.icon className="w-3 h-3 mr-1" /> {cfg.label}
+                </Badge>
               </div>
-              <Badge className={cfg.color + " border shrink-0"}>
-                <cfg.icon className="w-3 h-3 mr-1" /> {cfg.label}
-              </Badge>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
     </div>
   );
 }
