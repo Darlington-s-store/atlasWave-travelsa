@@ -85,7 +85,7 @@ const AdminOverview = () => {
         </div>
 
         {/* Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 md:gap-5">
           <Card className="lg:col-span-3 shadow-card rounded-xl border border-border/60">
             <CardHeader className="flex-row items-center justify-between pb-0 pt-5 px-6">
               <CardTitle className="text-[15px] font-semibold text-foreground">Recent Activity</CardTitle>
