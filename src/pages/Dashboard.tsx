@@ -74,18 +74,20 @@ const Dashboard = () => {
 
   const fetchAllData = async () => {
     setDataLoading(true);
-    const [appsRes, bookRes, shipRes, consRes, docsRes] = await Promise.all([
+    const [appsRes, bookRes, shipRes, consRes, docsRes, payRes] = await Promise.all([
       supabase.from("applications").select("*").order("created_at", { ascending: false }),
       supabase.from("bookings").select("*").order("created_at", { ascending: false }),
       supabase.from("shipments").select("*").order("created_at", { ascending: false }),
       supabase.from("consultations").select("*").order("created_at", { ascending: false }),
       supabase.from("documents").select("*").order("created_at", { ascending: false }),
+      supabase.from("payments").select("*").order("created_at", { ascending: false }),
     ]);
     setApplications(appsRes.data || []);
     setBookings(bookRes.data || []);
     setShipments(shipRes.data || []);
     setConsultations(consRes.data || []);
     setDocuments(docsRes.data || []);
+    setPayments(payRes.data || []);
     setDataLoading(false);
   };
 
