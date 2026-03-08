@@ -240,6 +240,11 @@ const Payments = () => {
                   </TabsContent>
                 </Tabs>
 
+                <div className="space-y-2 mb-4">
+                  <Label>Description</Label>
+                  <Input placeholder="e.g. Visa application fee" value={description} onChange={(e) => setDescription(e.target.value)} className="h-12" />
+                </div>
+
                 <div className="space-y-2 mb-6">
                   <Label>Amount (USD)</Label>
                   <Input placeholder="0.00" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className="h-12 text-lg font-semibold" />
