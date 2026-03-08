@@ -481,34 +481,43 @@ function ShipmentsTab() {
   return (
     <div className="space-y-6">
       <h2 className="font-display text-xl font-bold text-foreground">My Shipments</h2>
-      <div className="space-y-3">
-        {MOCK_SHIPMENTS.map((s) => (
-          <div key={s.id} className="p-5 rounded-xl border bg-background hover:shadow-md transition-shadow">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                  <Truck className="w-5 h-5 text-primary" />
+      {MOCK_SHIPMENTS.length === 0 ? (
+        <div className="bg-background rounded-xl border p-12 text-center">
+          <Package className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+          <h3 className="font-display font-semibold text-foreground mb-1">No shipments yet</h3>
+          <p className="text-sm text-muted-foreground mb-4">Your logistics and cargo shipments will appear here.</p>
+          <Button size="sm" asChild><Link to="/logistics">Explore Logistics</Link></Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {MOCK_SHIPMENTS.map((s) => (
+            <div key={s.id} className="p-5 rounded-xl border bg-background hover:shadow-md transition-shadow">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+                    <Truck className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">Shipment #{s.id}</p>
+                    <p className="text-sm text-muted-foreground">{s.origin} → {s.dest}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{s.weight}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-foreground">Shipment #{s.id}</p>
-                  <p className="text-sm text-muted-foreground">{s.origin} → {s.dest}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{s.weight}</p>
-                </div>
+                <Badge className={s.status === "in-transit" ? "bg-blue-100 text-blue-800 border-blue-200 border" : "bg-emerald-100 text-emerald-800 border-emerald-200 border"}>
+                  {s.status === "in-transit" ? "In Transit" : "Delivered"}
+                </Badge>
               </div>
-              <Badge className={s.status === "in-transit" ? "bg-blue-100 text-blue-800 border-blue-200 border" : "bg-emerald-100 text-emerald-800 border-emerald-200 border"}>
-                {s.status === "in-transit" ? "In Transit" : "Delivered"}
-              </Badge>
+              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${s.progress}%` }} />
+              </div>
+              <div className="flex justify-between mt-2">
+                <span className="text-xs text-muted-foreground">{s.eta}</span>
+                <button className="text-sm text-primary font-medium hover:underline">Track</button>
+              </div>
             </div>
-            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${s.progress}%` }} />
-            </div>
-            <div className="flex justify-between mt-2">
-              <span className="text-xs text-muted-foreground">{s.eta}</span>
-              <button className="text-sm text-primary font-medium hover:underline">Track</button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -521,22 +530,31 @@ function DocumentsTab() {
         <h2 className="font-display text-xl font-bold text-foreground">My Documents</h2>
         <Button size="sm"><Upload className="w-4 h-4 mr-2" /> Upload</Button>
       </div>
-      <div className="space-y-3">
-        {MOCK_DOCUMENTS.map((d, i) => (
-          <div key={i} className="flex items-center justify-between p-4 rounded-xl border bg-background hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center">
-                <FolderOpen className="w-5 h-5 text-primary" />
+      {MOCK_DOCUMENTS.length === 0 ? (
+        <div className="bg-background rounded-xl border p-12 text-center">
+          <FolderOpen className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+          <h3 className="font-display font-semibold text-foreground mb-1">No documents uploaded</h3>
+          <p className="text-sm text-muted-foreground mb-4">Upload your passports, certificates, and other important files.</p>
+          <Button size="sm"><Upload className="w-4 h-4 mr-2" /> Upload Document</Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {MOCK_DOCUMENTS.map((d, i) => (
+            <div key={i} className="flex items-center justify-between p-4 rounded-xl border bg-background hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center">
+                  <FolderOpen className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground text-sm">{d.name}</p>
+                  <p className="text-xs text-muted-foreground">{d.type} · {d.size} · {d.uploaded}</p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-foreground text-sm">{d.name}</p>
-                <p className="text-xs text-muted-foreground">{d.type} · {d.size} · {d.uploaded}</p>
-              </div>
+              <Button variant="ghost" size="sm"><Eye className="w-4 h-4" /></Button>
             </div>
-            <Button variant="ghost" size="sm"><Eye className="w-4 h-4" /></Button>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
