@@ -19,20 +19,20 @@ const stats = [
 const AdminOverview = () => {
   return (
     <AdminLayout>
-      <div className="space-y-7">
+      <div className="space-y-5 md:space-y-7">
         <div>
-          <h2 className="text-[22px] font-sans font-bold text-foreground tracking-tight">Dashboard Overview</h2>
+          <h2 className="text-lg md:text-[22px] font-sans font-bold text-foreground tracking-tight">Dashboard Overview</h2>
           <p className="text-[13px] text-muted-foreground mt-0.5">Welcome back! Here's a summary of your platform.</p>
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-5">
           {stats.map((stat) => (
             <Card key={stat.label} className="shadow-card hover:shadow-card-hover transition-all duration-300 rounded-xl border border-border/60 overflow-hidden group">
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`w-11 h-11 rounded-xl ${stat.iconBg} flex items-center justify-center`}>
-                    <stat.icon className={`w-5 h-5 ${stat.iconColor}`} />
+              <CardContent className="p-3 sm:p-5">
+                <div className="flex items-start justify-between mb-2 sm:mb-4">
+                  <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl ${stat.iconBg} flex items-center justify-center`}>
+                    <stat.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${stat.iconColor}`} />
                   </div>
                   <span className={`inline-flex items-center gap-0.5 text-[11px] font-bold px-2 py-1 rounded-lg ${
                     stat.trend === "up"
@@ -43,17 +43,17 @@ const AdminOverview = () => {
                     {stat.change}
                   </span>
                 </div>
-                <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wide">{stat.label}</p>
-                <p className="text-[26px] font-bold text-foreground mt-0.5 tracking-tight">{stat.value}</p>
+                <p className="text-[10px] sm:text-[12px] font-medium text-muted-foreground uppercase tracking-wide">{stat.label}</p>
+                <p className="text-xl sm:text-[26px] font-bold text-foreground mt-0.5 tracking-tight">{stat.value}</p>
               </CardContent>
             </Card>
           ))}
         </div>
 
         {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 md:gap-5">
           <Card className="lg:col-span-3 shadow-card rounded-xl border border-border/60">
-            <CardHeader className="flex-row items-center justify-between pb-1 pt-5 px-6">
+            <CardHeader className="flex-row items-center justify-between pb-1 pt-4 md:pt-5 px-4 md:px-6">
               <CardTitle className="text-[15px] font-semibold text-foreground">Revenue Trend</CardTitle>
               <span className="text-[11px] font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded-md">No data yet</span>
             </CardHeader>
@@ -85,7 +85,7 @@ const AdminOverview = () => {
         </div>
 
         {/* Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 md:gap-5">
           <Card className="lg:col-span-3 shadow-card rounded-xl border border-border/60">
             <CardHeader className="flex-row items-center justify-between pb-0 pt-5 px-6">
               <CardTitle className="text-[15px] font-semibold text-foreground">Recent Activity</CardTitle>
