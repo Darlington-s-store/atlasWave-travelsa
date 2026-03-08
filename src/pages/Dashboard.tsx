@@ -153,6 +153,9 @@ const Dashboard = () => {
                   <p className="text-muted-foreground text-[11px]">Premium Member</p>
                 </div>
               </div>
+              <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => { logout(); navigate("/"); }}>
+                <LogOut className="w-5 h-5" />
+              </Button>
             </div>
           </div>
 
