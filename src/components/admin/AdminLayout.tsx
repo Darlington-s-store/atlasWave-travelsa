@@ -8,7 +8,11 @@ import { Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function AdminLayout({ children }: { children: ReactNode }) {
-  const { isAdminAuthenticated, admin } = useAdmin();
+  const { isAdminAuthenticated, admin, loading } = useAdmin();
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center"><p className="text-muted-foreground">Loading...</p></div>;
+  }
 
   if (!isAdminAuthenticated) {
     return <Navigate to="/admin/login" replace />;

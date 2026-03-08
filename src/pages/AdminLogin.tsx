@@ -162,8 +162,8 @@ const AdminLogin = () => {
 
           <div className="mt-8 p-3.5 rounded-xl bg-muted/50 border border-border">
             <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
-              <span className="font-semibold text-foreground/70">Demo credentials:</span>{" "}
-              admin@africanwaves.com / admin123
+              <span className="font-semibold text-foreground/70">Note:</span>{" "}
+              Only users with the admin role can sign in here.
             </p>
           </div>
         </div>
