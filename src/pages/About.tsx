@@ -2,6 +2,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { motion } from "framer-motion";
 import { Target, Eye, Award, Shield, Users, Globe, CheckCircle2 } from "lucide-react";
+import PartnersSection from "@/components/PartnersSection";
 import teamPhoto from "@/assets/team-photo.jpg";
 import ceoPic from "@/assets/team-ceo.jpg";
 import opsPic from "@/assets/team-ops.jpg";
@@ -223,6 +224,8 @@ const About = () => {
             </div>
           </div>
         </section>
+        {/* Partners & Affiliates */}
+        <PartnersSection />
       </main>
       <Footer />
     </div>
