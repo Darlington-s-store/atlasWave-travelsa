@@ -24,6 +24,7 @@ const sidebarItems = [
   { id: "overview", label: "Dashboard", icon: LayoutDashboard },
   { id: "applications", label: "Applications", icon: FileText },
   { id: "appointments", label: "Appointments", icon: CalendarDays },
+  { id: "payments", label: "Payments", icon: CreditCard },
   { id: "shipments", label: "Logistics", icon: Package },
   { id: "bookings", label: "Travel", icon: Plane },
   { id: "documents", label: "Documents", icon: FolderOpen },
@@ -56,6 +57,7 @@ const Dashboard = () => {
   const [shipments, setShipments] = useState<any[]>([]);
   const [consultations, setConsultations] = useState<any[]>([]);
   const [documents, setDocuments] = useState<any[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
@@ -72,18 +74,20 @@ const Dashboard = () => {
 
   const fetchAllData = async () => {
     setDataLoading(true);
-    const [appsRes, bookRes, shipRes, consRes, docsRes] = await Promise.all([
+    const [appsRes, bookRes, shipRes, consRes, docsRes, payRes] = await Promise.all([
       supabase.from("applications").select("*").order("created_at", { ascending: false }),
       supabase.from("bookings").select("*").order("created_at", { ascending: false }),
       supabase.from("shipments").select("*").order("created_at", { ascending: false }),
       supabase.from("consultations").select("*").order("created_at", { ascending: false }),
       supabase.from("documents").select("*").order("created_at", { ascending: false }),
+      supabase.from("payments").select("*").order("created_at", { ascending: false }),
     ]);
     setApplications(appsRes.data || []);
     setBookings(bookRes.data || []);
     setShipments(shipRes.data || []);
     setConsultations(consRes.data || []);
     setDocuments(docsRes.data || []);
+    setPayments(payRes.data || []);
     setDataLoading(false);
   };
 
@@ -186,6 +190,7 @@ const Dashboard = () => {
           {activeTab === "overview" && <OverviewTab applications={applications} bookings={bookings} shipments={shipments} consultations={consultations} userName={user?.fullName || "User"} greeting={greeting()} dataLoading={dataLoading} />}
           {activeTab === "applications" && <ApplicationsTab applications={applications} onRefresh={fetchAllData} userId={user?.id || ""} />}
           {activeTab === "appointments" && <AppointmentsTab consultations={consultations} onRefresh={fetchAllData} userId={user?.id || ""} />}
+          {activeTab === "payments" && <PaymentsTab payments={payments} onRefresh={fetchAllData} userId={user?.id || ""} />}
           {activeTab === "bookings" && <BookingsTab bookings={bookings} onRefresh={fetchAllData} userId={user?.id || ""} />}
           {activeTab === "shipments" && <ShipmentsTab shipments={shipments} />}
           {activeTab === "documents" && <DocumentsTab documents={documents} onRefresh={fetchAllData} userId={user?.id || ""} />}
@@ -651,7 +656,172 @@ function BookingsTab({ bookings, onRefresh, userId }: { bookings: any[]; onRefre
   );
 }
 
-// --- SHIPMENTS TAB ---
+// --- PAYMENTS TAB ---
+function PaymentsTab({ payments, onRefresh, userId }: { payments: any[]; onRefresh: () => void; userId: string }) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState({ amount: "", description: "", payment_method: "card", currency: "USD" });
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    const amount = parseFloat(form.amount);
+    if (!amount || amount <= 0) {
+      toast({ title: "Enter a valid amount", variant: "destructive" });
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.from("payments").insert({
+      user_id: userId,
+      amount,
+      currency: form.currency,
+      description: form.description || null,
+      payment_method: form.payment_method,
+      status: "pending",
+      reference: `PAY-${Date.now().toString(36).toUpperCase()}`,
+    });
+    setSubmitting(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Payment submitted successfully!" });
+    setDialogOpen(false);
+    setForm({ amount: "", description: "", payment_method: "card", currency: "USD" });
+    onRefresh();
+  };
+
+  const totalPaid = payments.filter(p => p.status === "completed" || p.status === "paid").reduce((s, p) => s + Number(p.amount), 0);
+  const totalPending = payments.filter(p => p.status === "pending").reduce((s, p) => s + Number(p.amount), 0);
+
+  const paymentStatusConfig: Record<string, { color: string; label: string }> = {
+    pending: { color: "bg-amber-100 text-amber-800 border-amber-200", label: "Pending" },
+    completed: { color: "bg-emerald-100 text-emerald-800 border-emerald-200", label: "Completed" },
+    paid: { color: "bg-emerald-100 text-emerald-800 border-emerald-200", label: "Paid" },
+    failed: { color: "bg-red-100 text-red-800 border-red-200", label: "Failed" },
+    refunded: { color: "bg-blue-100 text-blue-800 border-blue-200", label: "Refunded" },
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-xl font-bold text-foreground">Payments</h2>
+        <Button size="sm" onClick={() => setDialogOpen(true)}>
+          <Plus className="w-4 h-4 mr-2" /> Make Payment
+        </Button>
+      </div>
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="bg-background rounded-xl border p-5">
+          <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center mb-3">
+            <DollarSign className="w-5 h-5 text-emerald-600" />
+          </div>
+          <p className="text-2xl font-bold text-foreground">${totalPaid.toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground">Total Paid</p>
+        </div>
+        <div className="bg-background rounded-xl border p-5">
+          <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center mb-3">
+            <Clock className="w-5 h-5 text-amber-600" />
+          </div>
+          <p className="text-2xl font-bold text-foreground">${totalPending.toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground">Pending</p>
+        </div>
+        <div className="bg-background rounded-xl border p-5">
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+            <CreditCard className="w-5 h-5 text-primary" />
+          </div>
+          <p className="text-2xl font-bold text-foreground">{payments.length}</p>
+          <p className="text-xs text-muted-foreground">Total Transactions</p>
+        </div>
+      </div>
+
+      {/* Payment history */}
+      {payments.length === 0 ? (
+        <div className="bg-background rounded-xl border p-12 text-center">
+          <CreditCard className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+          <h3 className="font-display font-semibold text-foreground mb-1">No payments yet</h3>
+          <p className="text-sm text-muted-foreground mb-4">Your payment history will appear here.</p>
+          <Button size="sm" onClick={() => setDialogOpen(true)}>Make Payment</Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {payments.map((p: any) => {
+            const cfg = paymentStatusConfig[p.status] || paymentStatusConfig.pending;
+            return (
+              <div key={p.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl border bg-background hover:shadow-md transition-shadow gap-3">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+                    <CreditCard className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">{p.description || "Payment"}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {p.reference || p.id.slice(0, 8)} · {p.payment_method || "Card"} · {new Date(p.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="font-display font-bold text-foreground text-lg">
+                    {p.currency === "USD" ? "$" : p.currency === "EUR" ? "€" : p.currency === "GBP" ? "£" : ""}{Number(p.amount).toLocaleString()}
+                  </span>
+                  <Badge className={cfg.color + " border text-[10px]"}>{cfg.label}</Badge>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Make Payment Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader><DialogTitle>Make a Payment</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Amount</Label>
+              <Input type="number" min="0" step="0.01" value={form.amount} onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))} placeholder="0.00" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Currency</Label>
+                <Select value={form.currency} onValueChange={(v) => setForm((f) => ({ ...f, currency: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">USD ($)</SelectItem>
+                    <SelectItem value="EUR">EUR (€)</SelectItem>
+                    <SelectItem value="GBP">GBP (£)</SelectItem>
+                    <SelectItem value="GHS">GHS (₵)</SelectItem>
+                    <SelectItem value="NGN">NGN (₦)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Payment Method</Label>
+                <Select value={form.payment_method} onValueChange={(v) => setForm((f) => ({ ...f, payment_method: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="card">Credit/Debit Card</SelectItem>
+                    <SelectItem value="momo">Mobile Money (MoMo)</SelectItem>
+                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Input value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="e.g. Visa application fee, Consultation payment..." />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+            <Button onClick={handleSubmit} disabled={submitting}>{submitting ? "Processing..." : "Submit Payment"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+
 function ShipmentsTab({ shipments }: { shipments: any[] }) {
   return (
     <div className="space-y-6">
