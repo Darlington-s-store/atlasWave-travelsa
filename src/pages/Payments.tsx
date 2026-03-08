@@ -321,8 +321,17 @@ const Payments = () => {
                               {config.label}
                             </Badge>
                             <div className="flex items-center gap-1">
-                              <Button variant="ghost" size="icon" className="h-8 w-8" title="Download Receipt" onClick={() => toast({ title: "Receipt Downloaded", description: `Receipt for ${txn.id} saved.` })}>
-                                <Download className="w-4 h-4 text-muted-foreground" />
+                              <Button variant="ghost" size="icon" className="h-8 w-8" title="Download Receipt" onClick={() => generateReceiptPDF({
+                                reference: txn.id,
+                                date: txn.date,
+                                description: txn.description,
+                                amount: txn.amount,
+                                currency: txn.currency,
+                                paymentMethod: txn.method,
+                                status: txn.status,
+                                customerName: user?.fullName || "Customer",
+                                customerEmail: user?.email || "",
+                              })}>
                               </Button>
                               {txn.status === "completed" && (
                                 <Button variant="ghost" size="icon" className="h-8 w-8" title="Request Refund" onClick={() => handleRefundRequest(txn.id)}>
