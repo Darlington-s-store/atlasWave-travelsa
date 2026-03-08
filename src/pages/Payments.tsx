@@ -55,30 +55,34 @@ const Payments = () => {
   const { user, isAuthenticated } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<"card" | "momo">("card");
   const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
   const [convertFrom, setConvertFrom] = useState<"USD" | "GHS">("USD");
   const [convertAmount, setConvertAmount] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
+  const fetchTransactions = () => {
+    if (!isAuthenticated) return;
+    supabase
+      .from("payments")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (data) setTransactions(data.map((d: any) => ({
+          id: `TXN-${d.id.slice(0, 8).toUpperCase()}`,
+          date: new Date(d.created_at).toISOString().split("T")[0],
+          description: d.description || "Payment",
+          amount: Number(d.amount),
+          currency: d.currency || "USD",
+          method: d.payment_method || "Card",
+          status: d.status as Transaction["status"],
+        })));
+      });
+  };
+
   useEffect(() => {
-    if (isAuthenticated) {
-      supabase
-        .from("payments")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .then(({ data }) => {
-          if (data) setTransactions(data.map((d: any) => ({
-            id: `TXN-${d.id.slice(0, 8).toUpperCase()}`,
-            date: new Date(d.created_at).toISOString().split("T")[0],
-            description: d.description || "Payment",
-            amount: Number(d.amount),
-            currency: d.currency || "USD",
-            method: d.payment_method || "Card",
-            status: d.status as Transaction["status"],
-          })));
-        });
-    }
+    fetchTransactions();
   }, [isAuthenticated]);
 
   const convertedValue = convertAmount
@@ -93,12 +97,65 @@ const Payments = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (!amount || parseFloat(amount) <= 0) {
       toast({ title: "Invalid amount", description: "Please enter a valid payment amount.", variant: "destructive" });
       return;
     }
-    toast({ title: "Payment Initiated", description: `Processing $${amount} via ${paymentMethod === "card" ? "Mastercard" : "Mobile Money"}...` });
+    if (!user) {
+      toast({ title: "Not logged in", description: "Please log in to make a payment.", variant: "destructive" });
+      return;
+    }
+
+    const method = paymentMethod === "card" ? "Mastercard" : "Mobile Money";
+    toast({ title: "Payment Initiated", description: `Processing $${amount} via ${method}...` });
+
+    // Insert payment into database (trigger auto-creates invoice)
+    const { data: payment, error } = await supabase.from("payments").insert({
+      user_id: user.id,
+      amount: parseFloat(amount),
+      currency: "USD",
+      description: description || "Service Payment",
+      payment_method: method,
+      status: "completed",
+    }).select().single();
+
+    if (error) {
+      toast({ title: "Payment Failed", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    // Fetch the auto-generated invoice to get the invoice number
+    const { data: invoice } = await supabase
+      .from("invoices")
+      .select("invoice_number")
+      .eq("payment_id", payment.id)
+      .single();
+
+    // Send invoice email via Resend
+    const userEmail = user.email || "";
+    const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
+
+    await supabase.functions.invoke("send-notification", {
+      body: {
+        type: "invoice_ready",
+        recipientEmail: userEmail,
+        recipientName: profile?.full_name || "Customer",
+        data: {
+          invoiceNumber: invoice?.invoice_number || "N/A",
+          amount: parseFloat(amount).toFixed(2),
+          currency: "USD",
+          description: description || "Service Payment",
+          paymentMethod: method,
+          date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+        },
+      },
+    });
+
+    toast({ title: "Payment Successful ✓", description: `Invoice ${invoice?.invoice_number || ""} emailed to ${userEmail}` });
+    fetchTransactions();
+    setAmount("");
+    setDescription("");
   };
 
   const handleRefundRequest = (txnId: string) => {
@@ -182,6 +239,11 @@ const Payments = () => {
                     </div>
                   </TabsContent>
                 </Tabs>
+
+                <div className="space-y-2 mb-4">
+                  <Label>Description</Label>
+                  <Input placeholder="e.g. Visa application fee" value={description} onChange={(e) => setDescription(e.target.value)} className="h-12" />
+                </div>
 
                 <div className="space-y-2 mb-6">
                   <Label>Amount (USD)</Label>
