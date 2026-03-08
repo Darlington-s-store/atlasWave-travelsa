@@ -1,88 +1,174 @@
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
-import { ArrowRight, Plane, Package, FileText } from "lucide-react";
+import { ArrowRight, Plane, Package, FileText, MapPin, Calendar, Users, ChevronLeft, ChevronRight } from "lucide-react";
 import heroTravel from "@/assets/hero-travel.jpg";
+import heroLogistics from "@/assets/hero-logistics.jpg";
+
+const slides = [
+  {
+    image: heroTravel,
+    badge: "Travel & Tours",
+    title: "Your Gateway to",
+    highlight: "Global",
+    titleEnd: "Opportunities",
+    desc: "From dream vacations to work permits, visa processing, and seamless logistics — we make global travel and immigration effortless.",
+    cta: { label: "Book a Flight", link: "/travel/flights" },
+    ctaSecondary: { label: "Explore Destinations", link: "/travel" },
+  },
+  {
+    image: heroLogistics,
+    badge: "Logistics & Shipping",
+    title: "Reliable",
+    highlight: "Cargo",
+    titleEnd: "Worldwide",
+    desc: "Air freight, sea cargo, road transport, and customs clearance — all with real-time tracking across 50+ countries.",
+    cta: { label: "Track Shipment", link: "/logistics/tracking" },
+    ctaSecondary: { label: "Get a Quote", link: "/consultation" },
+  },
+  {
+    image: heroTravel,
+    badge: "Immigration Services",
+    title: "Secure Your",
+    highlight: "Work Permit",
+    titleEnd: "Today",
+    desc: "Expert guidance for Schengen, Canada LMIA, Germany Opportunity Card, and USA NCLEX pathways with 98% success rate.",
+    cta: { label: "Apply Now", link: "/work-permits" },
+    ctaSecondary: { label: "Check Eligibility", link: "/work-permits/germany-chancenkarte" },
+  },
+];
+
+// Animated counter hook
+function useCounter(end: number, duration = 2000, start = 0, suffix = "") {
+  const [count, setCount] = useState(start);
+  const ref = useRef<HTMLDivElement>(null);
+  const hasAnimated = useRef(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasAnimated.current) {
+          hasAnimated.current = true;
+          const startTime = performance.now();
+          const animate = (now: number) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            setCount(Math.floor(start + (end - start) * eased));
+            if (progress < 1) requestAnimationFrame(animate);
+          };
+          requestAnimationFrame(animate);
+        }
+      },
+      { threshold: 0.5 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [end, duration, start]);
+
+  return { count, ref };
+}
 
 const HeroSection = () => {
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrent((p) => (p + 1) % slides.length), 6000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const slide = slides[current];
+
+  const goTo = (dir: number) => {
+    setCurrent((p) => (p + dir + slides.length) % slides.length);
+  };
+
+  // Stats with animated counters
+  const stat1 = useCounter(15000, 2000, 0);
+  const stat2 = useCounter(50, 1500, 0);
+  const stat3 = useCounter(98, 1800, 0);
+  const stats = [
+    { ...stat1, suffix: "+", label: "Visas Processed", format: (n: number) => n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}K` : String(n) },
+    { ...stat2, suffix: "+", label: "Countries Served", format: (n: number) => String(n) },
+    { ...stat3, suffix: "%", label: "Success Rate", format: (n: number) => String(n) },
+  ];
+
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0">
-        <img src={heroTravel} alt="Beautiful tropical coastline" className="w-full h-full object-cover" />
-        <div className="absolute inset-0" style={{ background: "var(--hero-overlay)" }} />
+      {/* Backgrounds */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={current}
+          initial={{ opacity: 0, scale: 1.05 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8 }}
+          className="absolute inset-0"
+        >
+          <img src={slide.image} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0" style={{ background: "var(--hero-overlay)" }} />
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Carousel Controls */}
+      <button onClick={() => goTo(-1)} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors hidden md:flex">
+        <ChevronLeft className="w-5 h-5 text-primary-foreground" />
+      </button>
+      <button onClick={() => goTo(1)} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors hidden md:flex">
+        <ChevronRight className="w-5 h-5 text-primary-foreground" />
+      </button>
+
+      {/* Dots */}
+      <div className="absolute bottom-32 lg:bottom-28 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+        {slides.map((_, i) => (
+          <button key={i} onClick={() => setCurrent(i)} className={`h-2 rounded-full transition-all duration-300 ${i === current ? "w-8 bg-accent" : "w-2 bg-primary-foreground/30"}`} />
+        ))}
       </div>
 
       <div className="container relative z-10 pt-24 pb-16">
         <div className="max-w-3xl">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-          >
-            <span className="inline-block px-4 py-1.5 bg-accent/20 text-accent text-sm font-semibold rounded-full mb-6 backdrop-blur-sm border border-accent/30">
-              Travel • Immigration • Logistics
-            </span>
-          </motion.div>
+          <AnimatePresence mode="wait">
+            <motion.div key={current} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.5 }}>
+              <span className="inline-block px-4 py-1.5 bg-accent/20 text-accent text-sm font-semibold rounded-full mb-6 backdrop-blur-sm border border-accent/30">
+                {slide.badge}
+              </span>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-[1.1] mb-6"
-            style={{ color: "hsl(var(--primary-foreground))" }}
-          >
-            Your Gateway to{" "}
-            <span className="text-gradient-accent">Global</span>{" "}
-            Opportunities
-          </motion.h1>
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-[1.1] mb-6" style={{ color: "hsl(var(--primary-foreground))" }}>
+                {slide.title}{" "}<span className="text-gradient-accent">{slide.highlight}</span>{" "}{slide.titleEnd}
+              </h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-lg md:text-xl leading-relaxed mb-10 max-w-2xl"
-            style={{ color: "hsl(var(--primary-foreground) / 0.75)" }}
-          >
-            From dream vacations to work permits, visa processing, and seamless logistics — we make global travel and immigration effortless.
-          </motion.p>
+              <p className="text-lg md:text-xl leading-relaxed mb-10 max-w-2xl" style={{ color: "hsl(var(--primary-foreground) / 0.75)" }}>
+                {slide.desc}
+              </p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-            className="flex flex-wrap gap-4"
-          >
-            <Button variant="hero" size="lg" asChild>
-              <Link to="/work-permits">
-                Apply for Work Permit <ArrowRight className="w-5 h-5" />
-              </Link>
-            </Button>
-            <Button variant="hero-outline" size="lg" asChild>
-              <Link to="/consultation">Book Consultation</Link>
-            </Button>
-          </motion.div>
+              <div className="flex flex-wrap gap-4">
+                <Button variant="hero" size="lg" asChild>
+                  <Link to={slide.cta.link}>{slide.cta.label} <ArrowRight className="w-5 h-5" /></Link>
+                </Button>
+                <Button variant="hero-outline" size="lg" asChild>
+                  <Link to={slide.ctaSecondary.link}>{slide.ctaSecondary.label}</Link>
+                </Button>
+              </div>
+            </motion.div>
+          </AnimatePresence>
 
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.5 }}
-            className="flex flex-wrap gap-8 mt-16 pt-8 border-t"
-            style={{ borderColor: "hsl(var(--primary-foreground) / 0.15)" }}
-          >
-            {[
-              { value: "15K+", label: "Visas Processed" },
-              { value: "50+", label: "Countries Served" },
-              { value: "98%", label: "Success Rate" },
-              { value: "24/7", label: "Support Available" },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <div className="text-2xl md:text-3xl font-display font-bold text-accent">{stat.value}</div>
+          {/* Animated Stats */}
+          <div className="flex flex-wrap gap-8 mt-16 pt-8 border-t" style={{ borderColor: "hsl(var(--primary-foreground) / 0.15)" }}>
+            {stats.map((stat) => (
+              <div key={stat.label} ref={stat.ref}>
+                <div className="text-2xl md:text-3xl font-display font-bold text-accent">
+                  {stat.format(stat.count)}{stat.suffix}
+                </div>
                 <div className="text-sm" style={{ color: "hsl(var(--primary-foreground) / 0.6)" }}>{stat.label}</div>
               </div>
             ))}
-          </motion.div>
+            <div>
+              <div className="text-2xl md:text-3xl font-display font-bold text-accent">24/7</div>
+              <div className="text-sm" style={{ color: "hsl(var(--primary-foreground) / 0.6)" }}>Support Available</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -95,16 +181,8 @@ const HeroSection = () => {
               { icon: FileText, title: "Work Permits", desc: "Immigration & visa processing", link: "/work-permits" },
               { icon: Package, title: "Logistics", desc: "Cargo shipping & tracking", link: "/logistics" },
             ].map((card, i) => (
-              <motion.div
-                key={card.title}
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 + i * 0.1 }}
-              >
-                <Link
-                  to={card.link}
-                  className="flex items-center gap-4 bg-card rounded-xl p-6 shadow-card-hover hover:shadow-accent/20 transition-all duration-300 group border"
-                >
+              <motion.div key={card.title} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.6 + i * 0.1 }}>
+                <Link to={card.link} className="flex items-center gap-4 bg-card rounded-xl p-6 shadow-card-hover hover:shadow-accent/20 transition-all duration-300 group border">
                   <div className="w-14 h-14 rounded-lg bg-accent/10 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
                     <card.icon className="w-7 h-7 text-accent" />
                   </div>
