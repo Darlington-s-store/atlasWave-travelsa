@@ -65,12 +65,25 @@ const AdminVisaApplications = () => {
 
   const handleUpdateApp = async () => {
     if (!editingApp) return;
+    const previousStatus = editingApp.status;
     const updates: any = { status: editStatus };
     if (editNotes.trim()) updates.details = editNotes;
     const { error } = await supabase.from("applications").update(updates).eq("id", editingApp.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Application Updated" });
     setEditDialogOpen(false);
+    // Send notification
+    notifyStatusChange({
+      type: "application_status_update",
+      userId: editingApp.user_id,
+      data: {
+        title: editingApp.title,
+        type: editingApp.type,
+        previousStatus,
+        newStatus: editStatus,
+        notes: editNotes || "",
+      },
+    });
     fetchApps();
   };
 
