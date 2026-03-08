@@ -55,7 +55,9 @@ const App = () => (
               <Route path="/travel/hotels" element={<HotelAccommodation />} />
               <Route path="/travel/visa" element={<VisaAssistance />} />
               <Route path="/logistics" element={<Logistics />} />
-              <Route path="/tracking" element={<Logistics />} />
+              <Route path="/logistics/tracking" element={<ShipmentTracking />} />
+              <Route path="/tracking" element={<ShipmentTracking />} />
+              <Route path="/payments" element={<Payments />} />
               <Route path="/work-permits" element={<WorkPermits />} />
               <Route path="/work-permits/schengen" element={<SchengenWorkPermits />} />
               <Route path="/work-permits/canada-lmia" element={<CanadaLMIA />} />
