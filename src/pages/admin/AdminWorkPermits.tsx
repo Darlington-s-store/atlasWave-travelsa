@@ -108,6 +108,22 @@ const AdminWorkPermits = () => {
     fetchApps();
   };
 
+  const handleCreate = async () => {
+    if (!createForm.title) { toast({ title: "Please enter a title", variant: "destructive" }); return; }
+    const { error } = await supabase.from("applications").insert({
+      title: createForm.title, type: createForm.type, details: createForm.details || null,
+      status: createForm.status, user_id: user?.id || "",
+    });
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Work Permit Application Created" }); setCreateDialogOpen(false);
+    setCreateForm({ title: "", type: PROGRAMMES[0], details: "", status: "submitted" }); fetchApps();
+  };
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from("applications").delete().eq("id", id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Application Deleted" }); fetchApps();
+  };
   const handleKanbanMove = async (itemId: string, newStatus: string) => {
     const { error } = await supabase.from("applications").update({ status: newStatus }).eq("id", itemId);
     if (error) {
