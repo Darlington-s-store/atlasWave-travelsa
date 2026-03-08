@@ -126,7 +126,7 @@ const AdminReports = () => {
         break;
       case "revenue":
         data = revenueChartData.map(r => ({ month: r.month, revenue: r.amount }));
-        filename = "revenue_summary";
+        filename = "revenue_summary" as string;
         break;
     }
     if (data.length === 0) {
