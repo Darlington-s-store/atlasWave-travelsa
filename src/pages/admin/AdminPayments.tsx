@@ -2,41 +2,30 @@ import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import {
-  Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious,
-} from "@/components/ui/pagination";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DollarSign, Clock, CheckCircle, Download, Plus, MoreHorizontal, TrendingUp } from "lucide-react";
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
-  PieChart, Pie,
-} from "recharts";
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { DollarSign, Clock, CheckCircle, Download, Plus, MoreHorizontal, Inbox, Eye, Pencil, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-const revenueData = [
-  { day: "01 Oct", value: 8000 },
-  { day: "07 Oct", value: 12000 },
-  { day: "14 Oct", value: 9500 },
-  { day: "21 Oct", value: 15000 },
-  { day: "Today", value: 22000 },
-];
+interface Transaction {
+  id: string;
+  user: string;
+  service: string;
+  amount: string;
+  date: string;
+  status: string;
+  method: string;
+}
 
-const paymentDistribution = [
-  { name: "Mastercard", value: 68, amount: "$87.3k", color: "hsl(var(--primary))" },
-  { name: "Mobile Money (MoMo)", value: 32, amount: "$41.1k", color: "hsl(var(--accent))" },
-];
-
-const transactions = [
-  { id: "#TR-92831", user: "Elena Jacobs", service: "Visa Processing", amount: "$1,250.00", date: "Oct 24, 2023", status: "Paid", method: "Mastercard" },
-  { id: "#TR-92832", user: "Marcus Wright", service: "Logistics Support", amount: "$450.00", date: "Oct 24, 2023", status: "Pending", method: "MoMo" },
-  { id: "#TR-92833", user: "Sara Ross", service: "Consultation Fee", amount: "$150.00", date: "Oct 23, 2023", status: "Failed", method: "Mastercard" },
-  { id: "#TR-92834", user: "Kevin Baker", service: "Education Visa", amount: "$2,800.00", date: "Oct 23, 2023", status: "Paid", method: "MoMo" },
-  { id: "#TR-92835", user: "Ama Mensah", service: "Work Permit", amount: "$1,800.00", date: "Oct 22, 2023", status: "Paid", method: "Mastercard" },
-  { id: "#TR-92836", user: "Kofi Boateng", service: "Flight Booking", amount: "$620.00", date: "Oct 22, 2023", status: "Pending", method: "MoMo" },
-];
+const SERVICES = ["Visa Processing", "Logistics Support", "Consultation Fee", "Education Visa", "Work Permit", "Flight Booking"];
+const METHODS = ["Mastercard", "MoMo"];
+const TX_STATUSES = ["Paid", "Pending", "Failed"];
 
 const statusStyle: Record<string, string> = {
   Paid: "bg-secondary/15 text-secondary border border-secondary/25",
@@ -44,15 +33,63 @@ const statusStyle: Record<string, string> = {
   Failed: "bg-destructive/10 text-destructive border border-destructive/20",
 };
 
-const ITEMS_PER_PAGE = 4;
+let nextTxId = 1;
+const generateTxId = () => `#TR-${String(nextTxId++).padStart(5, "0")}`;
 
 const AdminPayments = () => {
+  const { toast } = useToast();
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [page, setPage] = useState(1);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+  const [viewingTx, setViewingTx] = useState<Transaction | null>(null);
+  const [deletingTx, setDeletingTx] = useState<Transaction | null>(null);
+
+  const [form, setForm] = useState({ user: "", service: SERVICES[0], amount: "", status: "Pending", method: METHODS[0] });
+  const resetForm = () => setForm({ user: "", service: SERVICES[0], amount: "", status: "Pending", method: METHODS[0] });
+
+  const openCreate = () => { resetForm(); setEditingTx(null); setDialogOpen(true); };
+  const openEdit = (tx: Transaction) => {
+    setEditingTx(tx);
+    setForm({ user: tx.user, service: tx.service, amount: tx.amount.replace(/[$,]/g, ""), status: tx.status, method: tx.method });
+    setDialogOpen(true);
+  };
+
+  const handleSave = () => {
+    if (!form.user.trim() || !form.amount.trim()) {
+      toast({ title: "Validation Error", description: "User and amount are required.", variant: "destructive" });
+      return;
+    }
+    const amountFormatted = `$${parseFloat(form.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+    if (editingTx) {
+      setTransactions(prev => prev.map(t => t.id === editingTx.id ? { ...t, user: form.user, service: form.service, amount: amountFormatted, status: form.status, method: form.method } : t));
+      toast({ title: "Transaction Updated" });
+    } else {
+      const newTx: Transaction = { id: generateTxId(), user: form.user, service: form.service, amount: amountFormatted, date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), status: form.status, method: form.method };
+      setTransactions(prev => [newTx, ...prev]);
+      toast({ title: "Payment Recorded", description: `${amountFormatted} from ${form.user}` });
+    }
+    setDialogOpen(false);
+    resetForm();
+  };
+
+  const handleDelete = () => {
+    if (deletingTx) {
+      setTransactions(prev => prev.filter(t => t.id !== deletingTx.id));
+      toast({ title: "Transaction Deleted" });
+    }
+    setDeleteDialogOpen(false);
+    setDeletingTx(null);
+  };
 
   const filtered = transactions.filter(t => statusFilter === "all" || t.status === statusFilter);
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const paged = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+  const totalRevenue = transactions.filter(t => t.status === "Paid").reduce((sum, t) => sum + parseFloat(t.amount.replace(/[$,]/g, "")), 0);
+  const pendingCount = transactions.filter(t => t.status === "Pending").length;
+  const paidCount = transactions.filter(t => t.status === "Paid").length;
 
   return (
     <AdminLayout>
@@ -60,14 +97,14 @@ const AdminPayments = () => {
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
           <div>
             <h2 className="text-[22px] font-sans font-bold text-foreground tracking-tight">Payment Monitoring</h2>
-            <p className="text-[13px] text-muted-foreground mt-0.5">Monitor and manage global transactions in real-time.</p>
+            <p className="text-[13px] text-muted-foreground mt-0.5">Track and manage all transactions.</p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="gap-1.5 h-9 text-[13px] rounded-lg">
-              <Download className="w-4 h-4" /> Export Report
+              <Download className="w-4 h-4" /> Export
             </Button>
-            <Button size="sm" className="gap-1.5 h-9 text-[13px] font-semibold rounded-lg px-4">
-              <Plus className="w-4 h-4" /> Manual Payment
+            <Button size="sm" className="gap-1.5 h-9 text-[13px] font-semibold rounded-lg px-4" onClick={openCreate}>
+              <Plus className="w-4 h-4" /> Record Payment
             </Button>
           </div>
         </div>
@@ -82,13 +119,7 @@ const AdminPayments = () => {
                   <DollarSign className="w-4 h-4 text-accent" />
                 </div>
               </div>
-              <p className="text-[28px] font-bold text-foreground tracking-tight">$128,450.00</p>
-              <div className="flex items-center gap-2 mt-1.5">
-                <span className="text-[12px] text-muted-foreground">vs. $114,200 last month</span>
-                <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-secondary bg-secondary/10 px-1.5 py-0.5 rounded">
-                  <TrendingUp className="w-3 h-3" /> +12.5%
-                </span>
-              </div>
+              <p className="text-[28px] font-bold text-foreground tracking-tight">${totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
             </CardContent>
           </Card>
           <Card className="shadow-card rounded-xl border border-border/60">
@@ -99,104 +130,18 @@ const AdminPayments = () => {
                   <Clock className="w-4 h-4 text-primary" />
                 </div>
               </div>
-              <div className="flex items-baseline gap-2">
-                <p className="text-[28px] font-bold text-foreground tracking-tight">42</p>
-                <span className="text-[11px] font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded">-5%</span>
-              </div>
-              <p className="text-[12px] text-muted-foreground mt-1">Avg. processing time: 4.2h</p>
+              <p className="text-[28px] font-bold text-foreground tracking-tight">{pendingCount}</p>
             </CardContent>
           </Card>
           <Card className="shadow-card rounded-xl border border-border/60">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wide">Successful Transactions</p>
+                <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wide">Successful</p>
                 <div className="w-9 h-9 rounded-xl bg-secondary/15 flex items-center justify-center">
                   <CheckCircle className="w-4 h-4 text-secondary" />
                 </div>
               </div>
-              <div className="flex items-baseline gap-2">
-                <p className="text-[28px] font-bold text-foreground tracking-tight">1,205</p>
-                <span className="text-[11px] font-bold text-secondary bg-secondary/10 px-1.5 py-0.5 rounded">+8%</span>
-              </div>
-              <p className="text-[12px] text-muted-foreground mt-1">98.2% Success rate</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-          <Card className="lg:col-span-3 shadow-card rounded-xl border border-border/60">
-            <CardHeader className="flex-row items-center justify-between pb-1 pt-5 px-6">
-              <CardTitle className="text-[15px] font-semibold text-foreground">Revenue Trend</CardTitle>
-              <Tabs defaultValue="daily">
-                <TabsList className="h-8 bg-muted/50 p-0.5">
-                  <TabsTrigger value="daily" className="text-[11px] px-3 h-7 font-medium">Daily</TabsTrigger>
-                  <TabsTrigger value="weekly" className="text-[11px] px-3 h-7 font-medium">Weekly</TabsTrigger>
-                  <TabsTrigger value="monthly" className="text-[11px] px-3 h-7 font-medium">Monthly</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </CardHeader>
-            <CardContent className="px-6 pb-5">
-              <div className="h-[220px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={revenueData} barSize={32} margin={{ top: 10, right: 0, left: -10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }} dy={8} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => `$${v / 1000}k`} width={45} />
-                    <Tooltip
-                      cursor={{ fill: "hsl(var(--muted) / 0.5)" }}
-                      contentStyle={{ borderRadius: 10, border: "1px solid hsl(var(--border))", boxShadow: "0 4px 16px -4px rgba(0,0,0,0.1)", fontSize: 13, padding: "8px 14px" }}
-                      formatter={(value: number) => [`$${(value / 1000).toFixed(1)}k`, "Revenue"]}
-                    />
-                    <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                      {revenueData.map((_, index) => (
-                        <Cell key={index} fill={index === revenueData.length - 1 ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.3)"} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="lg:col-span-2 shadow-card rounded-xl border border-border/60">
-            <CardHeader className="pt-5 px-6 pb-0">
-              <CardTitle className="text-[15px] font-semibold text-foreground">Payment Distribution</CardTitle>
-            </CardHeader>
-            <CardContent className="px-6 pb-5">
-              <div className="h-[160px] flex items-center justify-center">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={paymentDistribution}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={48}
-                      outerRadius={68}
-                      dataKey="value"
-                      stroke="none"
-                      strokeWidth={0}
-                    >
-                      {paymentDistribution.map((entry, index) => (
-                        <Cell key={index} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <text x="50%" y="46%" textAnchor="middle" className="fill-foreground text-[20px] font-bold">68%</text>
-                    <text x="50%" y="58%" textAnchor="middle" className="fill-muted-foreground text-[9px] uppercase tracking-[0.15em] font-semibold">Mastercard</text>
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="space-y-2.5 mt-2">
-                {paymentDistribution.map((item) => (
-                  <div key={item.name} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                      <span className="text-[13px] font-medium text-foreground">{item.name}</span>
-                    </div>
-                    <span className="text-[13px] font-bold text-foreground">{item.amount}</span>
-                  </div>
-                ))}
-              </div>
+              <p className="text-[28px] font-bold text-foreground tracking-tight">{paidCount}</p>
             </CardContent>
           </Card>
         </div>
@@ -205,86 +150,180 @@ const AdminPayments = () => {
         <Card className="shadow-card rounded-xl border border-border/60 overflow-hidden">
           <CardContent className="p-0">
             <div className="flex items-center gap-3 p-4 border-b border-border flex-wrap">
-              <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setPage(1); }}>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[130px] h-9 text-[13px]"><SelectValue placeholder="Status: All" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Status: All</SelectItem>
-                  <SelectItem value="Paid">Paid</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Failed">Failed</SelectItem>
+                  {TX_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <span className="text-[12px] text-muted-foreground font-medium ml-auto">
-                Showing {(page - 1) * ITEMS_PER_PAGE + 1}-{Math.min(page * ITEMS_PER_PAGE, filtered.length)} of {filtered.length} transactions
-              </span>
+              <span className="text-[12px] text-muted-foreground font-medium ml-auto">{filtered.length} transactions</span>
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/30 hover:bg-muted/30">
-                  <TableHead className="text-[11px] uppercase tracking-wider font-bold">Transaction ID</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-wider font-bold">User</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-wider font-bold">Service</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-wider font-bold">Amount</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-wider font-bold">Date</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-wider font-bold">Status</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-wider font-bold">Method</TableHead>
-                  <TableHead className="w-10"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paged.map(tx => (
-                  <TableRow key={tx.id} className="hover:bg-muted/20 transition-colors">
-                    <TableCell className="font-mono text-[12px] text-primary font-bold">{tx.id}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-bold text-primary shrink-0">
-                          {tx.user.split(" ").map(n => n[0]).join("")}
-                        </div>
-                        <span className="font-semibold text-[13px] text-foreground">{tx.user}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-[13px] text-muted-foreground">{tx.service}</TableCell>
-                    <TableCell className="text-[13px] font-bold text-foreground">{tx.amount}</TableCell>
-                    <TableCell className="text-[13px] text-muted-foreground">{tx.date}</TableCell>
-                    <TableCell>
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold ${statusStyle[tx.status] || ""}`}>
-                        {tx.status}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-[13px] text-muted-foreground font-medium">{tx.method}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            {totalPages > 1 && (
-              <div className="flex justify-center py-3 border-t border-border bg-muted/20">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious href="#" onClick={e => { e.preventDefault(); setPage(p => Math.max(1, p - 1)); }} />
-                    </PaginationItem>
-                    {Array.from({ length: totalPages }, (_, i) => (
-                      <PaginationItem key={i}>
-                        <PaginationLink href="#" isActive={page === i + 1} onClick={e => { e.preventDefault(); setPage(i + 1); }}>
-                          {i + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-                    <PaginationItem>
-                      <PaginationNext href="#" onClick={e => { e.preventDefault(); setPage(p => Math.min(totalPages, p + 1)); }} />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+
+            {filtered.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+                  <Inbox className="w-8 h-8 text-muted-foreground/40" />
+                </div>
+                <p className="text-[15px] font-semibold text-foreground">No transactions yet</p>
+                <p className="text-[13px] text-muted-foreground mt-1 max-w-[300px]">
+                  {transactions.length === 0 ? "Record your first payment to get started." : "No transactions match the selected filter."}
+                </p>
+                {transactions.length === 0 && (
+                  <Button className="mt-4 gap-1.5" onClick={openCreate}>
+                    <Plus className="w-4 h-4" /> Record Payment
+                  </Button>
+                )}
               </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/30 hover:bg-muted/30">
+                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">ID</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">User</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">Service</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">Amount</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">Date</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">Status</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">Method</TableHead>
+                    <TableHead className="w-10"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map(tx => (
+                    <TableRow key={tx.id} className="hover:bg-muted/20 transition-colors">
+                      <TableCell className="font-mono text-[12px] text-primary font-bold">{tx.id}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-bold text-primary shrink-0">
+                            {tx.user.split(" ").map(n => n[0]).join("")}
+                          </div>
+                          <span className="font-semibold text-[13px] text-foreground">{tx.user}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-[13px] text-muted-foreground">{tx.service}</TableCell>
+                      <TableCell className="text-[13px] font-bold text-foreground">{tx.amount}</TableCell>
+                      <TableCell className="text-[13px] text-muted-foreground">{tx.date}</TableCell>
+                      <TableCell>
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold ${statusStyle[tx.status] || ""}`}>{tx.status}</span>
+                      </TableCell>
+                      <TableCell className="text-[13px] text-muted-foreground font-medium">{tx.method}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => { setViewingTx(tx); setViewDialogOpen(true); }}>
+                              <Eye className="w-4 h-4 mr-2" /> View
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openEdit(tx)}>
+                              <Pencil className="w-4 h-4 mr-2" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => { setDeletingTx(tx); setDeleteDialogOpen(true); }}>
+                              <Trash2 className="w-4 h-4 mr-2" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Create/Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle>{editingTx ? "Edit Transaction" : "Record Payment"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>User Name *</Label>
+              <Input value={form.user} onChange={e => setForm(f => ({ ...f, user: e.target.value }))} placeholder="Full name" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Service</Label>
+                <Select value={form.service} onValueChange={v => setForm(f => ({ ...f, service: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{SERVICES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Amount ($) *</Label>
+                <Input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{TX_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Method</Label>
+                <Select value={form.method} onValueChange={v => setForm(f => ({ ...f, method: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{METHODS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+            <Button onClick={handleSave}>{editingTx ? "Save Changes" : "Record Payment"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Dialog */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader><DialogTitle>Transaction Details</DialogTitle></DialogHeader>
+          {viewingTx && (
+            <div className="space-y-3 py-2 text-[13px]">
+              <div className="grid grid-cols-2 gap-3">
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">ID</span><span className="font-mono font-bold text-primary">{viewingTx.id}</span></div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Date</span>{viewingTx.date}</div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">User</span><span className="font-semibold">{viewingTx.user}</span></div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Amount</span><span className="font-bold">{viewingTx.amount}</span></div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Service</span>{viewingTx.service}</div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Method</span>{viewingTx.method}</div>
+              </div>
+              <div>
+                <span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-1">Status</span>
+                <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold ${statusStyle[viewingTx.status] || ""}`}>{viewingTx.status}</span>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader><DialogTitle>Delete Transaction</DialogTitle></DialogHeader>
+          <p className="text-[13px] text-muted-foreground py-2">
+            Are you sure you want to delete transaction <span className="font-bold text-foreground">{deletingTx?.id}</span>? This cannot be undone.
+          </p>
+          <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+            <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };
