@@ -8,10 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, Globe, MoreHorizontal, Eye, Pencil, Inbox, CheckCircle, Clock, XCircle, FileText, LayoutGrid, List } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Search, Globe, MoreHorizontal, Eye, Pencil, Inbox, CheckCircle, Clock, XCircle, FileText, LayoutGrid, List, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import KanbanBoard from "@/components/admin/KanbanBoard";
 
 const APP_STATUSES = ["pending", "in-review", "processing", "approved", "rejected"];
