@@ -34,30 +34,13 @@ const statusConfig = {
 };
 
 // --- Mock data ---
-const MOCK_ACTIVITIES = [
-  { icon: DollarSign, color: "text-emerald-500", bg: "bg-emerald-50", title: "Payment Confirmed", desc: "Logistics deposit of $1,200 received.", time: "3 HOURS AGO" },
-  { icon: FileText, color: "text-amber-500", bg: "bg-amber-50", title: "Document Requested", desc: "Please upload your birth certificate.", time: "YESTERDAY" },
-  { icon: MessageCircle, color: "text-blue-500", bg: "bg-blue-50", title: "Agent Response", desc: "Sarah replied to your visa inquiry.", time: "1 DAY AGO" },
-  { icon: Package, color: "text-primary", bg: "bg-primary/5", title: "Package Collected", desc: "Courier has picked up your relocation boxes.", time: "2 DAYS AGO" },
-];
+const MOCK_ACTIVITIES: { icon: any; color: string; bg: string; title: string; desc: string; time: string }[] = [];
 
-const MOCK_BOOKINGS = [
-  { id: "BK-001", type: "Flight", route: "Accra (ACC) → London (LHR)", date: "Mar 15, 2026", status: "confirmed" as const, airline: "British Airways • BA 078" },
-  { id: "BK-002", type: "Hotel", route: "Marriott Berlin, Germany", date: "Apr 2-8, 2026", status: "confirmed" as const, airline: "6 nights • Deluxe Room" },
-  { id: "BK-003", type: "Flight", route: "London (LHR) → Toronto (YYZ)", date: "Apr 10, 2026", status: "pending" as const, airline: "Air Canada • AC 849" },
-];
+const MOCK_BOOKINGS: { id: string; type: string; route: string; date: string; status: "confirmed" | "pending"; airline: string }[] = [];
 
-const MOCK_SHIPMENTS = [
-  { id: "SH-4821", origin: "Tema, Ghana", dest: "Rotterdam, Netherlands", weight: "240kg", status: "in-transit" as const, eta: "4 days", progress: 65 },
-  { id: "SH-4798", origin: "Accra, Ghana", dest: "London, UK", weight: "120kg", status: "delivered" as const, eta: "Delivered", progress: 100 },
-];
+const MOCK_SHIPMENTS: { id: string; origin: string; dest: string; weight: string; status: "in-transit" | "delivered"; eta: string; progress: number }[] = [];
 
-const MOCK_DOCUMENTS = [
-  { name: "Passport Copy", type: "PDF", uploaded: "Feb 10, 2026", size: "2.4 MB" },
-  { name: "LMIA Application Form", type: "PDF", uploaded: "Feb 15, 2026", size: "1.1 MB" },
-  { name: "Degree Certificate", type: "PDF", uploaded: "Jan 20, 2026", size: "3.2 MB" },
-  { name: "Employment Letter", type: "DOCX", uploaded: "Mar 01, 2026", size: "0.8 MB" },
-];
+const MOCK_DOCUMENTS: { name: string; type: string; uploaded: string; size: string }[] = [];
 
 const Dashboard = () => {
   const { user, isAuthenticated, logout, updateProfile, applications } = useAuth();
