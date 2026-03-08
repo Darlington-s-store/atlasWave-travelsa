@@ -137,6 +137,7 @@ const AdminVisaApplications = () => {
             >
               <LayoutGrid className="w-3.5 h-3.5" /> Kanban
             </Button>
+            </div>
           </div>
         </div>
 
