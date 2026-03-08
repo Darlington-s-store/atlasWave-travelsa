@@ -14,6 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
+      applications: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          status: string
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          status?: string
+          title: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bookings: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          provider: string | null
+          route: string
+          status: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          provider?: string | null
+          route: string
+          status?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          provider?: string | null
+          route?: string
+          status?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          payment_method: string | null
+          reference: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          payment_method?: string | null
+          reference?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          payment_method?: string | null
+          reference?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -38,6 +140,48 @@ export type Database = {
           id?: string
           phone?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      shipments: {
+        Row: {
+          created_at: string
+          destination: string
+          eta: string | null
+          id: string
+          origin: string
+          progress: number
+          status: string
+          tracking_number: string
+          updated_at: string
+          user_id: string
+          weight: string | null
+        }
+        Insert: {
+          created_at?: string
+          destination: string
+          eta?: string | null
+          id?: string
+          origin: string
+          progress?: number
+          status?: string
+          tracking_number: string
+          updated_at?: string
+          user_id: string
+          weight?: string | null
+        }
+        Update: {
+          created_at?: string
+          destination?: string
+          eta?: string | null
+          id?: string
+          origin?: string
+          progress?: number
+          status?: string
+          tracking_number?: string
+          updated_at?: string
+          user_id?: string
+          weight?: string | null
         }
         Relationships: []
       }
