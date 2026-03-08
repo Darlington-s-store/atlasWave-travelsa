@@ -9,9 +9,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, Globe, MoreHorizontal, Eye, Pencil, Inbox, CheckCircle, Clock, XCircle, FileText } from "lucide-react";
+import { Search, Globe, MoreHorizontal, Eye, Pencil, Inbox, CheckCircle, Clock, XCircle, FileText, LayoutGrid, List } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import KanbanBoard from "@/components/admin/KanbanBoard";
 
 const APP_STATUSES = ["pending", "in-review", "processing", "approved", "rejected"];
 const statusStyle: Record<string, string> = {
@@ -22,6 +23,14 @@ const statusStyle: Record<string, string> = {
   rejected: "bg-destructive/10 text-destructive",
 };
 
+const KANBAN_COLUMNS = [
+  { id: "pending", label: "Pending", color: "bg-accent" },
+  { id: "in-review", label: "In Review", color: "bg-primary" },
+  { id: "processing", label: "Processing", color: "bg-primary" },
+  { id: "approved", label: "Approved", color: "bg-secondary" },
+  { id: "rejected", label: "Rejected", color: "bg-destructive" },
+];
+
 const AdminVisaApplications = () => {
   const { toast } = useToast();
   const [apps, setApps] = useState<any[]>([]);
@@ -29,6 +38,7 @@ const AdminVisaApplications = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<"table" | "kanban">("table");
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [viewingApp, setViewingApp] = useState<any>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -57,6 +67,16 @@ const AdminVisaApplications = () => {
     fetchApps();
   };
 
+  const handleKanbanMove = async (itemId: string, newStatus: string) => {
+    const { error } = await supabase.from("applications").update({ status: newStatus }).eq("id", itemId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    setApps(prev => prev.map(a => a.id === itemId ? { ...a, status: newStatus } : a));
+    toast({ title: "Status Updated", description: `Application moved to ${newStatus.replace(/-/g, " ")}` });
+  };
+
   const appTypes = [...new Set(apps.map(a => a.type))];
 
   const filtered = apps.filter(a => {
@@ -69,9 +89,29 @@ const AdminVisaApplications = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h2 className="text-[22px] font-sans font-bold text-foreground tracking-tight">Visa & Immigration Applications</h2>
-          <p className="text-[13px] text-muted-foreground mt-0.5">Manage all visa applications and immigration cases.</p>
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+          <div>
+            <h2 className="text-[22px] font-sans font-bold text-foreground tracking-tight">Visa & Immigration Applications</h2>
+            <p className="text-[13px] text-muted-foreground mt-0.5">Manage all visa applications and immigration cases.</p>
+          </div>
+          <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5 border border-border/60">
+            <Button
+              variant={viewMode === "table" ? "default" : "ghost"}
+              size="sm"
+              className="h-8 gap-1.5 text-[12px]"
+              onClick={() => setViewMode("table")}
+            >
+              <List className="w-3.5 h-3.5" /> Table
+            </Button>
+            <Button
+              variant={viewMode === "kanban" ? "default" : "ghost"}
+              size="sm"
+              className="h-8 gap-1.5 text-[12px]"
+              onClick={() => setViewMode("kanban")}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" /> Kanban
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -121,57 +161,74 @@ const AdminVisaApplications = () => {
           </CardContent>
         </Card>
 
-        <Card className="shadow-card rounded-xl border border-border/60 overflow-hidden">
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="flex items-center justify-center py-16"><p className="text-muted-foreground text-[13px]">Loading...</p></div>
-            ) : filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4"><Inbox className="w-8 h-8 text-muted-foreground/40" /></div>
-                <p className="text-[15px] font-semibold text-foreground">No applications found</p>
-                <p className="text-[13px] text-muted-foreground mt-1">Applications will appear here as users submit them.</p>
-              </div>
-            ) : (
-              <>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/30 hover:bg-muted/30">
-                      <TableHead className="text-[11px] uppercase tracking-wider font-bold">Title</TableHead>
-                      <TableHead className="text-[11px] uppercase tracking-wider font-bold">Type</TableHead>
-                      <TableHead className="text-[11px] uppercase tracking-wider font-bold">Status</TableHead>
-                      <TableHead className="text-[11px] uppercase tracking-wider font-bold">Submitted</TableHead>
-                      <TableHead className="text-[11px] uppercase tracking-wider font-bold">Updated</TableHead>
-                      <TableHead className="w-10"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filtered.map(app => (
-                      <TableRow key={app.id} className="hover:bg-muted/20 transition-colors">
-                        <TableCell className="text-[13px] font-semibold text-foreground">{app.title}</TableCell>
-                        <TableCell className="text-[13px] text-muted-foreground">{app.type}</TableCell>
-                        <TableCell><span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg capitalize ${statusStyle[app.status] || "bg-muted"}`}>{app.status}</span></TableCell>
-                        <TableCell className="text-[13px] text-muted-foreground">{new Date(app.created_at).toLocaleDateString()}</TableCell>
-                        <TableCell className="text-[13px] text-muted-foreground">{new Date(app.updated_at).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => { setViewingApp(app); setViewDialogOpen(true); }}><Eye className="w-4 h-4 mr-2" /> View Details</DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => { setEditingApp(app); setEditStatus(app.status); setEditNotes(app.details || ""); setEditDialogOpen(true); }}><Pencil className="w-4 h-4 mr-2" /> Update Status</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                <div className="flex items-center justify-between px-5 py-3 border-t border-border bg-muted/20">
-                  <p className="text-[12px] text-muted-foreground font-medium">Showing {filtered.length} of {apps.length} applications</p>
+        {/* Kanban View */}
+        {viewMode === "kanban" && (
+          loading ? (
+            <div className="flex items-center justify-center py-16"><p className="text-muted-foreground text-[13px]">Loading...</p></div>
+          ) : (
+            <KanbanBoard
+              items={filtered}
+              columns={KANBAN_COLUMNS}
+              onMoveItem={handleKanbanMove}
+              onItemClick={(item) => { setViewingApp(item); setViewDialogOpen(true); }}
+            />
+          )
+        )}
+
+        {/* Table View */}
+        {viewMode === "table" && (
+          <Card className="shadow-card rounded-xl border border-border/60 overflow-hidden">
+            <CardContent className="p-0">
+              {loading ? (
+                <div className="flex items-center justify-center py-16"><p className="text-muted-foreground text-[13px]">Loading...</p></div>
+              ) : filtered.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4"><Inbox className="w-8 h-8 text-muted-foreground/40" /></div>
+                  <p className="text-[15px] font-semibold text-foreground">No applications found</p>
+                  <p className="text-[13px] text-muted-foreground mt-1">Applications will appear here as users submit them.</p>
                 </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+              ) : (
+                <>
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/30 hover:bg-muted/30">
+                        <TableHead className="text-[11px] uppercase tracking-wider font-bold">Title</TableHead>
+                        <TableHead className="text-[11px] uppercase tracking-wider font-bold">Type</TableHead>
+                        <TableHead className="text-[11px] uppercase tracking-wider font-bold">Status</TableHead>
+                        <TableHead className="text-[11px] uppercase tracking-wider font-bold">Submitted</TableHead>
+                        <TableHead className="text-[11px] uppercase tracking-wider font-bold">Updated</TableHead>
+                        <TableHead className="w-10"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filtered.map(app => (
+                        <TableRow key={app.id} className="hover:bg-muted/20 transition-colors">
+                          <TableCell className="text-[13px] font-semibold text-foreground">{app.title}</TableCell>
+                          <TableCell className="text-[13px] text-muted-foreground">{app.type}</TableCell>
+                          <TableCell><span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg capitalize ${statusStyle[app.status] || "bg-muted"}`}>{app.status}</span></TableCell>
+                          <TableCell className="text-[13px] text-muted-foreground">{new Date(app.created_at).toLocaleDateString()}</TableCell>
+                          <TableCell className="text-[13px] text-muted-foreground">{new Date(app.updated_at).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => { setViewingApp(app); setViewDialogOpen(true); }}><Eye className="w-4 h-4 mr-2" /> View Details</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => { setEditingApp(app); setEditStatus(app.status); setEditNotes(app.details || ""); setEditDialogOpen(true); }}><Pencil className="w-4 h-4 mr-2" /> Update Status</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  <div className="flex items-center justify-between px-5 py-3 border-t border-border bg-muted/20">
+                    <p className="text-[12px] text-muted-foreground font-medium">Showing {filtered.length} of {apps.length} applications</p>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* View Dialog */}
