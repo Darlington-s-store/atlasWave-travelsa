@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Search, Globe, MoreHorizontal, Eye, Pencil, Inbox, CheckCircle, Clock, XCircle, FileText, LayoutGrid, List, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { notifyStatusChange } from "@/lib/notifyStatusChange";
 import { useAuth } from "@/contexts/AuthContext";
 import KanbanBoard from "@/components/admin/KanbanBoard";
 
