@@ -51,9 +51,9 @@ const AdminOverview = () => {
         </div>
 
         {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 md:gap-5">
           <Card className="lg:col-span-3 shadow-card rounded-xl border border-border/60">
-            <CardHeader className="flex-row items-center justify-between pb-1 pt-5 px-6">
+            <CardHeader className="flex-row items-center justify-between pb-1 pt-4 md:pt-5 px-4 md:px-6">
               <CardTitle className="text-[15px] font-semibold text-foreground">Revenue Trend</CardTitle>
               <span className="text-[11px] font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded-md">No data yet</span>
             </CardHeader>
