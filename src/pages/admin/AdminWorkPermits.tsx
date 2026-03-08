@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { notifyStatusChange } from "@/lib/notifyStatusChange";
 import { useAuth } from "@/contexts/AuthContext";
 import KanbanBoard from "@/components/admin/KanbanBoard";
 
@@ -99,12 +100,18 @@ const AdminWorkPermits = () => {
 
   const handleUpdate = async () => {
     if (!editingApp) return;
+    const previousStatus = editingApp.status;
     const updates: any = { status: editForm.status };
     if (editForm.details.trim()) updates.details = editForm.details;
     const { error } = await supabase.from("applications").update(updates).eq("id", editingApp.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Application Updated" });
     setEditDialogOpen(false);
+    notifyStatusChange({
+      type: "application_status_update",
+      userId: editingApp.user_id,
+      data: { title: editingApp.title, type: editingApp.type, previousStatus, newStatus: editForm.status, notes: editForm.details || "" },
+    });
     fetchApps();
   };
 
@@ -125,6 +132,8 @@ const AdminWorkPermits = () => {
     toast({ title: "Application Deleted" }); fetchApps();
   };
   const handleKanbanMove = async (itemId: string, newStatus: string) => {
+    const app = applications.find(a => a.id === itemId);
+    const previousStatus = app?.status || "";
     const { error } = await supabase.from("applications").update({ status: newStatus }).eq("id", itemId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -132,6 +141,13 @@ const AdminWorkPermits = () => {
     }
     setApplications(prev => prev.map(a => a.id === itemId ? { ...a, status: newStatus } : a));
     toast({ title: "Stage Updated", description: `Application moved to ${newStatus.replace(/-/g, " ")}` });
+    if (app) {
+      notifyStatusChange({
+        type: "application_status_update",
+        userId: app.user_id,
+        data: { title: app.title, type: app.type, previousStatus, newStatus, notes: "" },
+      });
+    }
   };
 
   const filtered = applications.filter(a => {

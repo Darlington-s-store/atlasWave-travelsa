@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Search, Globe, MoreHorizontal, Eye, Pencil, Inbox, CheckCircle, Clock, XCircle, FileText, LayoutGrid, List, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { notifyStatusChange } from "@/lib/notifyStatusChange";
 import { useAuth } from "@/contexts/AuthContext";
 import KanbanBoard from "@/components/admin/KanbanBoard";
 
@@ -64,12 +65,25 @@ const AdminVisaApplications = () => {
 
   const handleUpdateApp = async () => {
     if (!editingApp) return;
+    const previousStatus = editingApp.status;
     const updates: any = { status: editStatus };
     if (editNotes.trim()) updates.details = editNotes;
     const { error } = await supabase.from("applications").update(updates).eq("id", editingApp.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Application Updated" });
     setEditDialogOpen(false);
+    // Send notification
+    notifyStatusChange({
+      type: "application_status_update",
+      userId: editingApp.user_id,
+      data: {
+        title: editingApp.title,
+        type: editingApp.type,
+        previousStatus,
+        newStatus: editStatus,
+        notes: editNotes || "",
+      },
+    });
     fetchApps();
   };
 
@@ -90,6 +104,8 @@ const AdminVisaApplications = () => {
     toast({ title: "Application Deleted" }); fetchApps();
   };
   const handleKanbanMove = async (itemId: string, newStatus: string) => {
+    const app = apps.find(a => a.id === itemId);
+    const previousStatus = app?.status || "";
     const { error } = await supabase.from("applications").update({ status: newStatus }).eq("id", itemId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -97,6 +113,13 @@ const AdminVisaApplications = () => {
     }
     setApps(prev => prev.map(a => a.id === itemId ? { ...a, status: newStatus } : a));
     toast({ title: "Status Updated", description: `Application moved to ${newStatus.replace(/-/g, " ")}` });
+    if (app) {
+      notifyStatusChange({
+        type: "application_status_update",
+        userId: app.user_id,
+        data: { title: app.title, type: app.type, previousStatus, newStatus, notes: "" },
+      });
+    }
   };
 
   const appTypes = [...new Set(apps.map(a => a.type))];

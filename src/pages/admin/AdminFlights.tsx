@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Search, Plane, MoreHorizontal, Eye, Pencil, Inbox, Clock, CheckCircle, XCircle, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { notifyStatusChange } from "@/lib/notifyStatusChange";
 import { useAuth } from "@/contexts/AuthContext";
 
 const STATUSES = ["pending", "confirmed", "cancelled"];
@@ -45,9 +46,18 @@ const AdminFlights = () => {
   };
 
   const updateStatus = async (id: string, status: string) => {
+    const booking = bookings.find(b => b.id === id);
     const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Status Updated" }); fetchBookings();
+    toast({ title: "Status Updated" });
+    if (booking) {
+      notifyStatusChange({
+        type: "booking_status_update",
+        userId: booking.user_id,
+        data: { route: booking.route, date: booking.date, provider: booking.provider || "", bookingType: "flight", newStatus: status },
+      });
+    }
+    fetchBookings();
   };
 
   const handleCreate = async () => {
