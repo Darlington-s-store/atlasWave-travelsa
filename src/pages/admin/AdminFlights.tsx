@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Search, Plane, MoreHorizontal, Eye, Pencil, Inbox, Clock, CheckCircle, XCircle, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { notifyStatusChange } from "@/lib/notifyStatusChange";
 import { useAuth } from "@/contexts/AuthContext";
 
 const STATUSES = ["pending", "confirmed", "cancelled"];
