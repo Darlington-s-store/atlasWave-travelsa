@@ -433,9 +433,7 @@ function ApplicationsTab({ applications }: { applications: Application[] }) {
         </div>
       )}
     </div>
-  );
-    </div>
-  );
+}
 }
 
 // --- BOOKINGS TAB ---
