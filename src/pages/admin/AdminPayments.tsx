@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,84 +12,93 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { DollarSign, Clock, CheckCircle, Download, Plus, MoreHorizontal, Inbox, Eye, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-interface Transaction {
-  id: string;
-  user: string;
-  service: string;
-  amount: string;
-  date: string;
-  status: string;
-  method: string;
-}
+import { supabase } from "@/integrations/supabase/client";
 
 const SERVICES = ["Visa Processing", "Logistics Support", "Consultation Fee", "Education Visa", "Work Permit", "Flight Booking"];
 const METHODS = ["Mastercard", "MoMo"];
-const TX_STATUSES = ["Paid", "Pending", "Failed"];
+const TX_STATUSES = ["completed", "pending", "failed", "refunded"];
 
 const statusStyle: Record<string, string> = {
-  Paid: "bg-secondary/15 text-secondary border border-secondary/25",
-  Pending: "bg-accent/15 text-accent-foreground border border-accent/25",
-  Failed: "bg-destructive/10 text-destructive border border-destructive/20",
+  completed: "bg-secondary/15 text-secondary border border-secondary/25",
+  paid: "bg-secondary/15 text-secondary border border-secondary/25",
+  pending: "bg-accent/15 text-accent-foreground border border-accent/25",
+  failed: "bg-destructive/10 text-destructive border border-destructive/20",
+  refunded: "bg-muted text-muted-foreground border border-border",
 };
-
-let nextTxId = 1;
-const generateTxId = () => `#TR-${String(nextTxId++).padStart(5, "0")}`;
 
 const AdminPayments = () => {
   const { toast } = useToast();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, string>>({});
   const [statusFilter, setStatusFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
-  const [viewingTx, setViewingTx] = useState<Transaction | null>(null);
-  const [deletingTx, setDeletingTx] = useState<Transaction | null>(null);
+  const [editingTx, setEditingTx] = useState<any | null>(null);
+  const [viewingTx, setViewingTx] = useState<any | null>(null);
+  const [deletingTx, setDeletingTx] = useState<any | null>(null);
 
-  const [form, setForm] = useState({ user: "", service: SERVICES[0], amount: "", status: "Pending", method: METHODS[0] });
-  const resetForm = () => setForm({ user: "", service: SERVICES[0], amount: "", status: "Pending", method: METHODS[0] });
+  const [form, setForm] = useState({ description: SERVICES[0], amount: "", status: "pending", payment_method: METHODS[0] });
+  const resetForm = () => setForm({ description: SERVICES[0], amount: "", status: "pending", payment_method: METHODS[0] });
 
-  const openCreate = () => { resetForm(); setEditingTx(null); setDialogOpen(true); };
-  const openEdit = (tx: Transaction) => {
+  const fetchData = async () => {
+    setLoading(true);
+    const [payRes, profRes] = await Promise.all([
+      supabase.from("payments").select("*").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id, full_name"),
+    ]);
+    setTransactions(payRes.data || []);
+    const pMap: Record<string, string> = {};
+    (profRes.data || []).forEach((p: any) => { pMap[p.id] = p.full_name || "Unknown"; });
+    setProfiles(pMap);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchData(); }, []);
+
+  const openEdit = (tx: any) => {
     setEditingTx(tx);
-    setForm({ user: tx.user, service: tx.service, amount: tx.amount.replace(/[$,]/g, ""), status: tx.status, method: tx.method });
+    setForm({ description: tx.description || "", amount: String(tx.amount), status: tx.status, payment_method: tx.payment_method || "Mastercard" });
     setDialogOpen(true);
   };
 
-  const handleSave = () => {
-    if (!form.user.trim() || !form.amount.trim()) {
-      toast({ title: "Validation Error", description: "User and amount are required.", variant: "destructive" });
+  const handleSave = async () => {
+    if (!form.amount.trim()) {
+      toast({ title: "Validation Error", description: "Amount is required.", variant: "destructive" });
       return;
     }
-    const amountFormatted = `$${parseFloat(form.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
     if (editingTx) {
-      setTransactions(prev => prev.map(t => t.id === editingTx.id ? { ...t, user: form.user, service: form.service, amount: amountFormatted, status: form.status, method: form.method } : t));
+      const { error } = await supabase.from("payments").update({
+        description: form.description,
+        amount: parseFloat(form.amount),
+        status: form.status,
+        payment_method: form.payment_method,
+      }).eq("id", editingTx.id);
+      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       toast({ title: "Transaction Updated" });
-    } else {
-      const newTx: Transaction = { id: generateTxId(), user: form.user, service: form.service, amount: amountFormatted, date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), status: form.status, method: form.method };
-      setTransactions(prev => [newTx, ...prev]);
-      toast({ title: "Payment Recorded", description: `${amountFormatted} from ${form.user}` });
     }
     setDialogOpen(false);
     resetForm();
+    fetchData();
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deletingTx) {
-      setTransactions(prev => prev.filter(t => t.id !== deletingTx.id));
+      await supabase.from("payments").delete().eq("id", deletingTx.id);
       toast({ title: "Transaction Deleted" });
     }
     setDeleteDialogOpen(false);
     setDeletingTx(null);
+    fetchData();
   };
 
   const filtered = transactions.filter(t => statusFilter === "all" || t.status === statusFilter);
 
-  const totalRevenue = transactions.filter(t => t.status === "Paid").reduce((sum, t) => sum + parseFloat(t.amount.replace(/[$,]/g, "")), 0);
-  const pendingCount = transactions.filter(t => t.status === "Pending").length;
-  const paidCount = transactions.filter(t => t.status === "Paid").length;
+  const totalRevenue = transactions.filter(t => t.status === "completed" || t.status === "paid").reduce((sum, t) => sum + Number(t.amount), 0);
+  const pendingCount = transactions.filter(t => t.status === "pending").length;
+  const paidCount = transactions.filter(t => t.status === "completed" || t.status === "paid").length;
 
   return (
     <AdminLayout>
@@ -97,14 +106,11 @@ const AdminPayments = () => {
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
           <div>
             <h2 className="text-[22px] font-sans font-bold text-foreground tracking-tight">Payment Monitoring</h2>
-            <p className="text-[13px] text-muted-foreground mt-0.5">Track and manage all transactions.</p>
+            <p className="text-[13px] text-muted-foreground mt-0.5">Track and manage all transactions from the database.</p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="gap-1.5 h-9 text-[13px] rounded-lg">
               <Download className="w-4 h-4" /> Export
-            </Button>
-            <Button size="sm" className="gap-1.5 h-9 text-[13px] font-semibold rounded-lg px-4" onClick={openCreate}>
-              <Plus className="w-4 h-4" /> Record Payment
             </Button>
           </div>
         </div>
@@ -154,34 +160,31 @@ const AdminPayments = () => {
                 <SelectTrigger className="w-[130px] h-9 text-[13px]"><SelectValue placeholder="Status: All" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Status: All</SelectItem>
-                  {TX_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  {TX_STATUSES.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
                 </SelectContent>
               </Select>
               <span className="text-[12px] text-muted-foreground font-medium ml-auto">{filtered.length} transactions</span>
             </div>
 
-            {filtered.length === 0 ? (
+            {loading ? (
+              <div className="flex items-center justify-center py-16"><p className="text-muted-foreground">Loading...</p></div>
+            ) : filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
                   <Inbox className="w-8 h-8 text-muted-foreground/40" />
                 </div>
-                <p className="text-[15px] font-semibold text-foreground">No transactions yet</p>
+                <p className="text-[15px] font-semibold text-foreground">No transactions found</p>
                 <p className="text-[13px] text-muted-foreground mt-1 max-w-[300px]">
-                  {transactions.length === 0 ? "Record your first payment to get started." : "No transactions match the selected filter."}
+                  {transactions.length === 0 ? "Payments will appear here when users make them." : "No transactions match the selected filter."}
                 </p>
-                {transactions.length === 0 && (
-                  <Button className="mt-4 gap-1.5" onClick={openCreate}>
-                    <Plus className="w-4 h-4" /> Record Payment
-                  </Button>
-                )}
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30 hover:bg-muted/30">
-                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">ID</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">Reference</TableHead>
                     <TableHead className="text-[11px] uppercase tracking-wider font-bold">User</TableHead>
-                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">Service</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">Description</TableHead>
                     <TableHead className="text-[11px] uppercase tracking-wider font-bold">Amount</TableHead>
                     <TableHead className="text-[11px] uppercase tracking-wider font-bold">Date</TableHead>
                     <TableHead className="text-[11px] uppercase tracking-wider font-bold">Status</TableHead>
@@ -192,22 +195,17 @@ const AdminPayments = () => {
                 <TableBody>
                   {filtered.map(tx => (
                     <TableRow key={tx.id} className="hover:bg-muted/20 transition-colors">
-                      <TableCell className="font-mono text-[12px] text-primary font-bold">{tx.id}</TableCell>
+                      <TableCell className="font-mono text-[12px] text-primary font-bold">{tx.reference || tx.id.slice(0, 8)}</TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-bold text-primary shrink-0">
-                            {tx.user.split(" ").map(n => n[0]).join("")}
-                          </div>
-                          <span className="font-semibold text-[13px] text-foreground">{tx.user}</span>
-                        </div>
+                        <span className="font-semibold text-[13px] text-foreground">{profiles[tx.user_id] || "Unknown"}</span>
                       </TableCell>
-                      <TableCell className="text-[13px] text-muted-foreground">{tx.service}</TableCell>
-                      <TableCell className="text-[13px] font-bold text-foreground">{tx.amount}</TableCell>
-                      <TableCell className="text-[13px] text-muted-foreground">{tx.date}</TableCell>
+                      <TableCell className="text-[13px] text-muted-foreground">{tx.description || "Payment"}</TableCell>
+                      <TableCell className="text-[13px] font-bold text-foreground">${Number(tx.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}</TableCell>
+                      <TableCell className="text-[13px] text-muted-foreground">{new Date(tx.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</TableCell>
                       <TableCell>
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold ${statusStyle[tx.status] || ""}`}>{tx.status}</span>
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold capitalize ${statusStyle[tx.status] || ""}`}>{tx.status}</span>
                       </TableCell>
-                      <TableCell className="text-[13px] text-muted-foreground font-medium">{tx.method}</TableCell>
+                      <TableCell className="text-[13px] text-muted-foreground font-medium">{tx.payment_method || "Card"}</TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -237,50 +235,44 @@ const AdminPayments = () => {
         </Card>
       </div>
 
-      {/* Create/Edit Dialog */}
+      {/* Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-[450px]">
           <DialogHeader>
-            <DialogTitle>{editingTx ? "Edit Transaction" : "Record Payment"}</DialogTitle>
+            <DialogTitle>Edit Transaction</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label>User Name *</Label>
-              <Input value={form.user} onChange={e => setForm(f => ({ ...f, user: e.target.value }))} placeholder="Full name" />
+              <Label>Description</Label>
+              <Select value={form.description} onValueChange={v => setForm(f => ({ ...f, description: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{SERVICES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Service</Label>
-                <Select value={form.service} onValueChange={v => setForm(f => ({ ...f, service: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{SERVICES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Amount ($) *</Label>
+                <Label>Amount ($)</Label>
                 <Input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" />
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Status</Label>
                 <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{TX_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                  <SelectContent>{TX_STATUSES.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Method</Label>
-                <Select value={form.method} onValueChange={v => setForm(f => ({ ...f, method: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{METHODS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Method</Label>
+              <Select value={form.payment_method} onValueChange={v => setForm(f => ({ ...f, payment_method: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{METHODS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
             <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-            <Button onClick={handleSave}>{editingTx ? "Save Changes" : "Record Payment"}</Button>
+            <Button onClick={handleSave}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -292,16 +284,16 @@ const AdminPayments = () => {
           {viewingTx && (
             <div className="space-y-3 py-2 text-[13px]">
               <div className="grid grid-cols-2 gap-3">
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">ID</span><span className="font-mono font-bold text-primary">{viewingTx.id}</span></div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Date</span>{viewingTx.date}</div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">User</span><span className="font-semibold">{viewingTx.user}</span></div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Amount</span><span className="font-bold">{viewingTx.amount}</span></div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Service</span>{viewingTx.service}</div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Method</span>{viewingTx.method}</div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Reference</span><span className="font-mono font-bold text-primary">{viewingTx.reference || viewingTx.id.slice(0, 8)}</span></div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Date</span>{new Date(viewingTx.created_at).toLocaleDateString()}</div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">User</span><span className="font-semibold">{profiles[viewingTx.user_id] || "Unknown"}</span></div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Amount</span><span className="font-bold">${Number(viewingTx.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Description</span>{viewingTx.description || "Payment"}</div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Method</span>{viewingTx.payment_method || "Card"}</div>
               </div>
               <div>
                 <span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-1">Status</span>
-                <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold ${statusStyle[viewingTx.status] || ""}`}>{viewingTx.status}</span>
+                <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold capitalize ${statusStyle[viewingTx.status] || ""}`}>{viewingTx.status}</span>
               </div>
             </div>
           )}
@@ -316,7 +308,7 @@ const AdminPayments = () => {
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader><DialogTitle>Delete Transaction</DialogTitle></DialogHeader>
           <p className="text-[13px] text-muted-foreground py-2">
-            Are you sure you want to delete transaction <span className="font-bold text-foreground">{deletingTx?.id}</span>? This cannot be undone.
+            Are you sure you want to delete this transaction? This cannot be undone.
           </p>
           <DialogFooter>
             <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>

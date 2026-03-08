@@ -26,6 +26,7 @@ const sidebarItems = [
   { id: "applications", label: "Applications", icon: FileText },
   { id: "appointments", label: "Appointments", icon: CalendarDays },
   { id: "payments", label: "Payments", icon: CreditCard },
+  { id: "invoices", label: "Invoices", icon: FileText },
   { id: "shipments", label: "Logistics", icon: Package },
   { id: "bookings", label: "Travel", icon: Plane },
   { id: "documents", label: "Documents", icon: FolderOpen },
@@ -192,6 +193,7 @@ const Dashboard = () => {
           {activeTab === "applications" && <ApplicationsTab applications={applications} onRefresh={fetchAllData} userId={user?.id || ""} />}
           {activeTab === "appointments" && <AppointmentsTab consultations={consultations} onRefresh={fetchAllData} userId={user?.id || ""} />}
           {activeTab === "payments" && <PaymentsTab payments={payments} onRefresh={fetchAllData} userId={user?.id || ""} />}
+          {activeTab === "invoices" && <InvoicesTab userId={user?.id || ""} />}
           {activeTab === "bookings" && <BookingsTab bookings={bookings} onRefresh={fetchAllData} userId={user?.id || ""} />}
           {activeTab === "shipments" && <ShipmentsTab shipments={shipments} />}
           {activeTab === "documents" && <DocumentsTab documents={documents} onRefresh={fetchAllData} userId={user?.id || ""} />}
@@ -842,6 +844,102 @@ function PaymentsTab({ payments, onRefresh, userId }: { payments: any[]; onRefre
   );
 }
 
+
+// --- INVOICES TAB ---
+function InvoicesTab({ userId }: { userId: string }) {
+  const { user } = useAuth();
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("invoices")
+        .select("*")
+        .order("created_at", { ascending: false });
+      setInvoices(data || []);
+      setLoading(false);
+    };
+    fetchInvoices();
+  }, [userId]);
+
+  const invoiceStatusConfig: Record<string, { color: string; label: string }> = {
+    issued: { color: "bg-amber-100 text-amber-800 border-amber-200", label: "Issued" },
+    paid: { color: "bg-emerald-100 text-emerald-800 border-emerald-200", label: "Paid" },
+    refunded: { color: "bg-blue-100 text-blue-800 border-blue-200", label: "Refunded" },
+    cancelled: { color: "bg-red-100 text-red-800 border-red-200", label: "Cancelled" },
+  };
+
+  const currSym = (c: string) => ({ USD: "$", EUR: "€", GBP: "£", GHS: "₵", NGN: "₦" }[c] || c + " ");
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-xl font-bold text-foreground">Invoices</h2>
+      </div>
+
+      {loading ? (
+        <div className="bg-background rounded-xl border p-12 text-center">
+          <p className="text-muted-foreground">Loading invoices...</p>
+        </div>
+      ) : invoices.length === 0 ? (
+        <div className="bg-background rounded-xl border p-12 text-center">
+          <FileText className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+          <h3 className="font-display font-semibold text-foreground mb-1">No invoices yet</h3>
+          <p className="text-sm text-muted-foreground">Invoices are automatically generated when you make payments.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {invoices.map((inv: any) => {
+            const cfg = invoiceStatusConfig[inv.status] || invoiceStatusConfig.issued;
+            return (
+              <div key={inv.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl border bg-background hover:shadow-md transition-shadow gap-3">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+                    <FileText className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-mono font-bold text-primary text-sm">{inv.invoice_number}</p>
+                    <p className="text-sm text-foreground">{inv.description || "Payment"}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {inv.payment_method || "Card"} · {new Date(inv.issued_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="font-display font-bold text-foreground text-lg">
+                    {currSym(inv.currency)}{Number(inv.amount).toLocaleString()}
+                  </span>
+                  <Badge className={cfg.color + " border text-[10px]"}>{cfg.label}</Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    title="Download Invoice"
+                    onClick={() => generateReceiptPDF({
+                      reference: inv.invoice_number,
+                      date: new Date(inv.issued_at).toLocaleDateString(),
+                      description: inv.description || "Payment",
+                      amount: Number(inv.amount),
+                      currency: inv.currency || "USD",
+                      paymentMethod: inv.payment_method || "Card",
+                      status: inv.status,
+                      customerName: user?.fullName || "Customer",
+                      customerEmail: user?.email || "",
+                    })}
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function ShipmentsTab({ shipments }: { shipments: any[] }) {
   return (
