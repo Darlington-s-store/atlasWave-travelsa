@@ -7,6 +7,7 @@ import PartnersSection from "@/components/PartnersSection";
 import BackToTop from "@/components/BackToTop";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { WorkPermitsSection, LogisticsSection, CTASection } from "@/components/HomeSections";
+import { DealsSection, NewsletterSection } from "@/components/HomeExtras";
 
 const Index = () => {
   return (
@@ -15,10 +16,12 @@ const Index = () => {
       <main>
         <section id="hero"><HeroSection /></section>
         <section id="services"><ServicesSection /></section>
+        <section id="deals"><DealsSection /></section>
         <section id="work-permits"><WorkPermitsSection /></section>
         <section id="logistics"><LogisticsSection /></section>
         <section id="testimonials"><TestimonialsSection /></section>
         <section id="partners"><PartnersSection /></section>
+        <section id="newsletter"><NewsletterSection /></section>
         <section id="cta"><CTASection /></section>
       </main>
       <Footer />
