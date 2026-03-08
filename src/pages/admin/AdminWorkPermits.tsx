@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -11,13 +11,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Search, Briefcase, MoreHorizontal, Eye, Pencil, Inbox, Clock,
-  CheckCircle, XCircle, FileText, Globe, Star, Calculator,
+  CheckCircle, XCircle, FileText, Globe, Calculator, LayoutGrid, List,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import KanbanBoard from "@/components/admin/KanbanBoard";
 
 const PROGRAMMES = ["Schengen Work Permit", "Canada LMIA", "Germany Opportunity Card", "USA NCLEX"];
 const STAGES = [
@@ -40,13 +40,24 @@ const statusStyle: Record<string, string> = {
   rejected: "bg-destructive/10 text-destructive",
 };
 
-// Eligibility scoring for Germany Opportunity Card
+const KANBAN_COLUMNS = [
+  { id: "submitted", label: "Submitted", color: "bg-accent" },
+  { id: "documents-review", label: "Docs Review", color: "bg-primary" },
+  { id: "eligibility-check", label: "Eligibility", color: "bg-primary" },
+  { id: "processing", label: "Processing", color: "bg-accent" },
+  { id: "employer-match", label: "Employer Match", color: "bg-primary" },
+  { id: "interview-prep", label: "Interview", color: "bg-accent" },
+  { id: "decision-pending", label: "Decision", color: "bg-accent" },
+  { id: "approved", label: "Approved", color: "bg-secondary" },
+  { id: "rejected", label: "Rejected", color: "bg-destructive" },
+];
+
 interface EligibilityScore {
-  qualification: number;   // 0-4
-  experience: number;      // 0-3
-  language: number;        // 0-4
-  age: number;             // 0-2
-  germanConnection: number;// 0-1
+  qualification: number;
+  experience: number;
+  language: number;
+  age: number;
+  germanConnection: number;
 }
 
 const calculateScore = (s: EligibilityScore) => s.qualification + s.experience + s.language + s.age + s.germanConnection;
@@ -58,6 +69,7 @@ const AdminWorkPermits = () => {
   const [search, setSearch] = useState("");
   const [programmeFilter, setProgrammeFilter] = useState("all");
   const [stageFilter, setStageFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<"table" | "kanban">("table");
 
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [viewingApp, setViewingApp] = useState<any>(null);
@@ -71,11 +83,10 @@ const AdminWorkPermits = () => {
 
   const fetchApps = async () => {
     setLoading(true);
-    // Fetch applications that are work-permit types
     const { data, error } = await supabase
       .from("applications")
       .select("*")
-      .in("type", ["work-permit", "Work Permit", "Schengen Work Permit", "Canada LMIA", "Germany Opportunity Card", "USA NCLEX", ...PROGRAMMES])
+      .in("type", ["work-permit", "Work Permit", ...PROGRAMMES])
       .order("created_at", { ascending: false });
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     setApplications(data || []);
@@ -91,6 +102,16 @@ const AdminWorkPermits = () => {
     toast({ title: "Application Updated" });
     setEditDialogOpen(false);
     fetchApps();
+  };
+
+  const handleKanbanMove = async (itemId: string, newStatus: string) => {
+    const { error } = await supabase.from("applications").update({ status: newStatus }).eq("id", itemId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    setApplications(prev => prev.map(a => a.id === itemId ? { ...a, status: newStatus } : a));
+    toast({ title: "Stage Updated", description: `Application moved to ${newStatus.replace(/-/g, " ")}` });
   };
 
   const filtered = applications.filter(a => {
@@ -111,12 +132,22 @@ const AdminWorkPermits = () => {
             <h2 className="text-[22px] font-sans font-bold text-foreground tracking-tight">Work Permit Management</h2>
             <p className="text-[13px] text-muted-foreground mt-0.5">Manage all work permit and immigration programme applications.</p>
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5 h-9" onClick={() => setScorerOpen(true)}>
-            <Calculator className="w-4 h-4" /> Eligibility Scorer
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="gap-1.5 h-8 text-[12px]" onClick={() => setScorerOpen(true)}>
+              <Calculator className="w-3.5 h-3.5" /> Scorer
+            </Button>
+            <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5 border border-border/60">
+              <Button variant={viewMode === "table" ? "default" : "ghost"} size="sm" className="h-8 gap-1.5 text-[12px]" onClick={() => setViewMode("table")}>
+                <List className="w-3.5 h-3.5" /> Table
+              </Button>
+              <Button variant={viewMode === "kanban" ? "default" : "ghost"} size="sm" className="h-8 gap-1.5 text-[12px]" onClick={() => setViewMode("kanban")}>
+                <LayoutGrid className="w-3.5 h-3.5" /> Kanban
+              </Button>
+            </div>
+          </div>
         </div>
 
-        {/* Programme Stats */}
+        {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: "Total Applications", value: applications.length, icon: Briefcase, bg: "bg-primary/10", color: "text-primary" },
@@ -182,71 +213,87 @@ const AdminWorkPermits = () => {
           </CardContent>
         </Card>
 
-        {/* Table */}
-        <Card className="shadow-card rounded-xl border border-border/60 overflow-hidden">
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="flex items-center justify-center py-16"><p className="text-muted-foreground text-[13px]">Loading...</p></div>
-            ) : filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4"><Inbox className="w-8 h-8 text-muted-foreground/40" /></div>
-                <p className="text-[15px] font-semibold text-foreground">No work permit applications</p>
-                <p className="text-[13px] text-muted-foreground mt-1">Applications will appear here as users submit them.</p>
-              </div>
-            ) : (
-              <>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/30 hover:bg-muted/30">
-                      <TableHead className="text-[11px] uppercase tracking-wider font-bold">Application</TableHead>
-                      <TableHead className="text-[11px] uppercase tracking-wider font-bold">Programme</TableHead>
-                      <TableHead className="text-[11px] uppercase tracking-wider font-bold">Stage</TableHead>
-                      <TableHead className="text-[11px] uppercase tracking-wider font-bold">Progress</TableHead>
-                      <TableHead className="text-[11px] uppercase tracking-wider font-bold">Submitted</TableHead>
-                      <TableHead className="w-10"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filtered.map(app => {
-                      const progress = stageProgress[app.status] || 10;
-                      return (
-                        <TableRow key={app.id} className="hover:bg-muted/20 transition-colors">
-                          <TableCell>
-                            <div>
-                              <span className="font-semibold text-[13px] text-foreground block">{app.title}</span>
-                              <span className="text-[11px] text-muted-foreground font-mono">{app.id.slice(0, 8)}...</span>
-                            </div>
-                          </TableCell>
-                          <TableCell><Badge variant="outline" className="text-[10px]">{app.type}</Badge></TableCell>
-                          <TableCell><span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg capitalize ${statusStyle[app.status] || "bg-muted"}`}>{app.status.replace(/-/g, " ")}</span></TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2 min-w-[120px]">
-                              <Progress value={progress} className="h-2 flex-1" />
-                              <span className="text-[11px] font-bold text-muted-foreground w-8">{progress}%</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-[13px] text-muted-foreground">{new Date(app.created_at).toLocaleDateString()}</TableCell>
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => { setViewingApp(app); setViewDialogOpen(true); }}><Eye className="w-4 h-4 mr-2" /> View Details</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => { setEditingApp(app); setEditForm({ status: app.status, details: app.details || "" }); setEditDialogOpen(true); }}><Pencil className="w-4 h-4 mr-2" /> Update Stage</DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-                <div className="flex items-center justify-between px-5 py-3 border-t border-border bg-muted/20">
-                  <p className="text-[12px] text-muted-foreground font-medium">Showing {filtered.length} of {applications.length}</p>
+        {/* Kanban View */}
+        {viewMode === "kanban" && (
+          loading ? (
+            <div className="flex items-center justify-center py-16"><p className="text-muted-foreground text-[13px]">Loading...</p></div>
+          ) : (
+            <KanbanBoard
+              items={filtered}
+              columns={KANBAN_COLUMNS}
+              onMoveItem={handleKanbanMove}
+              onItemClick={(item) => { setViewingApp(item); setViewDialogOpen(true); }}
+            />
+          )
+        )}
+
+        {/* Table View */}
+        {viewMode === "table" && (
+          <Card className="shadow-card rounded-xl border border-border/60 overflow-hidden">
+            <CardContent className="p-0">
+              {loading ? (
+                <div className="flex items-center justify-center py-16"><p className="text-muted-foreground text-[13px]">Loading...</p></div>
+              ) : filtered.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4"><Inbox className="w-8 h-8 text-muted-foreground/40" /></div>
+                  <p className="text-[15px] font-semibold text-foreground">No work permit applications</p>
+                  <p className="text-[13px] text-muted-foreground mt-1">Applications will appear here as users submit them.</p>
                 </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+              ) : (
+                <>
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/30 hover:bg-muted/30">
+                        <TableHead className="text-[11px] uppercase tracking-wider font-bold">Application</TableHead>
+                        <TableHead className="text-[11px] uppercase tracking-wider font-bold">Programme</TableHead>
+                        <TableHead className="text-[11px] uppercase tracking-wider font-bold">Stage</TableHead>
+                        <TableHead className="text-[11px] uppercase tracking-wider font-bold">Progress</TableHead>
+                        <TableHead className="text-[11px] uppercase tracking-wider font-bold">Submitted</TableHead>
+                        <TableHead className="w-10"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filtered.map(app => {
+                        const progress = stageProgress[app.status] || 10;
+                        return (
+                          <TableRow key={app.id} className="hover:bg-muted/20 transition-colors">
+                            <TableCell>
+                              <div>
+                                <span className="font-semibold text-[13px] text-foreground block">{app.title}</span>
+                                <span className="text-[11px] text-muted-foreground font-mono">{app.id.slice(0, 8)}...</span>
+                              </div>
+                            </TableCell>
+                            <TableCell><Badge variant="outline" className="text-[10px]">{app.type}</Badge></TableCell>
+                            <TableCell><span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg capitalize ${statusStyle[app.status] || "bg-muted"}`}>{app.status.replace(/-/g, " ")}</span></TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2 min-w-[120px]">
+                                <Progress value={progress} className="h-2 flex-1" />
+                                <span className="text-[11px] font-bold text-muted-foreground w-8">{progress}%</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-[13px] text-muted-foreground">{new Date(app.created_at).toLocaleDateString()}</TableCell>
+                            <TableCell>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => { setViewingApp(app); setViewDialogOpen(true); }}><Eye className="w-4 h-4 mr-2" /> View Details</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => { setEditingApp(app); setEditForm({ status: app.status, details: app.details || "" }); setEditDialogOpen(true); }}><Pencil className="w-4 h-4 mr-2" /> Update Stage</DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                  <div className="flex items-center justify-between px-5 py-3 border-t border-border bg-muted/20">
+                    <p className="text-[12px] text-muted-foreground font-medium">Showing {filtered.length} of {applications.length}</p>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* View Dialog */}
@@ -386,8 +433,6 @@ const AdminWorkPermits = () => {
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Score Result */}
             <Card className={`rounded-xl border-2 ${eligible ? "border-secondary bg-secondary/5" : "border-destructive/30 bg-destructive/5"}`}>
               <CardContent className="p-4 text-center">
                 <div className="flex items-center justify-center gap-3">
