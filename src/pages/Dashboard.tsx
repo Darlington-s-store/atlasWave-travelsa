@@ -121,9 +121,9 @@ const Dashboard = () => {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen lg:ml-64">
         {/* Top bar */}
-        <header className="bg-background border-b sticky top-0 z-30">
+        <header className="bg-background border-b fixed top-0 right-0 left-0 lg:left-64 z-30">
           <div className="flex items-center justify-between px-6 lg:px-8 h-16">
             {/* Mobile logo */}
             <Link to="/" className="flex lg:hidden items-center gap-2">
