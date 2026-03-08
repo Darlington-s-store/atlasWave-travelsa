@@ -19,9 +19,9 @@ const stats = [
 const AdminOverview = () => {
   return (
     <AdminLayout>
-      <div className="space-y-7">
+      <div className="space-y-5 md:space-y-7">
         <div>
-          <h2 className="text-[22px] font-sans font-bold text-foreground tracking-tight">Dashboard Overview</h2>
+          <h2 className="text-lg md:text-[22px] font-sans font-bold text-foreground tracking-tight">Dashboard Overview</h2>
           <p className="text-[13px] text-muted-foreground mt-0.5">Welcome back! Here's a summary of your platform.</p>
         </div>
 
