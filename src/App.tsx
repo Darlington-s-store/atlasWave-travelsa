@@ -49,7 +49,7 @@ const App = () => (
             <Route path="/work-permits/canada-lmia" element={<CanadaLMIA />} />
             <Route path="/work-permits/germany-chancenkarte" element={<GermanyChancenkarte />} />
             <Route path="/work-permits/usa-nclex" element={<UsaNclex />} />
-            <Route path="/work-permits/credential-evaluation" element={<WorkPermits />} />
+            <Route path="/work-permits/credential-evaluation" element={<CredentialEvaluation />} />
             <Route path="/documentation" element={<Documentation />} />
             <Route path="/consultation" element={<Consultation />} />
             <Route path="/contact" element={<Contact />} />
