@@ -36,6 +36,7 @@ import AdminPayments from "./pages/admin/AdminPayments";
 import AdminChatbot from "./pages/admin/AdminChatbot";
 import AdminShipments from "./pages/admin/AdminShipments";
 import AdminRefunds from "./pages/admin/AdminRefunds";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import Payments from "./pages/Payments";
 import ShipmentTracking from "./pages/ShipmentTracking";
 import NotFound from "./pages/NotFound";
