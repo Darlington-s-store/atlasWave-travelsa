@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 export interface AdminUser {
   id: string;
@@ -10,38 +12,99 @@ export interface AdminUser {
 interface AdminContextType {
   admin: AdminUser | null;
   isAdminAuthenticated: boolean;
-  adminLogin: (email: string, password: string) => Promise<boolean>;
-  adminLogout: () => void;
+  loading: boolean;
+  adminLogin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  adminLogout: () => Promise<void>;
 }
 
 const AdminContext = createContext<AdminContextType>({} as AdminContextType);
 
-const MOCK_ADMIN_EMAIL = "admin@africanwaves.com";
-const MOCK_ADMIN_PASSWORD = "admin123";
-
 export function AdminProvider({ children }: { children: ReactNode }) {
-  const [admin, setAdmin] = useState<AdminUser | null>(() => {
-    const stored = localStorage.getItem("aw_admin");
-    return stored ? JSON.parse(stored) : null;
-  });
+  const [admin, setAdmin] = useState<AdminUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (admin) localStorage.setItem("aw_admin", JSON.stringify(admin));
-    else localStorage.removeItem("aw_admin");
-  }, [admin]);
-
-  const adminLogin = async (email: string, password: string): Promise<boolean> => {
-    if (email === MOCK_ADMIN_EMAIL && password === MOCK_ADMIN_PASSWORD) {
-      setAdmin({ id: "admin_1", email, name: "Admin User", role: "super-admin" });
-      return true;
-    }
-    return false;
+  const checkAdminRole = async (user: User): Promise<boolean> => {
+    const { data } = await supabase.rpc("has_role", {
+      _user_id: user.id,
+      _role: "admin",
+    } as any);
+    return !!data;
   };
 
-  const adminLogout = () => setAdmin(null);
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          setTimeout(async () => {
+            const isAdmin = await checkAdminRole(session.user);
+            if (isAdmin) {
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("full_name")
+                .eq("id", session.user.id)
+                .single();
+              setAdmin({
+                id: session.user.id,
+                email: session.user.email || "",
+                name: profile?.full_name || "Admin",
+                role: "super-admin",
+              });
+            } else {
+              setAdmin(null);
+            }
+            setLoading(false);
+          }, 0);
+        } else {
+          setAdmin(null);
+          setLoading(false);
+        }
+      }
+    );
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const isAdmin = await checkAdminRole(session.user);
+        if (isAdmin) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", session.user.id)
+            .single();
+          setAdmin({
+            id: session.user.id,
+            email: session.user.email || "",
+            name: profile?.full_name || "Admin",
+            role: "super-admin",
+          });
+        }
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const adminLogin = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { success: false, error: error.message };
+    
+    if (data.user) {
+      const isAdmin = await checkAdminRole(data.user);
+      if (!isAdmin) {
+        await supabase.auth.signOut();
+        return { success: false, error: "You do not have admin privileges." };
+      }
+    }
+    return { success: true };
+  };
+
+  const adminLogout = async () => {
+    await supabase.auth.signOut();
+    setAdmin(null);
+  };
 
   return (
-    <AdminContext.Provider value={{ admin, isAdminAuthenticated: !!admin, adminLogin, adminLogout }}>
+    <AdminContext.Provider value={{ admin, isAdminAuthenticated: !!admin, loading, adminLogin, adminLogout }}>
       {children}
     </AdminContext.Provider>
   );
