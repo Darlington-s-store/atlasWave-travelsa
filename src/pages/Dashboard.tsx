@@ -34,30 +34,13 @@ const statusConfig = {
 };
 
 // --- Mock data ---
-const MOCK_ACTIVITIES = [
-  { icon: DollarSign, color: "text-emerald-500", bg: "bg-emerald-50", title: "Payment Confirmed", desc: "Logistics deposit of $1,200 received.", time: "3 HOURS AGO" },
-  { icon: FileText, color: "text-amber-500", bg: "bg-amber-50", title: "Document Requested", desc: "Please upload your birth certificate.", time: "YESTERDAY" },
-  { icon: MessageCircle, color: "text-blue-500", bg: "bg-blue-50", title: "Agent Response", desc: "Sarah replied to your visa inquiry.", time: "1 DAY AGO" },
-  { icon: Package, color: "text-primary", bg: "bg-primary/5", title: "Package Collected", desc: "Courier has picked up your relocation boxes.", time: "2 DAYS AGO" },
-];
+const MOCK_ACTIVITIES: { icon: any; color: string; bg: string; title: string; desc: string; time: string }[] = [];
 
-const MOCK_BOOKINGS = [
-  { id: "BK-001", type: "Flight", route: "Accra (ACC) → London (LHR)", date: "Mar 15, 2026", status: "confirmed" as const, airline: "British Airways • BA 078" },
-  { id: "BK-002", type: "Hotel", route: "Marriott Berlin, Germany", date: "Apr 2-8, 2026", status: "confirmed" as const, airline: "6 nights • Deluxe Room" },
-  { id: "BK-003", type: "Flight", route: "London (LHR) → Toronto (YYZ)", date: "Apr 10, 2026", status: "pending" as const, airline: "Air Canada • AC 849" },
-];
+const MOCK_BOOKINGS: { id: string; type: string; route: string; date: string; status: "confirmed" | "pending"; airline: string }[] = [];
 
-const MOCK_SHIPMENTS = [
-  { id: "SH-4821", origin: "Tema, Ghana", dest: "Rotterdam, Netherlands", weight: "240kg", status: "in-transit" as const, eta: "4 days", progress: 65 },
-  { id: "SH-4798", origin: "Accra, Ghana", dest: "London, UK", weight: "120kg", status: "delivered" as const, eta: "Delivered", progress: 100 },
-];
+const MOCK_SHIPMENTS: { id: string; origin: string; dest: string; weight: string; status: "in-transit" | "delivered"; eta: string; progress: number }[] = [];
 
-const MOCK_DOCUMENTS = [
-  { name: "Passport Copy", type: "PDF", uploaded: "Feb 10, 2026", size: "2.4 MB" },
-  { name: "LMIA Application Form", type: "PDF", uploaded: "Feb 15, 2026", size: "1.1 MB" },
-  { name: "Degree Certificate", type: "PDF", uploaded: "Jan 20, 2026", size: "3.2 MB" },
-  { name: "Employment Letter", type: "DOCX", uploaded: "Mar 01, 2026", size: "0.8 MB" },
-];
+const MOCK_DOCUMENTS: { name: string; type: string; uploaded: string; size: string }[] = [];
 
 const Dashboard = () => {
   const { user, isAuthenticated, logout, updateProfile, applications } = useAuth();
@@ -118,13 +101,22 @@ const Dashboard = () => {
           })}
         </nav>
 
-        {/* Support Hours */}
-        <div className="p-4 border-t border-white/10">
-          <p className="text-white/40 text-[10px] uppercase tracking-wider font-semibold mb-2">Support Hours</p>
-          <p className="text-white/60 text-xs mb-3">Mon-Fri 9am - 6pm EST</p>
-          <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm">
-            <MessageCircle className="w-4 h-4 mr-2" /> Start Live Chat
+        {/* Logout + Support */}
+        <div className="p-4 border-t border-white/10 space-y-3">
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-white/60 hover:text-white hover:bg-white/5 text-sm"
+            onClick={() => { logout(); navigate("/"); }}
+          >
+            <LogOut className="w-4 h-4 mr-2" /> Sign Out
           </Button>
+          <div className="pt-2 border-t border-white/10">
+            <p className="text-white/40 text-[10px] uppercase tracking-wider font-semibold mb-2">Support Hours</p>
+            <p className="text-white/60 text-xs mb-3">Mon-Fri 9am - 6pm EST</p>
+            <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm">
+              <MessageCircle className="w-4 h-4 mr-2" /> Start Live Chat
+            </Button>
+          </div>
         </div>
       </aside>
 
@@ -161,6 +153,9 @@ const Dashboard = () => {
                   <p className="text-muted-foreground text-[11px]">Premium Member</p>
                 </div>
               </div>
+              <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => { logout(); navigate("/"); }}>
+                <LogOut className="w-5 h-5" />
+              </Button>
             </div>
           </div>
 
@@ -285,104 +280,92 @@ function OverviewTab({ applications, activeApp, activeShipment, userName, greeti
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
           <h2 className="font-display text-lg font-bold text-foreground">Active Processes</h2>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {/* Application card */}
-            {activeApp && (
-              <div className="bg-background rounded-xl border p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-[10px] border">IMMIGRATION</Badge>
-                </div>
-                <h3 className="font-display font-bold text-foreground mb-0.5">{activeApp.title}</h3>
-                <p className="text-xs text-muted-foreground mb-2">Application ID: #{activeApp.id}</p>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-muted-foreground">Verification Stage</span>
-                  <span className="text-xs font-semibold text-foreground">85%</span>
-                </div>
-                <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mb-3">
-                  <div className="h-full bg-primary rounded-full" style={{ width: "85%" }} />
-                </div>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Clock className="w-3 h-3" /> Estimated completion: Oct 24
-                </div>
-              </div>
-            )}
-
-            {/* Shipment card */}
-            {activeShipment && (
-              <div className="bg-background rounded-xl border p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                    <Truck className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-[10px] border">IN TRANSIT</Badge>
-                </div>
-                <h3 className="font-display font-bold text-foreground mb-0.5">Household Relocation</h3>
-                <p className="text-xs text-muted-foreground mb-2">Tracking: MY-{activeShipment.id}</p>
-                <div className="flex items-center gap-1 text-xs text-foreground mb-1">
-                  <Truck className="w-3 h-3 text-primary" /> En Route to Port
-                  <span className="ml-auto font-semibold">{activeShipment.progress}%</span>
-                </div>
-                <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mb-3">
-                  <div className="h-full bg-primary rounded-full" style={{ width: `${activeShipment.progress}%` }} />
-                </div>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <MapPin className="w-3 h-3" /> Current: Jersey City Terminal
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Upcoming Flight Card */}
-          <div className="bg-[hsl(220,30%,15%)] rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-white">
-            <div className="flex items-center gap-5">
-              <div>
-                <p className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Upcoming Flight</p>
-                <p className="font-display font-bold text-xl mt-1">JFK → BER</p>
-              </div>
-              <div className="h-10 w-px bg-white/20 hidden sm:block" />
-              <div>
-                <p className="text-[10px] text-white/50 uppercase">Date</p>
-                <p className="font-semibold text-sm">Nov 12, 2024</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-white/50 uppercase">Gate</p>
-                <p className="font-semibold text-sm">B32</p>
-              </div>
-              <div className="hidden sm:block">
-                <p className="text-[10px] text-white/50 uppercase">Booking Ref</p>
-                <p className="font-semibold text-sm">LX-9921</p>
-              </div>
+          {!activeApp && !activeShipment ? (
+            <div className="bg-background rounded-xl border p-10 text-center">
+              <LayoutDashboard className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+              <h3 className="font-display font-semibold text-foreground mb-1">No active processes</h3>
+              <p className="text-sm text-muted-foreground">Start an application or shipment to track your progress here.</p>
             </div>
-            <Button variant="outline" size="sm" className="border-white/30 text-white hover:bg-white/10 hover:text-white shrink-0">
-              View Ticket
-            </Button>
-          </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 gap-4">
+              {activeApp && (
+                <div className="bg-background rounded-xl border p-5 hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-primary" />
+                    </div>
+                    <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-[10px] border">IMMIGRATION</Badge>
+                  </div>
+                  <h3 className="font-display font-bold text-foreground mb-0.5">{activeApp.title}</h3>
+                  <p className="text-xs text-muted-foreground mb-2">Application ID: #{activeApp.id}</p>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-muted-foreground">Verification Stage</span>
+                    <span className="text-xs font-semibold text-foreground">85%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mb-3">
+                    <div className="h-full bg-primary rounded-full" style={{ width: "85%" }} />
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Clock className="w-3 h-3" /> Estimated completion: Oct 24
+                  </div>
+                </div>
+              )}
+              {activeShipment && (
+                <div className="bg-background rounded-xl border p-5 hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center">
+                      <Truck className="w-5 h-5 text-primary" />
+                    </div>
+                    <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-[10px] border">IN TRANSIT</Badge>
+                  </div>
+                  <h3 className="font-display font-bold text-foreground mb-0.5">Household Relocation</h3>
+                  <p className="text-xs text-muted-foreground mb-2">Tracking: MY-{activeShipment.id}</p>
+                  <div className="flex items-center gap-1 text-xs text-foreground mb-1">
+                    <Truck className="w-3 h-3 text-primary" /> En Route to Port
+                    <span className="ml-auto font-semibold">{activeShipment.progress}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mb-3">
+                    <div className="h-full bg-primary rounded-full" style={{ width: `${activeShipment.progress}%` }} />
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <MapPin className="w-3 h-3" /> Current: Jersey City Terminal
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Recent Activity */}
         <div className="space-y-4">
           <h2 className="font-display text-lg font-bold text-foreground">Recent Activity</h2>
           <div className="bg-background rounded-xl border p-5">
-            <div className="space-y-5">
-              {MOCK_ACTIVITIES.map((a, i) => (
-                <div key={i} className="flex gap-3">
-                  <div className={`w-8 h-8 rounded-lg ${a.bg} flex items-center justify-center shrink-0`}>
-                    <a.icon className={`w-4 h-4 ${a.color}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground">{a.title}</p>
-                    <p className="text-xs text-muted-foreground">{a.desc}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider">{a.time}</p>
-                  </div>
+            {MOCK_ACTIVITIES.length === 0 ? (
+              <div className="text-center py-6">
+                <Bell className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No recent activity</p>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-5">
+                  {MOCK_ACTIVITIES.map((a, i) => (
+                    <div key={i} className="flex gap-3">
+                      <div className={`w-8 h-8 rounded-lg ${a.bg} flex items-center justify-center shrink-0`}>
+                        <a.icon className={`w-4 h-4 ${a.color}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground">{a.title}</p>
+                        <p className="text-xs text-muted-foreground">{a.desc}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider">{a.time}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <button className="text-sm text-primary font-semibold mt-5 hover:underline w-full text-center uppercase tracking-wider text-xs">
-              View Full History
-            </button>
+                <button className="text-sm text-primary font-semibold mt-5 hover:underline w-full text-center uppercase tracking-wider text-xs">
+                  View Full History
+                </button>
+              </>
+            )}
           </div>
 
           {/* Need Professional Help */}
@@ -406,31 +389,40 @@ function ApplicationsTab({ applications }: { applications: Application[] }) {
   return (
     <div className="space-y-6">
       <h2 className="font-display text-xl font-bold text-foreground">My Applications</h2>
-      <div className="space-y-3">
-        {applications.map((app) => {
-          const cfg = statusConfig[app.status];
-          return (
-            <div key={app.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl border bg-background hover:shadow-md transition-shadow gap-3">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                  {app.type === "work-permit" ? <FileText className="w-5 h-5 text-primary" /> :
-                   app.type === "logistics" ? <Package className="w-5 h-5 text-primary" /> :
-                   app.type === "travel" ? <Plane className="w-5 h-5 text-primary" /> :
-                   <Eye className="w-5 h-5 text-primary" />}
+      {applications.length === 0 ? (
+        <div className="bg-background rounded-xl border p-12 text-center">
+          <FileText className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+          <h3 className="font-display font-semibold text-foreground mb-1">No applications yet</h3>
+          <p className="text-sm text-muted-foreground mb-4">Start a new application to track your immigration or travel services.</p>
+          <Button size="sm">New Application</Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {applications.map((app) => {
+            const cfg = statusConfig[app.status];
+            return (
+              <div key={app.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl border bg-background hover:shadow-md transition-shadow gap-3">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+                    {app.type === "work-permit" ? <FileText className="w-5 h-5 text-primary" /> :
+                     app.type === "logistics" ? <Package className="w-5 h-5 text-primary" /> :
+                     app.type === "travel" ? <Plane className="w-5 h-5 text-primary" /> :
+                     <Eye className="w-5 h-5 text-primary" />}
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">{app.title}</p>
+                    <p className="text-sm text-muted-foreground">{app.details}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{app.id} · {app.date}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-foreground">{app.title}</p>
-                  <p className="text-sm text-muted-foreground">{app.details}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{app.id} · {app.date}</p>
-                </div>
+                <Badge className={cfg.color + " border shrink-0"}>
+                  <cfg.icon className="w-3 h-3 mr-1" /> {cfg.label}
+                </Badge>
               </div>
-              <Badge className={cfg.color + " border shrink-0"}>
-                <cfg.icon className="w-3 h-3 mr-1" /> {cfg.label}
-              </Badge>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -440,28 +432,37 @@ function BookingsTab() {
   return (
     <div className="space-y-6">
       <h2 className="font-display text-xl font-bold text-foreground">My Bookings</h2>
-      <div className="space-y-3">
-        {MOCK_BOOKINGS.map((b) => (
-          <div key={b.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl border bg-background hover:shadow-md transition-shadow gap-3">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                {b.type === "Flight" ? <Plane className="w-5 h-5 text-primary" /> : <CalendarDays className="w-5 h-5 text-primary" />}
+      {MOCK_BOOKINGS.length === 0 ? (
+        <div className="bg-background rounded-xl border p-12 text-center">
+          <Plane className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+          <h3 className="font-display font-semibold text-foreground mb-1">No bookings yet</h3>
+          <p className="text-sm text-muted-foreground mb-4">Book flights or hotels to see them here.</p>
+          <Button size="sm" asChild><Link to="/travel">Browse Travel Services</Link></Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {MOCK_BOOKINGS.map((b) => (
+            <div key={b.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl border bg-background hover:shadow-md transition-shadow gap-3">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+                  {b.type === "Flight" ? <Plane className="w-5 h-5 text-primary" /> : <CalendarDays className="w-5 h-5 text-primary" />}
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">{b.route}</p>
+                  <p className="text-sm text-muted-foreground">{b.airline}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{b.id} · {b.date}</p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-foreground">{b.route}</p>
-                <p className="text-sm text-muted-foreground">{b.airline}</p>
-                <p className="text-xs text-muted-foreground mt-1">{b.id} · {b.date}</p>
+              <div className="flex items-center gap-3">
+                <Badge className={b.status === "confirmed" ? "bg-emerald-100 text-emerald-800 border-emerald-200 border" : "bg-amber-100 text-amber-800 border-amber-200 border"}>
+                  {b.status === "confirmed" ? "Confirmed" : "Pending"}
+                </Badge>
+                <Button variant="outline" size="sm">Manage</Button>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Badge className={b.status === "confirmed" ? "bg-emerald-100 text-emerald-800 border-emerald-200 border" : "bg-amber-100 text-amber-800 border-amber-200 border"}>
-                {b.status === "confirmed" ? "Confirmed" : "Pending"}
-              </Badge>
-              <Button variant="outline" size="sm">Manage</Button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -471,34 +472,43 @@ function ShipmentsTab() {
   return (
     <div className="space-y-6">
       <h2 className="font-display text-xl font-bold text-foreground">My Shipments</h2>
-      <div className="space-y-3">
-        {MOCK_SHIPMENTS.map((s) => (
-          <div key={s.id} className="p-5 rounded-xl border bg-background hover:shadow-md transition-shadow">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                  <Truck className="w-5 h-5 text-primary" />
+      {MOCK_SHIPMENTS.length === 0 ? (
+        <div className="bg-background rounded-xl border p-12 text-center">
+          <Package className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+          <h3 className="font-display font-semibold text-foreground mb-1">No shipments yet</h3>
+          <p className="text-sm text-muted-foreground mb-4">Your logistics and cargo shipments will appear here.</p>
+          <Button size="sm" asChild><Link to="/logistics">Explore Logistics</Link></Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {MOCK_SHIPMENTS.map((s) => (
+            <div key={s.id} className="p-5 rounded-xl border bg-background hover:shadow-md transition-shadow">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+                    <Truck className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">Shipment #{s.id}</p>
+                    <p className="text-sm text-muted-foreground">{s.origin} → {s.dest}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{s.weight}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-foreground">Shipment #{s.id}</p>
-                  <p className="text-sm text-muted-foreground">{s.origin} → {s.dest}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{s.weight}</p>
-                </div>
+                <Badge className={s.status === "in-transit" ? "bg-blue-100 text-blue-800 border-blue-200 border" : "bg-emerald-100 text-emerald-800 border-emerald-200 border"}>
+                  {s.status === "in-transit" ? "In Transit" : "Delivered"}
+                </Badge>
               </div>
-              <Badge className={s.status === "in-transit" ? "bg-blue-100 text-blue-800 border-blue-200 border" : "bg-emerald-100 text-emerald-800 border-emerald-200 border"}>
-                {s.status === "in-transit" ? "In Transit" : "Delivered"}
-              </Badge>
+              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${s.progress}%` }} />
+              </div>
+              <div className="flex justify-between mt-2">
+                <span className="text-xs text-muted-foreground">{s.eta}</span>
+                <button className="text-sm text-primary font-medium hover:underline">Track</button>
+              </div>
             </div>
-            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${s.progress}%` }} />
-            </div>
-            <div className="flex justify-between mt-2">
-              <span className="text-xs text-muted-foreground">{s.eta}</span>
-              <button className="text-sm text-primary font-medium hover:underline">Track</button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -511,22 +521,31 @@ function DocumentsTab() {
         <h2 className="font-display text-xl font-bold text-foreground">My Documents</h2>
         <Button size="sm"><Upload className="w-4 h-4 mr-2" /> Upload</Button>
       </div>
-      <div className="space-y-3">
-        {MOCK_DOCUMENTS.map((d, i) => (
-          <div key={i} className="flex items-center justify-between p-4 rounded-xl border bg-background hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center">
-                <FolderOpen className="w-5 h-5 text-primary" />
+      {MOCK_DOCUMENTS.length === 0 ? (
+        <div className="bg-background rounded-xl border p-12 text-center">
+          <FolderOpen className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+          <h3 className="font-display font-semibold text-foreground mb-1">No documents uploaded</h3>
+          <p className="text-sm text-muted-foreground mb-4">Upload your passports, certificates, and other important files.</p>
+          <Button size="sm"><Upload className="w-4 h-4 mr-2" /> Upload Document</Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {MOCK_DOCUMENTS.map((d, i) => (
+            <div key={i} className="flex items-center justify-between p-4 rounded-xl border bg-background hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center">
+                  <FolderOpen className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground text-sm">{d.name}</p>
+                  <p className="text-xs text-muted-foreground">{d.type} · {d.size} · {d.uploaded}</p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-foreground text-sm">{d.name}</p>
-                <p className="text-xs text-muted-foreground">{d.type} · {d.size} · {d.uploaded}</p>
-              </div>
+              <Button variant="ghost" size="sm"><Eye className="w-4 h-4" /></Button>
             </div>
-            <Button variant="ghost" size="sm"><Eye className="w-4 h-4" /></Button>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
