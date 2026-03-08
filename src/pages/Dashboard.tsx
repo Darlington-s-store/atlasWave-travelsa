@@ -193,6 +193,7 @@ const Dashboard = () => {
           {activeTab === "applications" && <ApplicationsTab applications={applications} onRefresh={fetchAllData} userId={user?.id || ""} />}
           {activeTab === "appointments" && <AppointmentsTab consultations={consultations} onRefresh={fetchAllData} userId={user?.id || ""} />}
           {activeTab === "payments" && <PaymentsTab payments={payments} onRefresh={fetchAllData} userId={user?.id || ""} />}
+          {activeTab === "invoices" && <InvoicesTab userId={user?.id || ""} />}
           {activeTab === "bookings" && <BookingsTab bookings={bookings} onRefresh={fetchAllData} userId={user?.id || ""} />}
           {activeTab === "shipments" && <ShipmentsTab shipments={shipments} />}
           {activeTab === "documents" && <DocumentsTab documents={documents} onRefresh={fetchAllData} userId={user?.id || ""} />}
