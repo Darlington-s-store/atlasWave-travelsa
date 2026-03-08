@@ -43,8 +43,8 @@ const AdminOverview = () => {
                     {stat.change}
                   </span>
                 </div>
-                <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wide">{stat.label}</p>
-                <p className="text-[26px] font-bold text-foreground mt-0.5 tracking-tight">{stat.value}</p>
+                <p className="text-[10px] sm:text-[12px] font-medium text-muted-foreground uppercase tracking-wide">{stat.label}</p>
+                <p className="text-xl sm:text-[26px] font-bold text-foreground mt-0.5 tracking-tight">{stat.value}</p>
               </CardContent>
             </Card>
           ))}
