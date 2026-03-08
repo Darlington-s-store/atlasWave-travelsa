@@ -12,6 +12,8 @@ import SchengenWorkPermits from "./pages/SchengenWorkPermits";
 import CanadaLMIA from "./pages/CanadaLMIA";
 import GermanyChancenkarte from "./pages/GermanyChancenkarte";
 import UsaNclex from "./pages/UsaNclex";
+import Documentation from "./pages/Documentation";
+import Consultation from "./pages/Consultation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
