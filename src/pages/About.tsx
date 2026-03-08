@@ -223,6 +223,8 @@ const About = () => {
             </div>
           </div>
         </section>
+        {/* Partners & Affiliates */}
+        <PartnersSection />
       </main>
       <Footer />
     </div>
