@@ -13,6 +13,31 @@ interface NotificationPayload {
 }
 
 const templates: Record<string, (data: Record<string, string>, name: string) => { subject: string; html: string }> = {
+  invoice_ready: (data, name) => ({
+    subject: `Invoice ${data.invoiceNumber} — Payment Confirmed`,
+    html: `
+      <div style="font-family: 'DM Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 24px;">
+        <div style="background: linear-gradient(135deg, #0A3D62, #1ABC9C); padding: 32px 24px; border-radius: 12px 12px 0 0; text-align: center;">
+          <h1 style="color: #fff; margin: 0; font-size: 22px;">🧾 Invoice & Payment Receipt</h1>
+        </div>
+        <div style="background: #fff; border: 1px solid #E5E7EB; border-top: none; border-radius: 0 0 12px 12px; padding: 32px 24px;">
+          <p style="color: #2C3E50; font-size: 15px;">Hi ${name},</p>
+          <p style="color: #6B7280; font-size: 14px; line-height: 1.6;">Your payment has been confirmed and an invoice has been generated.</p>
+          <div style="background: #F9FAFB; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <p style="margin: 6px 0; font-size: 13px; color: #6B7280;">Invoice Number: <strong style="color: #2C3E50;">${data.invoiceNumber}</strong></p>
+            <p style="margin: 6px 0; font-size: 13px; color: #6B7280;">Amount: <strong style="color: #1ABC9C;">${data.currency} ${data.amount}</strong></p>
+            <p style="margin: 6px 0; font-size: 13px; color: #6B7280;">Description: <strong style="color: #2C3E50;">${data.description || 'Service Payment'}</strong></p>
+            <p style="margin: 6px 0; font-size: 13px; color: #6B7280;">Payment Method: <strong style="color: #2C3E50;">${data.paymentMethod || 'N/A'}</strong></p>
+            <p style="margin: 6px 0; font-size: 13px; color: #6B7280;">Date: <strong style="color: #2C3E50;">${data.date}</strong></p>
+          </div>
+          <p style="color: #6B7280; font-size: 13px;">You can download your full receipt from your dashboard at any time.</p>
+          <div style="margin-top: 24px; text-align: center;">
+            <p style="color: #9CA3AF; font-size: 11px;">AtlasWave — Thank you for your payment.</p>
+          </div>
+        </div>
+      </div>
+    `,
+  }),
   application_status_update: (data, name) => ({
     subject: `Application Update — ${data.title}`,
     html: `
@@ -155,6 +180,11 @@ serve(async (req: Request) => {
   }
 
   try {
+    const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+    if (!RESEND_API_KEY) {
+      throw new Error('RESEND_API_KEY is not configured');
+    }
+
     const payload: NotificationPayload = await req.json();
     const { type, recipientEmail, recipientName, data } = payload;
 
@@ -168,25 +198,52 @@ serve(async (req: Request) => {
     const template = templates[type];
     const { subject, html } = template(data, recipientName);
 
-    console.log(`📧 Email notification queued:
+    // Send email via Resend
+    const resendResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'AtlasWave <onboarding@resend.dev>',
+        to: [recipientEmail],
+        subject,
+        html,
+      }),
+    });
+
+    const resendData = await resendResponse.json();
+
+    if (!resendResponse.ok) {
+      console.error('Resend API error:', resendData);
+      return new Response(
+        JSON.stringify({ error: 'Failed to send email', details: resendData }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`📧 Email sent via Resend:
       To: ${recipientEmail}
       Subject: ${subject}
       Type: ${type}
+      Resend ID: ${resendData.id}
     `);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Notification queued for ${recipientEmail}`,
+        message: `Email sent to ${recipientEmail}`,
         type,
         subject,
+        emailId: resendData.id,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Notification error:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to process notification' }),
+      JSON.stringify({ error: 'Failed to process notification', details: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

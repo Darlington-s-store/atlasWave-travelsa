@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type NotificationType =
+  | "invoice_ready"
   | "refund_approved"
   | "refund_rejected"
   | "refund_processed"
