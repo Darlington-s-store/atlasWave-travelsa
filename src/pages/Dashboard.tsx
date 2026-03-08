@@ -177,8 +177,8 @@ const Dashboard = () => {
           </div>
         </header>
 
-        {/* Content */}
-        <main className="flex-1 p-6 lg:p-8">
+        {/* Content - offset for fixed header */}
+        <main className="flex-1 p-6 lg:p-8 mt-16 lg:mt-16">
           {activeTab === "overview" && <OverviewTab applications={applications} activeApp={activeApp} activeShipment={activeShipment} />}
           {activeTab === "applications" && <ApplicationsTab applications={applications} />}
           {activeTab === "bookings" && <BookingsTab />}
