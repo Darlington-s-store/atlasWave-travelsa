@@ -280,81 +280,60 @@ function OverviewTab({ applications, activeApp, activeShipment, userName, greeti
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
           <h2 className="font-display text-lg font-bold text-foreground">Active Processes</h2>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {/* Application card */}
-            {activeApp && (
-              <div className="bg-background rounded-xl border p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-[10px] border">IMMIGRATION</Badge>
-                </div>
-                <h3 className="font-display font-bold text-foreground mb-0.5">{activeApp.title}</h3>
-                <p className="text-xs text-muted-foreground mb-2">Application ID: #{activeApp.id}</p>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-muted-foreground">Verification Stage</span>
-                  <span className="text-xs font-semibold text-foreground">85%</span>
-                </div>
-                <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mb-3">
-                  <div className="h-full bg-primary rounded-full" style={{ width: "85%" }} />
-                </div>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Clock className="w-3 h-3" /> Estimated completion: Oct 24
-                </div>
-              </div>
-            )}
-
-            {/* Shipment card */}
-            {activeShipment && (
-              <div className="bg-background rounded-xl border p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                    <Truck className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-[10px] border">IN TRANSIT</Badge>
-                </div>
-                <h3 className="font-display font-bold text-foreground mb-0.5">Household Relocation</h3>
-                <p className="text-xs text-muted-foreground mb-2">Tracking: MY-{activeShipment.id}</p>
-                <div className="flex items-center gap-1 text-xs text-foreground mb-1">
-                  <Truck className="w-3 h-3 text-primary" /> En Route to Port
-                  <span className="ml-auto font-semibold">{activeShipment.progress}%</span>
-                </div>
-                <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mb-3">
-                  <div className="h-full bg-primary rounded-full" style={{ width: `${activeShipment.progress}%` }} />
-                </div>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <MapPin className="w-3 h-3" /> Current: Jersey City Terminal
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Upcoming Flight Card */}
-          <div className="bg-[hsl(220,30%,15%)] rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-white">
-            <div className="flex items-center gap-5">
-              <div>
-                <p className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Upcoming Flight</p>
-                <p className="font-display font-bold text-xl mt-1">JFK → BER</p>
-              </div>
-              <div className="h-10 w-px bg-white/20 hidden sm:block" />
-              <div>
-                <p className="text-[10px] text-white/50 uppercase">Date</p>
-                <p className="font-semibold text-sm">Nov 12, 2024</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-white/50 uppercase">Gate</p>
-                <p className="font-semibold text-sm">B32</p>
-              </div>
-              <div className="hidden sm:block">
-                <p className="text-[10px] text-white/50 uppercase">Booking Ref</p>
-                <p className="font-semibold text-sm">LX-9921</p>
-              </div>
+          {!activeApp && !activeShipment ? (
+            <div className="bg-background rounded-xl border p-10 text-center">
+              <LayoutDashboard className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+              <h3 className="font-display font-semibold text-foreground mb-1">No active processes</h3>
+              <p className="text-sm text-muted-foreground">Start an application or shipment to track your progress here.</p>
             </div>
-            <Button variant="outline" size="sm" className="border-white/30 text-white hover:bg-white/10 hover:text-white shrink-0">
-              View Ticket
-            </Button>
-          </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 gap-4">
+              {activeApp && (
+                <div className="bg-background rounded-xl border p-5 hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-primary" />
+                    </div>
+                    <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-[10px] border">IMMIGRATION</Badge>
+                  </div>
+                  <h3 className="font-display font-bold text-foreground mb-0.5">{activeApp.title}</h3>
+                  <p className="text-xs text-muted-foreground mb-2">Application ID: #{activeApp.id}</p>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-muted-foreground">Verification Stage</span>
+                    <span className="text-xs font-semibold text-foreground">85%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mb-3">
+                    <div className="h-full bg-primary rounded-full" style={{ width: "85%" }} />
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Clock className="w-3 h-3" /> Estimated completion: Oct 24
+                  </div>
+                </div>
+              )}
+              {activeShipment && (
+                <div className="bg-background rounded-xl border p-5 hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center">
+                      <Truck className="w-5 h-5 text-primary" />
+                    </div>
+                    <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-[10px] border">IN TRANSIT</Badge>
+                  </div>
+                  <h3 className="font-display font-bold text-foreground mb-0.5">Household Relocation</h3>
+                  <p className="text-xs text-muted-foreground mb-2">Tracking: MY-{activeShipment.id}</p>
+                  <div className="flex items-center gap-1 text-xs text-foreground mb-1">
+                    <Truck className="w-3 h-3 text-primary" /> En Route to Port
+                    <span className="ml-auto font-semibold">{activeShipment.progress}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mb-3">
+                    <div className="h-full bg-primary rounded-full" style={{ width: `${activeShipment.progress}%` }} />
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <MapPin className="w-3 h-3" /> Current: Jersey City Terminal
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Recent Activity */}
