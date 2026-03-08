@@ -9,8 +9,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { ArrowRight, CheckCircle2, Video, Users, Phone, Clock, CreditCard, Shield, Globe, CalendarX, RefreshCw, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
