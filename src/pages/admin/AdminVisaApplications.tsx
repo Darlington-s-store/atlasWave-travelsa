@@ -116,8 +116,12 @@ const AdminVisaApplications = () => {
             <h2 className="text-[22px] font-sans font-bold text-foreground tracking-tight">Visa & Immigration Applications</h2>
             <p className="text-[13px] text-muted-foreground mt-0.5">Manage all visa applications and immigration cases.</p>
           </div>
-          <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5 border border-border/60">
-            <Button
+          <div className="flex items-center gap-2">
+            <Button size="sm" className="gap-1.5 h-8 text-[12px]" onClick={() => { setCreateForm({ title: "", type: "Tourist Visa", details: "", status: "pending" }); setCreateDialogOpen(true); }}>
+              <Plus className="w-3.5 h-3.5" /> Add Application
+            </Button>
+            <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5 border border-border/60">
+              <Button
               variant={viewMode === "table" ? "default" : "ghost"}
               size="sm"
               className="h-8 gap-1.5 text-[12px]"
