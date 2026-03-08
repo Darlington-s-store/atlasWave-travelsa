@@ -19,12 +19,12 @@ const AdminLogin = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const success = await adminLogin(email, password);
+    const result = await adminLogin(email, password);
     setLoading(false);
-    if (success) {
+    if (result.success) {
       navigate("/admin");
     } else {
-      toast({ title: "Access Denied", description: "Invalid admin credentials.", variant: "destructive" });
+      toast({ title: "Access Denied", description: result.error || "Invalid admin credentials.", variant: "destructive" });
     }
   };
 
