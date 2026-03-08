@@ -39,6 +39,8 @@ const App = () => (
           <Route path="/work-permits/germany-chancenkarte" element={<GermanyChancenkarte />} />
           <Route path="/work-permits/usa-nclex" element={<UsaNclex />} />
           <Route path="/work-permits/credential-evaluation" element={<WorkPermits />} />
+          <Route path="/documentation" element={<Documentation />} />
+          <Route path="/consultation" element={<Consultation />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
