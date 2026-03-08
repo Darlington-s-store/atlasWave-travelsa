@@ -57,6 +57,7 @@ const Dashboard = () => {
   const [shipments, setShipments] = useState<any[]>([]);
   const [consultations, setConsultations] = useState<any[]>([]);
   const [documents, setDocuments] = useState<any[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
