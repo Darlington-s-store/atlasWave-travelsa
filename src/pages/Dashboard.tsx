@@ -80,7 +80,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen flex bg-muted/30">
       {/* Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 bg-primary text-primary-foreground min-h-screen sticky top-0">
+      <aside className="hidden lg:flex flex-col w-64 bg-primary text-primary-foreground fixed top-0 left-0 h-screen z-40">
         <div className="p-6 border-b border-primary-foreground/10">
           <Link to="/" className="flex items-center gap-3">
             <img src={logo} alt="AtlasWave" className="h-9 w-9 rounded-lg object-cover" />
@@ -121,9 +121,9 @@ const Dashboard = () => {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen lg:ml-64">
         {/* Top bar */}
-        <header className="bg-background border-b sticky top-0 z-30">
+        <header className="bg-background border-b fixed top-0 right-0 left-0 lg:left-64 z-30">
           <div className="flex items-center justify-between px-6 lg:px-8 h-16">
             {/* Mobile logo */}
             <Link to="/" className="flex lg:hidden items-center gap-2">
@@ -177,8 +177,8 @@ const Dashboard = () => {
           </div>
         </header>
 
-        {/* Content */}
-        <main className="flex-1 p-6 lg:p-8">
+        {/* Content - offset for fixed header */}
+        <main className="flex-1 p-6 lg:p-8 mt-16 lg:mt-16">
           {activeTab === "overview" && <OverviewTab applications={applications} activeApp={activeApp} activeShipment={activeShipment} />}
           {activeTab === "applications" && <ApplicationsTab applications={applications} />}
           {activeTab === "bookings" && <BookingsTab />}
