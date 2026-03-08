@@ -5,13 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, UserPlus, MoreHorizontal, Eye, Pencil, Inbox, Users, Shield } from "lucide-react";
+import { Search, MoreHorizontal, Eye, Pencil, Inbox, Users, Shield, Trash2, UserMinus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,7 +22,6 @@ interface UserRow {
   phone: string | null;
   avatar_url: string | null;
   created_at: string;
-  email?: string;
   roles: string[];
 }
 
@@ -42,77 +42,64 @@ const AdminUsers = () => {
 
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [viewingUser, setViewingUser] = useState<UserRow | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>("user");
   const [managingUser, setManagingUser] = useState<UserRow | null>(null);
+  const [editForm, setEditForm] = useState({ full_name: "", phone: "" });
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  useEffect(() => { fetchUsers(); }, []);
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
       const { data: profiles, error } = await supabase.from("profiles").select("*");
       if (error) throw error;
-
       const { data: allRoles } = await supabase.from("user_roles").select("user_id, role");
       const roleMap: Record<string, string[]> = {};
       (allRoles || []).forEach(r => {
         if (!roleMap[r.user_id]) roleMap[r.user_id] = [];
         roleMap[r.user_id].push(r.role);
       });
-
-      const mapped: UserRow[] = (profiles || []).map(p => ({
-        id: p.id,
-        full_name: p.full_name,
-        phone: p.phone,
-        avatar_url: p.avatar_url,
-        created_at: p.created_at,
+      setUsers((profiles || []).map(p => ({
+        id: p.id, full_name: p.full_name, phone: p.phone,
+        avatar_url: p.avatar_url, created_at: p.created_at,
         roles: roleMap[p.id] || ["user"],
-      }));
-
-      setUsers(mapped);
+      })));
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   const handleAssignRole = async () => {
     if (!managingUser) return;
-    try {
-      // Check if role already exists
-      const { data: existing } = await supabase
-        .from("user_roles")
-        .select("id")
-        .eq("user_id", managingUser.id)
-        .eq("role", selectedRole as any);
-
-      if (existing && existing.length > 0) {
-        toast({ title: "Role already assigned", description: `User already has the ${selectedRole} role.` });
-        setRoleDialogOpen(false);
-        return;
-      }
-
-      const { error } = await supabase.from("user_roles").insert({
-        user_id: managingUser.id,
-        role: selectedRole as any,
-      });
-      if (error) throw error;
-
-      toast({ title: "Role Assigned", description: `${selectedRole} role assigned to ${managingUser.full_name || "user"}.` });
-      setRoleDialogOpen(false);
-      fetchUsers();
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    const { data: existing } = await supabase.from("user_roles").select("id")
+      .eq("user_id", managingUser.id).eq("role", selectedRole as any);
+    if (existing && existing.length > 0) {
+      toast({ title: "Role already assigned" }); setRoleDialogOpen(false); return;
     }
+    const { error } = await supabase.from("user_roles").insert({ user_id: managingUser.id, role: selectedRole as any });
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Role Assigned" }); setRoleDialogOpen(false); fetchUsers();
+  };
+
+  const handleRemoveRole = async (userId: string, role: string) => {
+    const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", role as any);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Role Removed" }); fetchUsers();
+  };
+
+  const handleEditUser = async () => {
+    if (!managingUser) return;
+    const { error } = await supabase.from("profiles").update({
+      full_name: editForm.full_name || null, phone: editForm.phone || null,
+    }).eq("id", managingUser.id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Profile Updated" }); setEditDialogOpen(false); fetchUsers();
   };
 
   const filtered = users.filter(u => {
-    const matchesSearch = (u.full_name || "").toLowerCase().includes(search.toLowerCase()) ||
-      u.id.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = (u.full_name || "").toLowerCase().includes(search.toLowerCase()) || u.id.toLowerCase().includes(search.toLowerCase());
     const matchesRole = roleFilter === "all" || u.roles.includes(roleFilter);
     return matchesSearch && matchesRole;
   });
@@ -120,54 +107,28 @@ const AdminUsers = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h2 className="text-[22px] font-sans font-bold text-foreground tracking-tight">User Management</h2>
-            <p className="text-muted-foreground text-[13px] mt-0.5">View and manage all registered users and their roles.</p>
-          </div>
+        <div>
+          <h2 className="text-[22px] font-sans font-bold text-foreground tracking-tight">User Management</h2>
+          <p className="text-muted-foreground text-[13px] mt-0.5">View and manage all registered users and their roles.</p>
         </div>
 
-        {/* Stat Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="shadow-card rounded-xl border border-border/60">
-            <CardContent className="p-4 text-center">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-2">
-                <Users className="w-5 h-5 text-primary" />
-              </div>
-              <p className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Total Users</p>
-              <p className="text-2xl font-bold text-foreground">{users.length}</p>
-            </CardContent>
-          </Card>
-          <Card className="shadow-card rounded-xl border border-border/60">
-            <CardContent className="p-4 text-center">
-              <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center mx-auto mb-2">
-                <Shield className="w-5 h-5 text-destructive" />
-              </div>
-              <p className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Admins</p>
-              <p className="text-2xl font-bold text-foreground">{users.filter(u => u.roles.includes("admin")).length}</p>
-            </CardContent>
-          </Card>
-          <Card className="shadow-card rounded-xl border border-border/60">
-            <CardContent className="p-4 text-center">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-2">
-                <Shield className="w-5 h-5 text-primary" />
-              </div>
-              <p className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Moderators</p>
-              <p className="text-2xl font-bold text-foreground">{users.filter(u => u.roles.includes("moderator")).length}</p>
-            </CardContent>
-          </Card>
-          <Card className="shadow-card rounded-xl border border-border/60">
-            <CardContent className="p-4 text-center">
-              <div className="w-10 h-10 rounded-xl bg-secondary/15 flex items-center justify-center mx-auto mb-2">
-                <Users className="w-5 h-5 text-secondary" />
-              </div>
-              <p className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Regular Users</p>
-              <p className="text-2xl font-bold text-foreground">{users.filter(u => !u.roles.includes("admin") && !u.roles.includes("moderator")).length}</p>
-            </CardContent>
-          </Card>
+          {[
+            { label: "Total Users", value: users.length, icon: Users, bg: "bg-primary/10", color: "text-primary" },
+            { label: "Admins", value: users.filter(u => u.roles.includes("admin")).length, icon: Shield, bg: "bg-destructive/10", color: "text-destructive" },
+            { label: "Moderators", value: users.filter(u => u.roles.includes("moderator")).length, icon: Shield, bg: "bg-primary/10", color: "text-primary" },
+            { label: "Regular Users", value: users.filter(u => !u.roles.includes("admin") && !u.roles.includes("moderator")).length, icon: Users, bg: "bg-secondary/15", color: "text-secondary" },
+          ].map(s => (
+            <Card key={s.label} className="shadow-card rounded-xl border border-border/60">
+              <CardContent className="p-4 text-center">
+                <div className={`w-10 h-10 rounded-xl ${s.bg} flex items-center justify-center mx-auto mb-2`}><s.icon className={`w-5 h-5 ${s.color}`} /></div>
+                <p className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">{s.label}</p>
+                <p className="text-2xl font-bold text-foreground">{s.value}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        {/* Filters */}
         <Card className="shadow-card rounded-xl border border-border/60">
           <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -186,22 +147,15 @@ const AdminUsers = () => {
           </CardContent>
         </Card>
 
-        {/* Table */}
         <Card className="shadow-card rounded-xl border border-border/60 overflow-hidden">
           <CardContent className="p-0">
             {loading ? (
-              <div className="flex items-center justify-center py-16">
-                <p className="text-muted-foreground text-[13px]">Loading users...</p>
-              </div>
+              <div className="flex items-center justify-center py-16"><p className="text-muted-foreground text-[13px]">Loading users...</p></div>
             ) : filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
-                  <Inbox className="w-8 h-8 text-muted-foreground/40" />
-                </div>
+                <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4"><Inbox className="w-8 h-8 text-muted-foreground/40" /></div>
                 <p className="text-[15px] font-semibold text-foreground">No users found</p>
-                <p className="text-[13px] text-muted-foreground mt-1">
-                  {users.length === 0 ? "No users have registered yet." : "No users match your filters."}
-                </p>
+                <p className="text-[13px] text-muted-foreground mt-1">{users.length === 0 ? "No users have registered yet." : "No users match your filters."}</p>
               </div>
             ) : (
               <Table>
@@ -239,18 +193,17 @@ const AdminUsers = () => {
                       <TableCell className="text-[13px] text-muted-foreground">{new Date(user.created_at).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
+                          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => { setViewingUser(user); setViewDialogOpen(true); }}>
-                              <Eye className="w-4 h-4 mr-2" /> View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => { setManagingUser(user); setSelectedRole("user"); setRoleDialogOpen(true); }}>
-                              <Shield className="w-4 h-4 mr-2" /> Assign Role
-                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { setViewingUser(user); setViewDialogOpen(true); }}><Eye className="w-4 h-4 mr-2" /> View Details</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { setManagingUser(user); setEditForm({ full_name: user.full_name || "", phone: user.phone || "" }); setEditDialogOpen(true); }}><Pencil className="w-4 h-4 mr-2" /> Edit Profile</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { setManagingUser(user); setSelectedRole("user"); setRoleDialogOpen(true); }}><Shield className="w-4 h-4 mr-2" /> Assign Role</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {user.roles.filter(r => r !== "user").map(r => (
+                              <DropdownMenuItem key={r} onClick={() => handleRemoveRole(user.id, r)} className="text-destructive">
+                                <UserMinus className="w-4 h-4 mr-2" /> Remove {r} role
+                              </DropdownMenuItem>
+                            ))}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -282,16 +235,31 @@ const AdminUsers = () => {
               </div>
               <div>
                 <span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-1">Roles</span>
-                <div className="flex gap-1">
-                  {viewingUser.roles.map(r => (
-                    <Badge key={r} variant="secondary" className="capitalize">{r}</Badge>
-                  ))}
-                </div>
+                <div className="flex gap-1">{viewingUser.roles.map(r => <Badge key={r} variant="secondary" className="capitalize">{r}</Badge>)}</div>
               </div>
             </div>
           )}
+          <DialogFooter><DialogClose asChild><Button variant="outline">Close</Button></DialogClose></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader><DialogTitle>Edit User Profile</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Full Name</Label>
+              <Input value={editForm.full_name} onChange={e => setEditForm(f => ({ ...f, full_name: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Phone</Label>
+              <Input value={editForm.phone} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))} />
+            </div>
+          </div>
           <DialogFooter>
-            <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
+            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+            <Button onClick={handleEditUser}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -301,23 +269,15 @@ const AdminUsers = () => {
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader><DialogTitle>Assign Role</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
-            <p className="text-[13px] text-muted-foreground">
-              Assign a role to <strong>{managingUser?.full_name || "this user"}</strong>.
-            </p>
+            <p className="text-[13px] text-muted-foreground">Assign a role to <strong>{managingUser?.full_name || "this user"}</strong>.</p>
             <div className="space-y-2">
               <Label>Role</Label>
               <Select value={selectedRole} onValueChange={setSelectedRole}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {ASSIGNABLE_ROLES.map(r => <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>)}
-                </SelectContent>
+                <SelectContent>{ASSIGNABLE_ROLES.map(r => <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            {managingUser && (
-              <div className="text-[12px] text-muted-foreground">
-                Current roles: {managingUser.roles.join(", ")}
-              </div>
-            )}
+            {managingUser && <p className="text-[12px] text-muted-foreground">Current roles: {managingUser.roles.join(", ")}</p>}
           </div>
           <DialogFooter>
             <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
