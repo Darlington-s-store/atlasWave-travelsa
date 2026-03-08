@@ -39,9 +39,9 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/about" element={<About />} />
             <Route path="/travel" element={<TravelServices />} />
-            <Route path="/travel/flights" element={<TravelServices />} />
-            <Route path="/travel/hotels" element={<TravelServices />} />
-            <Route path="/travel/visa" element={<TravelServices />} />
+            <Route path="/travel/flights" element={<FlightBooking />} />
+            <Route path="/travel/hotels" element={<HotelAccommodation />} />
+            <Route path="/travel/visa" element={<VisaAssistance />} />
             <Route path="/logistics" element={<Logistics />} />
             <Route path="/tracking" element={<Logistics />} />
             <Route path="/work-permits" element={<WorkPermits />} />
