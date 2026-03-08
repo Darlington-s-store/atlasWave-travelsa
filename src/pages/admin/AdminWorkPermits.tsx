@@ -13,10 +13,11 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Progress } from "@/components/ui/progress";
 import {
   Search, Briefcase, MoreHorizontal, Eye, Pencil, Inbox, Clock,
-  CheckCircle, XCircle, FileText, Globe, Calculator, LayoutGrid, List,
+  CheckCircle, XCircle, FileText, Globe, Calculator, LayoutGrid, List, Plus, Trash2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import KanbanBoard from "@/components/admin/KanbanBoard";
 
 const PROGRAMMES = ["Schengen Work Permit", "Canada LMIA", "Germany Opportunity Card", "USA NCLEX"];
