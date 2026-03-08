@@ -29,10 +29,10 @@ const AdminOverview = () => {
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-5">
           {stats.map((stat) => (
             <Card key={stat.label} className="shadow-card hover:shadow-card-hover transition-all duration-300 rounded-xl border border-border/60 overflow-hidden group">
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`w-11 h-11 rounded-xl ${stat.iconBg} flex items-center justify-center`}>
-                    <stat.icon className={`w-5 h-5 ${stat.iconColor}`} />
+              <CardContent className="p-3 sm:p-5">
+                <div className="flex items-start justify-between mb-2 sm:mb-4">
+                  <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl ${stat.iconBg} flex items-center justify-center`}>
+                    <stat.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${stat.iconColor}`} />
                   </div>
                   <span className={`inline-flex items-center gap-0.5 text-[11px] font-bold px-2 py-1 rounded-lg ${
                     stat.trend === "up"
