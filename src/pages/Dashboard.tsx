@@ -779,7 +779,7 @@ function PaymentsTab({ payments, onRefresh, userId }: { payments: any[]; onRefre
                       currency: p.currency || "USD",
                       paymentMethod: p.payment_method || "Card",
                       status: p.status,
-                      customerName: user?.user_metadata?.full_name || "Customer",
+                      customerName: user?.fullName || "Customer",
                       customerEmail: user?.email || "",
                     })}
                   >
