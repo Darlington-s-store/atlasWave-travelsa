@@ -12,7 +12,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
-import { LayoutDashboard, Users, FileText, PenTool, LogOut, CreditCard } from "lucide-react";
+import { LayoutDashboard, Users, FileText, PenTool, LogOut, CreditCard, Bot, Package, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
@@ -20,6 +20,9 @@ const navItems = [
   { title: "Applications", url: "/admin/applications", icon: FileText },
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Payments", url: "/admin/payments", icon: CreditCard },
+  { title: "Shipments", url: "/admin/shipments", icon: Package },
+  { title: "Refunds", url: "/admin/refunds", icon: RotateCcw },
+  { title: "Chatbot", url: "/admin/chatbot", icon: Bot },
   { title: "Content", url: "/admin/content", icon: PenTool },
 ];
 

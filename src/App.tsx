@@ -33,6 +33,9 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminApplications from "./pages/admin/AdminApplications";
 import AdminContent from "./pages/admin/AdminContent";
 import AdminPayments from "./pages/admin/AdminPayments";
+import AdminChatbot from "./pages/admin/AdminChatbot";
+import AdminShipments from "./pages/admin/AdminShipments";
+import AdminRefunds from "./pages/admin/AdminRefunds";
 import Payments from "./pages/Payments";
 import ShipmentTracking from "./pages/ShipmentTracking";
 import NotFound from "./pages/NotFound";
@@ -79,6 +82,9 @@ const App = () => (
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/applications" element={<AdminApplications />} />
               <Route path="/admin/payments" element={<AdminPayments />} />
+              <Route path="/admin/chatbot" element={<AdminChatbot />} />
+              <Route path="/admin/shipments" element={<AdminShipments />} />
+              <Route path="/admin/refunds" element={<AdminRefunds />} />
               <Route path="/admin/content" element={<AdminContent />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
