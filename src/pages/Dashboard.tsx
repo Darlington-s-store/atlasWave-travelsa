@@ -34,13 +34,32 @@ const statusConfig = {
 };
 
 // --- Mock data ---
-const MOCK_ACTIVITIES: { icon: any; color: string; bg: string; title: string; desc: string; time: string }[] = [];
+const MOCK_ACTIVITIES: { icon: any; color: string; bg: string; title: string; desc: string; time: string }[] = [
+  { icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-50", title: "Visa Application Approved", desc: "Your Schengen tourist visa has been approved.", time: "2 hours ago" },
+  { icon: CreditCard, color: "text-blue-600", bg: "bg-blue-50", title: "Payment Received", desc: "$450 for Canada LMIA application fee.", time: "5 hours ago" },
+  { icon: Plane, color: "text-amber-600", bg: "bg-amber-50", title: "Flight Booked", desc: "Accra → London, March 15 — Turkish Airlines.", time: "1 day ago" },
+  { icon: Package, color: "text-purple-600", bg: "bg-purple-50", title: "Shipment Dispatched", desc: "AWL-2024-00847 picked up from Accra warehouse.", time: "2 days ago" },
+  { icon: FileText, color: "text-primary", bg: "bg-primary/5", title: "Document Uploaded", desc: "Passport bio page uploaded to document vault.", time: "3 days ago" },
+];
 
-const MOCK_BOOKINGS: { id: string; type: string; route: string; date: string; status: "confirmed" | "pending"; airline: string }[] = [];
+const MOCK_BOOKINGS: { id: string; type: string; route: string; date: string; status: "confirmed" | "pending"; airline: string }[] = [
+  { id: "BK-2024-001", type: "Flight", route: "Accra (ACC) → London (LHR)", date: "Mar 15, 2024", status: "confirmed", airline: "Turkish Airlines" },
+  { id: "BK-2024-002", type: "Hotel", route: "Grand Marriott Istanbul — 4 nights", date: "Apr 02, 2024", status: "confirmed", airline: "Marriott Hotels" },
+  { id: "BK-2024-003", type: "Flight", route: "Lagos (LOS) → Toronto (YYZ)", date: "May 10, 2024", status: "pending", airline: "Emirates" },
+];
 
-const MOCK_SHIPMENTS: { id: string; origin: string; dest: string; weight: string; status: "in-transit" | "delivered"; eta: string; progress: number }[] = [];
+const MOCK_SHIPMENTS: { id: string; origin: string; dest: string; weight: string; status: "in-transit" | "delivered"; eta: string; progress: number }[] = [
+  { id: "AWL-2024-00847", origin: "Accra, Ghana", dest: "London, UK", weight: "45.2 kg", status: "in-transit", eta: "ETA: Mar 12, 2024", progress: 60 },
+  { id: "AWL-2024-00812", origin: "Lagos, Nigeria", dest: "Toronto, Canada", weight: "120 kg", status: "delivered", eta: "Delivered: Feb 28, 2024", progress: 100 },
+];
 
-const MOCK_DOCUMENTS: { name: string; type: string; uploaded: string; size: string }[] = [];
+const MOCK_DOCUMENTS: { name: string; type: string; uploaded: string; size: string }[] = [
+  { name: "Passport — Bio Page", type: "PDF", uploaded: "Mar 05, 2024", size: "1.2 MB" },
+  { name: "Bank Statement (3 months)", type: "PDF", uploaded: "Mar 04, 2024", size: "2.8 MB" },
+  { name: "University Degree Certificate", type: "PDF", uploaded: "Feb 28, 2024", size: "850 KB" },
+  { name: "Employment Letter", type: "DOCX", uploaded: "Feb 25, 2024", size: "420 KB" },
+  { name: "Passport Photo (White BG)", type: "JPG", uploaded: "Feb 20, 2024", size: "380 KB" },
+];
 
 const Dashboard = () => {
   const { user, isAuthenticated, logout, updateProfile, applications } = useAuth();
