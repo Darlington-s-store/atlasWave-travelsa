@@ -110,7 +110,7 @@ const AdminReports = () => {
 
   const handleExport = (type: ReportType) => {
     let data: any[] = [];
-    let filename = type;
+    let filename: string = type;
     switch (type) {
       case "users":
         data = users.map(u => ({ id: u.id, name: u.full_name || "", phone: u.phone || "", joined: u.created_at }));
