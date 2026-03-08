@@ -6,51 +6,57 @@
 
 @layer base {
   :root {
+    /* #FFFFFF */
     --background: 0 0% 100%;
-    --foreground: 210 33% 24%;
+    /* #2C3E50 */
+    --foreground: 210 29% 24%;
 
     --card: 0 0% 100%;
-    --card-foreground: 210 33% 24%;
+    --card-foreground: 210 29% 24%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 33% 24%;
+    --popover-foreground: 210 29% 24%;
 
-    --primary: 204 80% 21%;
+    /* #0A3D62 */
+    --primary: 204 81% 21%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 168 58% 42%;
+    /* #1ABC9C */
+    --secondary: 168 76% 42%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 210 20% 96%;
     --muted-foreground: 210 15% 46%;
 
-    --accent: 43 100% 48%;
-    --accent-foreground: 204 80% 15%;
+    /* #F4B400 */
+    --accent: 44 100% 48%;
+    --accent-foreground: 204 81% 15%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 210 18% 90%;
     --input: 210 18% 90%;
-    --ring: 204 80% 21%;
+    --ring: 204 81% 21%;
 
     --radius: 0.625rem;
 
-    --hero-overlay: linear-gradient(135deg, hsla(204, 80%, 15%, 0.88) 0%, hsla(204, 60%, 21%, 0.65) 50%, hsla(43, 100%, 48%, 0.15) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(43, 100%, 48%), hsl(33, 100%, 50%));
-    --gradient-primary: linear-gradient(135deg, hsl(204, 80%, 21%), hsl(168, 58%, 42%));
-    --shadow-card: 0 4px 24px -4px hsla(204, 80%, 21%, 0.08);
-    --shadow-card-hover: 0 12px 40px -8px hsla(204, 80%, 21%, 0.15);
-    --shadow-accent: 0 8px 24px -4px hsla(43, 100%, 48%, 0.35);
+    --hero-overlay: linear-gradient(135deg, hsla(204, 81%, 15%, 0.88) 0%, hsla(204, 60%, 21%, 0.65) 50%, hsla(44, 100%, 48%, 0.15) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(44, 100%, 48%), hsl(33, 100%, 50%));
+    --gradient-primary: linear-gradient(135deg, hsl(204, 81%, 21%), hsl(168, 76%, 42%));
+    --shadow-card: 0 4px 24px -4px hsla(204, 81%, 21%, 0.08);
+    --shadow-card-hover: 0 12px 40px -8px hsla(204, 81%, 21%, 0.15);
+    --shadow-accent: 0 8px 24px -4px hsla(44, 100%, 48%, 0.35);
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 210 33% 24%;
-    --sidebar-primary: 204 80% 21%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 20% 96%;
-    --sidebar-accent-foreground: 204 80% 21%;
-    --sidebar-border: 210 18% 90%;
-    --sidebar-ring: 168 58% 42%;
+    /* Sidebar uses navy primary */
+    --sidebar-background: 204 81% 21%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 204 81% 21%;
+    --sidebar-accent: 204 60% 28%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 204 60% 28%;
+    --sidebar-ring: 168 76% 42%;
   }
 
   .dark {
