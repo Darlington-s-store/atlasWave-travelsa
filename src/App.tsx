@@ -8,12 +8,16 @@ import ChatBot from "@/components/ChatBot";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import TravelServices from "./pages/TravelServices";
+import FlightBooking from "./pages/FlightBooking";
+import HotelAccommodation from "./pages/HotelAccommodation";
+import VisaAssistance from "./pages/VisaAssistance";
 import Logistics from "./pages/Logistics";
 import WorkPermits from "./pages/WorkPermits";
 import SchengenWorkPermits from "./pages/SchengenWorkPermits";
 import CanadaLMIA from "./pages/CanadaLMIA";
 import GermanyChancenkarte from "./pages/GermanyChancenkarte";
 import UsaNclex from "./pages/UsaNclex";
+import CredentialEvaluation from "./pages/CredentialEvaluation";
 import Documentation from "./pages/Documentation";
 import Consultation from "./pages/Consultation";
 import Contact from "./pages/Contact";
@@ -35,9 +39,9 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/about" element={<About />} />
             <Route path="/travel" element={<TravelServices />} />
-            <Route path="/travel/flights" element={<TravelServices />} />
-            <Route path="/travel/hotels" element={<TravelServices />} />
-            <Route path="/travel/visa" element={<TravelServices />} />
+            <Route path="/travel/flights" element={<FlightBooking />} />
+            <Route path="/travel/hotels" element={<HotelAccommodation />} />
+            <Route path="/travel/visa" element={<VisaAssistance />} />
             <Route path="/logistics" element={<Logistics />} />
             <Route path="/tracking" element={<Logistics />} />
             <Route path="/work-permits" element={<WorkPermits />} />
@@ -45,7 +49,7 @@ const App = () => (
             <Route path="/work-permits/canada-lmia" element={<CanadaLMIA />} />
             <Route path="/work-permits/germany-chancenkarte" element={<GermanyChancenkarte />} />
             <Route path="/work-permits/usa-nclex" element={<UsaNclex />} />
-            <Route path="/work-permits/credential-evaluation" element={<WorkPermits />} />
+            <Route path="/work-permits/credential-evaluation" element={<CredentialEvaluation />} />
             <Route path="/documentation" element={<Documentation />} />
             <Route path="/consultation" element={<Consultation />} />
             <Route path="/contact" element={<Contact />} />
