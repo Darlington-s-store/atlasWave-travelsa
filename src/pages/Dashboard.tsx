@@ -340,23 +340,32 @@ function OverviewTab({ applications, activeApp, activeShipment, userName, greeti
         <div className="space-y-4">
           <h2 className="font-display text-lg font-bold text-foreground">Recent Activity</h2>
           <div className="bg-background rounded-xl border p-5">
-            <div className="space-y-5">
-              {MOCK_ACTIVITIES.map((a, i) => (
-                <div key={i} className="flex gap-3">
-                  <div className={`w-8 h-8 rounded-lg ${a.bg} flex items-center justify-center shrink-0`}>
-                    <a.icon className={`w-4 h-4 ${a.color}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground">{a.title}</p>
-                    <p className="text-xs text-muted-foreground">{a.desc}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider">{a.time}</p>
-                  </div>
+            {MOCK_ACTIVITIES.length === 0 ? (
+              <div className="text-center py-6">
+                <Bell className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No recent activity</p>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-5">
+                  {MOCK_ACTIVITIES.map((a, i) => (
+                    <div key={i} className="flex gap-3">
+                      <div className={`w-8 h-8 rounded-lg ${a.bg} flex items-center justify-center shrink-0`}>
+                        <a.icon className={`w-4 h-4 ${a.color}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground">{a.title}</p>
+                        <p className="text-xs text-muted-foreground">{a.desc}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider">{a.time}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <button className="text-sm text-primary font-semibold mt-5 hover:underline w-full text-center uppercase tracking-wider text-xs">
-              View Full History
-            </button>
+                <button className="text-sm text-primary font-semibold mt-5 hover:underline w-full text-center uppercase tracking-wider text-xs">
+                  View Full History
+                </button>
+              </>
+            )}
           </div>
 
           {/* Need Professional Help */}
