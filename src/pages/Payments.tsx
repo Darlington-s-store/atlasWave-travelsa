@@ -93,12 +93,65 @@ const Payments = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (!amount || parseFloat(amount) <= 0) {
       toast({ title: "Invalid amount", description: "Please enter a valid payment amount.", variant: "destructive" });
       return;
     }
-    toast({ title: "Payment Initiated", description: `Processing $${amount} via ${paymentMethod === "card" ? "Mastercard" : "Mobile Money"}...` });
+    if (!user) {
+      toast({ title: "Not logged in", description: "Please log in to make a payment.", variant: "destructive" });
+      return;
+    }
+
+    const method = paymentMethod === "card" ? "Mastercard" : "Mobile Money";
+    toast({ title: "Payment Initiated", description: `Processing $${amount} via ${method}...` });
+
+    // Insert payment into database (trigger auto-creates invoice)
+    const { data: payment, error } = await supabase.from("payments").insert({
+      user_id: user.id,
+      amount: parseFloat(amount),
+      currency: "USD",
+      description: description || "Service Payment",
+      payment_method: method,
+      status: "completed",
+    }).select().single();
+
+    if (error) {
+      toast({ title: "Payment Failed", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    // Fetch the auto-generated invoice to get the invoice number
+    const { data: invoice } = await supabase
+      .from("invoices")
+      .select("invoice_number")
+      .eq("payment_id", payment.id)
+      .single();
+
+    // Send invoice email via Resend
+    const userEmail = user.email || "";
+    const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
+
+    await supabase.functions.invoke("send-notification", {
+      body: {
+        type: "invoice_ready",
+        recipientEmail: userEmail,
+        recipientName: profile?.full_name || "Customer",
+        data: {
+          invoiceNumber: invoice?.invoice_number || "N/A",
+          amount: parseFloat(amount).toFixed(2),
+          currency: "USD",
+          description: description || "Service Payment",
+          paymentMethod: method,
+          date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+        },
+      },
+    });
+
+    toast({ title: "Payment Successful ✓", description: `Invoice ${invoice?.invoice_number || ""} emailed to ${userEmail}` });
+    fetchTransactions();
+    setAmount("");
+    setDescription("");
   };
 
   const handleRefundRequest = (txnId: string) => {
