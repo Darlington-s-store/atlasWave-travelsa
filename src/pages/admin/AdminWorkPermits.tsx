@@ -65,6 +65,7 @@ const calculateScore = (s: EligibilityScore) => s.qualification + s.experience +
 
 const AdminWorkPermits = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -79,6 +80,8 @@ const AdminWorkPermits = () => {
   const [editForm, setEditForm] = useState({ status: "", details: "" });
   const [scorerOpen, setScorerOpen] = useState(false);
   const [score, setScore] = useState<EligibilityScore>({ qualification: 0, experience: 0, language: 0, age: 0, germanConnection: 0 });
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({ title: "", type: PROGRAMMES[0], details: "", status: "submitted" });
 
   useEffect(() => { fetchApps(); }, []);
 
