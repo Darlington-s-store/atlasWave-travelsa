@@ -80,7 +80,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen flex bg-muted/30">
       {/* Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 bg-primary text-primary-foreground min-h-screen sticky top-0">
+      <aside className="hidden lg:flex flex-col w-64 bg-primary text-primary-foreground fixed top-0 left-0 h-screen z-40">
         <div className="p-6 border-b border-primary-foreground/10">
           <Link to="/" className="flex items-center gap-3">
             <img src={logo} alt="AtlasWave" className="h-9 w-9 rounded-lg object-cover" />
