@@ -241,6 +241,8 @@ const AdminVisaApplications = () => {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => { setViewingApp(app); setViewDialogOpen(true); }}><Eye className="w-4 h-4 mr-2" /> View Details</DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => { setEditingApp(app); setEditStatus(app.status); setEditNotes(app.details || ""); setEditDialogOpen(true); }}><Pencil className="w-4 h-4 mr-2" /> Update Status</DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleDelete(app.id)} className="text-destructive"><Trash2 className="w-4 h-4 mr-2" /> Delete</DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
