@@ -32,8 +32,11 @@ const KANBAN_COLUMNS = [
   { id: "rejected", label: "Rejected", color: "bg-destructive" },
 ];
 
+const VISA_TYPES = ["Tourist Visa", "Business Visa", "Student Visa", "Work Visa", "Transit Visa"];
+
 const AdminVisaApplications = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [apps, setApps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -46,6 +49,8 @@ const AdminVisaApplications = () => {
   const [editingApp, setEditingApp] = useState<any>(null);
   const [editStatus, setEditStatus] = useState("");
   const [editNotes, setEditNotes] = useState("");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({ title: "", type: "Tourist Visa", details: "", status: "pending" });
 
   useEffect(() => { fetchApps(); }, []);
 
