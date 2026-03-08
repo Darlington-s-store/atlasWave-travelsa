@@ -23,6 +23,7 @@ import {
   Box,
   Camera,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
