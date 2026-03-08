@@ -126,7 +126,7 @@ export function AdminSidebar() {
         </div>
 
         {navGroups.map((group) => (
-          <SidebarGroup key={group.label} defaultOpen>
+          <SidebarGroup key={group.label}>
             {!collapsed && (
               <SidebarGroupLabel className="px-4 text-[10px] uppercase tracking-[0.15em] text-sidebar-foreground/40 font-bold mb-0.5">
                 {group.label}
