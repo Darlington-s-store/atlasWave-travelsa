@@ -153,6 +153,9 @@ const AdminWorkPermits = () => {
             <p className="text-[13px] text-muted-foreground mt-0.5">Manage all work permit and immigration programme applications.</p>
           </div>
           <div className="flex items-center gap-2">
+            <Button size="sm" className="gap-1.5 h-8 text-[12px]" onClick={() => { setCreateForm({ title: "", type: PROGRAMMES[0], details: "", status: "submitted" }); setCreateDialogOpen(true); }}>
+              <Plus className="w-3.5 h-3.5" /> Add Application
+            </Button>
             <Button variant="outline" size="sm" className="gap-1.5 h-8 text-[12px]" onClick={() => setScorerOpen(true)}>
               <Calculator className="w-3.5 h-3.5" /> Scorer
             </Button>
