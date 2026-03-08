@@ -146,15 +146,17 @@ const Consultation = () => {
               <div className="container py-12">
                 <h2 className="text-2xl font-display font-bold text-foreground mb-6">My Consultations</h2>
                 <div className="space-y-3">
-                  {MOCK_BOOKINGS.map((b) => (
+                  {bookings.length === 0 ? (
+                    <p className="text-muted-foreground text-sm">No consultations booked yet.</p>
+                  ) : bookings.map((b) => (
                     <div key={b.id} className="bg-card rounded-xl border p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-display font-bold text-foreground text-sm">{b.id}</span>
+                          <span className="font-display font-bold text-foreground text-sm">CON-{b.id}</span>
                           <Badge variant="outline" className={b.status === "upcoming" ? "bg-secondary/10 text-secondary border-secondary/20" : "bg-muted text-muted-foreground"}>{b.status}</Badge>
                         </div>
-                        <p className="text-sm text-foreground">{b.type} — {b.topic}</p>
-                        <p className="text-xs text-muted-foreground">{b.date} at {b.time} · {b.duration} · {b.price}</p>
+                        <p className="text-sm text-foreground">{b.type} — {b.topic || "General"}</p>
+                        <p className="text-xs text-muted-foreground">{b.date} at {b.time} · {b.duration} min · ${b.price}</p>
                       </div>
                       {b.status === "upcoming" && (
                         <div className="flex gap-2">
