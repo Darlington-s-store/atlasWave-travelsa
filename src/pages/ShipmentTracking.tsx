@@ -69,19 +69,59 @@ const ShipmentTracking = () => {
   const [trackingId, setTrackingId] = useState("");
   const [shipment, setShipment] = useState<typeof MOCK_SHIPMENT | null>(null);
   const [loading, setLoading] = useState(false);
+  const [activeTrackingNumber, setActiveTrackingNumber] = useState<string | null>(null);
+
+  // Realtime subscription for the currently tracked shipment
+  useEffect(() => {
+    if (!activeTrackingNumber) return;
+
+    const channel = supabase
+      .channel(`shipment-${activeTrackingNumber}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'shipments',
+          filter: `tracking_number=eq.${activeTrackingNumber}`,
+        },
+        (payload) => {
+          const data = payload.new as any;
+          setShipment((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  status: data.status === "delivered" ? "Delivered" : data.status === "customs" ? "Customs" : "In Transit",
+                  progress: data.progress,
+                  eta: data.eta || "TBD",
+                  origin: data.origin,
+                  destination: data.destination,
+                  weight: data.weight || "N/A",
+                }
+              : prev
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeTrackingNumber]);
 
   const handleTrack = async () => {
     if (!trackingId.trim()) return;
     setLoading(true);
     
-    // Try to find in database first
+    const normalizedId = trackingId.trim().toUpperCase();
     const { data } = await supabase
       .from("shipments")
       .select("*")
-      .eq("tracking_number", trackingId.trim().toUpperCase())
+      .eq("tracking_number", normalizedId)
       .maybeSingle();
     
     if (data) {
+      setActiveTrackingNumber(data.tracking_number);
       setShipment({
         ...MOCK_SHIPMENT,
         id: data.tracking_number,
@@ -93,8 +133,8 @@ const ShipmentTracking = () => {
         eta: data.eta || "TBD",
       });
     } else {
-      // Fallback to mock for demo
-      setShipment({ ...MOCK_SHIPMENT, id: trackingId.toUpperCase() || MOCK_SHIPMENT.id });
+      setActiveTrackingNumber(null);
+      setShipment({ ...MOCK_SHIPMENT, id: normalizedId || MOCK_SHIPMENT.id });
     }
     setLoading(false);
   };
