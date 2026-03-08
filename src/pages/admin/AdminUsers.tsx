@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,82 +11,111 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, UserPlus, MoreHorizontal, Eye, Pencil, Trash2, Inbox } from "lucide-react";
+import { Search, UserPlus, MoreHorizontal, Eye, Pencil, Inbox, Users, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
-interface User {
+interface UserRow {
   id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-  joined: string;
+  full_name: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  email?: string;
+  roles: string[];
 }
 
-const ROLES = ["user", "moderator", "admin"];
-const USER_STATUSES = ["active", "suspended", "pending"];
+const ASSIGNABLE_ROLES = ["admin", "moderator", "user"] as const;
 
-const statusColor = (s: string) => {
-  if (s === "active") return "bg-secondary/15 text-secondary border-secondary/30";
-  if (s === "suspended") return "bg-destructive/15 text-destructive border-destructive/30";
-  return "bg-accent/15 text-accent-foreground border-accent/30";
+const roleColor = (r: string) => {
+  if (r === "admin") return "bg-destructive/15 text-destructive";
+  if (r === "moderator") return "bg-primary/10 text-primary";
+  return "bg-secondary/15 text-secondary";
 };
-
-let nextUserId = 1;
-const generateUserId = () => String(nextUserId++);
 
 const AdminUsers = () => {
   const { toast } = useToast();
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
 
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [viewingUser, setViewingUser] = useState<User | null>(null);
-  const [deletingUser, setDeletingUser] = useState<User | null>(null);
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [viewingUser, setViewingUser] = useState<UserRow | null>(null);
+  const [selectedRole, setSelectedRole] = useState<string>("user");
+  const [managingUser, setManagingUser] = useState<UserRow | null>(null);
 
-  const [form, setForm] = useState({ name: "", email: "", role: "user", status: "active" });
-  const resetForm = () => setForm({ name: "", email: "", role: "user", status: "active" });
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
-  const openCreate = () => { resetForm(); setEditingUser(null); setDialogOpen(true); };
-  const openEdit = (u: User) => {
-    setEditingUser(u);
-    setForm({ name: u.name, email: u.email, role: u.role, status: u.status });
-    setDialogOpen(true);
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const { data: profiles, error } = await supabase.from("profiles").select("*");
+      if (error) throw error;
+
+      const { data: allRoles } = await supabase.from("user_roles").select("user_id, role");
+      const roleMap: Record<string, string[]> = {};
+      (allRoles || []).forEach(r => {
+        if (!roleMap[r.user_id]) roleMap[r.user_id] = [];
+        roleMap[r.user_id].push(r.role);
+      });
+
+      const mapped: UserRow[] = (profiles || []).map(p => ({
+        id: p.id,
+        full_name: p.full_name,
+        phone: p.phone,
+        avatar_url: p.avatar_url,
+        created_at: p.created_at,
+        roles: roleMap[p.id] || ["user"],
+      }));
+
+      setUsers(mapped);
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSave = () => {
-    if (!form.name.trim() || !form.email.trim()) {
-      toast({ title: "Validation Error", description: "Name and email are required.", variant: "destructive" });
-      return;
+  const handleAssignRole = async () => {
+    if (!managingUser) return;
+    try {
+      // Check if role already exists
+      const { data: existing } = await supabase
+        .from("user_roles")
+        .select("id")
+        .eq("user_id", managingUser.id)
+        .eq("role", selectedRole as any);
+
+      if (existing && existing.length > 0) {
+        toast({ title: "Role already assigned", description: `User already has the ${selectedRole} role.` });
+        setRoleDialogOpen(false);
+        return;
+      }
+
+      const { error } = await supabase.from("user_roles").insert({
+        user_id: managingUser.id,
+        role: selectedRole as any,
+      });
+      if (error) throw error;
+
+      toast({ title: "Role Assigned", description: `${selectedRole} role assigned to ${managingUser.full_name || "user"}.` });
+      setRoleDialogOpen(false);
+      fetchUsers();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
     }
-    if (editingUser) {
-      setUsers(prev => prev.map(u => u.id === editingUser.id ? { ...u, ...form } : u));
-      toast({ title: "User Updated", description: `${form.name} has been updated.` });
-    } else {
-      const newUser: User = { id: generateUserId(), ...form, joined: new Date().toISOString().split("T")[0] };
-      setUsers(prev => [newUser, ...prev]);
-      toast({ title: "User Added", description: `${form.name} has been added.` });
-    }
-    setDialogOpen(false);
-    resetForm();
   };
 
-  const handleDelete = () => {
-    if (deletingUser) {
-      setUsers(prev => prev.filter(u => u.id !== deletingUser.id));
-      toast({ title: "User Deleted", description: `${deletingUser.name} has been removed.` });
-    }
-    setDeleteDialogOpen(false);
-    setDeletingUser(null);
-  };
-
-  const filtered = users.filter(u =>
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = users.filter(u => {
+    const matchesSearch = (u.full_name || "").toLowerCase().includes(search.toLowerCase()) ||
+      u.id.toLowerCase().includes(search.toLowerCase());
+    const matchesRole = roleFilter === "all" || u.roles.includes(roleFilter);
+    return matchesSearch && matchesRole;
+  });
 
   return (
     <AdminLayout>
@@ -94,54 +123,93 @@ const AdminUsers = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h2 className="text-[22px] font-sans font-bold text-foreground tracking-tight">User Management</h2>
-            <p className="text-muted-foreground text-[13px] mt-0.5">View, search, and manage all registered users.</p>
+            <p className="text-muted-foreground text-[13px] mt-0.5">View and manage all registered users and their roles.</p>
           </div>
-          <Button className="w-fit gap-1.5" onClick={openCreate}>
-            <UserPlus className="w-4 h-4" /> Add User
-          </Button>
         </div>
 
+        {/* Stat Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="shadow-card rounded-xl border border-border/60">
+            <CardContent className="p-4 text-center">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-2">
+                <Users className="w-5 h-5 text-primary" />
+              </div>
+              <p className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Total Users</p>
+              <p className="text-2xl font-bold text-foreground">{users.length}</p>
+            </CardContent>
+          </Card>
+          <Card className="shadow-card rounded-xl border border-border/60">
+            <CardContent className="p-4 text-center">
+              <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center mx-auto mb-2">
+                <Shield className="w-5 h-5 text-destructive" />
+              </div>
+              <p className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Admins</p>
+              <p className="text-2xl font-bold text-foreground">{users.filter(u => u.roles.includes("admin")).length}</p>
+            </CardContent>
+          </Card>
+          <Card className="shadow-card rounded-xl border border-border/60">
+            <CardContent className="p-4 text-center">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-2">
+                <Shield className="w-5 h-5 text-primary" />
+              </div>
+              <p className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Moderators</p>
+              <p className="text-2xl font-bold text-foreground">{users.filter(u => u.roles.includes("moderator")).length}</p>
+            </CardContent>
+          </Card>
+          <Card className="shadow-card rounded-xl border border-border/60">
+            <CardContent className="p-4 text-center">
+              <div className="w-10 h-10 rounded-xl bg-secondary/15 flex items-center justify-center mx-auto mb-2">
+                <Users className="w-5 h-5 text-secondary" />
+              </div>
+              <p className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Regular Users</p>
+              <p className="text-2xl font-bold text-foreground">{users.filter(u => !u.roles.includes("admin") && !u.roles.includes("moderator")).length}</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filters */}
         <Card className="shadow-card rounded-xl border border-border/60">
           <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder="Search users..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9 text-[13px]" />
+                <Input placeholder="Search by name or ID..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9 text-[13px]" />
               </div>
-              <div className="flex gap-2">
-                <Badge variant="outline" className="cursor-pointer hover:bg-muted">All ({users.length})</Badge>
-                <Badge variant="outline" className="cursor-pointer hover:bg-muted">Active ({users.filter(u => u.status === "active").length})</Badge>
-                <Badge variant="outline" className="cursor-pointer hover:bg-muted">Pending ({users.filter(u => u.status === "pending").length})</Badge>
-              </div>
+              <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <SelectTrigger className="w-[140px] h-9 text-[13px]"><SelectValue placeholder="All Roles" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  {ASSIGNABLE_ROLES.map(r => <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
 
+        {/* Table */}
         <Card className="shadow-card rounded-xl border border-border/60 overflow-hidden">
           <CardContent className="p-0">
-            {filtered.length === 0 ? (
+            {loading ? (
+              <div className="flex items-center justify-center py-16">
+                <p className="text-muted-foreground text-[13px]">Loading users...</p>
+              </div>
+            ) : filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
                   <Inbox className="w-8 h-8 text-muted-foreground/40" />
                 </div>
-                <p className="text-[15px] font-semibold text-foreground">No users yet</p>
-                <p className="text-[13px] text-muted-foreground mt-1 max-w-[300px]">
-                  {users.length === 0 ? "Add your first user to get started." : "No users match your search."}
+                <p className="text-[15px] font-semibold text-foreground">No users found</p>
+                <p className="text-[13px] text-muted-foreground mt-1">
+                  {users.length === 0 ? "No users have registered yet." : "No users match your filters."}
                 </p>
-                {users.length === 0 && (
-                  <Button className="mt-4 gap-1.5" onClick={openCreate}>
-                    <UserPlus className="w-4 h-4" /> Add User
-                  </Button>
-                )}
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30 hover:bg-muted/30">
-                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">Name</TableHead>
-                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">Email</TableHead>
-                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">Role</TableHead>
-                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">Status</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">User</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">Phone</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">Roles</TableHead>
                     <TableHead className="text-[11px] uppercase tracking-wider font-bold">Joined</TableHead>
                     <TableHead className="w-10"></TableHead>
                   </TableRow>
@@ -152,19 +220,23 @@ const AdminUsers = () => {
                       <TableCell>
                         <div className="flex items-center gap-2.5">
                           <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-bold text-primary shrink-0">
-                            {user.name.split(" ").map(n => n[0]).join("")}
+                            {(user.full_name || "U").charAt(0).toUpperCase()}
                           </div>
-                          <span className="font-semibold text-[13px]">{user.name}</span>
+                          <div>
+                            <span className="font-semibold text-[13px] text-foreground block">{user.full_name || "Unnamed"}</span>
+                            <span className="text-[11px] text-muted-foreground">{user.id.slice(0, 8)}...</span>
+                          </div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-[13px] text-muted-foreground">{user.email}</TableCell>
-                      <TableCell><Badge variant="secondary" className="capitalize text-[11px]">{user.role}</Badge></TableCell>
+                      <TableCell className="text-[13px] text-muted-foreground">{user.phone || "—"}</TableCell>
                       <TableCell>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${statusColor(user.status)}`}>
-                          {user.status}
-                        </span>
+                        <div className="flex gap-1 flex-wrap">
+                          {user.roles.map(r => (
+                            <span key={r} className={`text-[10px] font-bold px-2 py-0.5 rounded-md capitalize ${roleColor(r)}`}>{r}</span>
+                          ))}
+                        </div>
                       </TableCell>
-                      <TableCell className="text-[13px] text-muted-foreground">{user.joined}</TableCell>
+                      <TableCell className="text-[13px] text-muted-foreground">{new Date(user.created_at).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -174,13 +246,10 @@ const AdminUsers = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => { setViewingUser(user); setViewDialogOpen(true); }}>
-                              <Eye className="w-4 h-4 mr-2" /> View
+                              <Eye className="w-4 h-4 mr-2" /> View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openEdit(user)}>
-                              <Pencil className="w-4 h-4 mr-2" /> Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive" onClick={() => { setDeletingUser(user); setDeleteDialogOpen(true); }}>
-                              <Trash2 className="w-4 h-4 mr-2" /> Delete
+                            <DropdownMenuItem onClick={() => { setManagingUser(user); setSelectedRole("user"); setRoleDialogOpen(true); }}>
+                              <Shield className="w-4 h-4 mr-2" /> Assign Role
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -190,86 +259,69 @@ const AdminUsers = () => {
                 </TableBody>
               </Table>
             )}
+            {filtered.length > 0 && (
+              <div className="flex items-center justify-between px-5 py-3 border-t border-border bg-muted/20">
+                <p className="text-[12px] text-muted-foreground font-medium">Showing {filtered.length} of {users.length} users</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Create/Edit Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[450px]">
-          <DialogHeader>
-            <DialogTitle>{editingUser ? "Edit User" : "Add User"}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Name *</Label>
-                <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Full name" />
-              </div>
-              <div className="space-y-2">
-                <Label>Email *</Label>
-                <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="email@example.com" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Role</Label>
-                <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{ROLES.map(r => <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{USER_STATUSES.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-            <Button onClick={handleSave}>{editingUser ? "Save Changes" : "Add User"}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* View Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="sm:max-w-[400px]">
+        <DialogContent className="sm:max-w-[450px]">
           <DialogHeader><DialogTitle>User Details</DialogTitle></DialogHeader>
           {viewingUser && (
             <div className="space-y-3 py-2 text-[13px]">
               <div className="grid grid-cols-2 gap-3">
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Name</span><span className="font-semibold">{viewingUser.name}</span></div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Email</span>{viewingUser.email}</div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Role</span><Badge variant="secondary" className="capitalize">{viewingUser.role}</Badge></div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Joined</span>{viewingUser.joined}</div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Name</span><span className="font-semibold">{viewingUser.full_name || "Unnamed"}</span></div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Phone</span>{viewingUser.phone || "—"}</div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">User ID</span><span className="font-mono text-[11px]">{viewingUser.id}</span></div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Joined</span>{new Date(viewingUser.created_at).toLocaleDateString()}</div>
               </div>
               <div>
-                <span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-1">Status</span>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${statusColor(viewingUser.status)}`}>{viewingUser.status}</span>
+                <span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-1">Roles</span>
+                <div className="flex gap-1">
+                  {viewingUser.roles.map(r => (
+                    <Badge key={r} variant="secondary" className="capitalize">{r}</Badge>
+                  ))}
+                </div>
               </div>
             </div>
           )}
           <DialogFooter>
             <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
-            {viewingUser && <Button onClick={() => { setViewDialogOpen(false); openEdit(viewingUser); }}>Edit</Button>}
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      {/* Role Assignment Dialog */}
+      <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader><DialogTitle>Delete User</DialogTitle></DialogHeader>
-          <p className="text-[13px] text-muted-foreground py-2">
-            Are you sure you want to delete <span className="font-bold text-foreground">{deletingUser?.name}</span>? This cannot be undone.
-          </p>
+          <DialogHeader><DialogTitle>Assign Role</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-[13px] text-muted-foreground">
+              Assign a role to <strong>{managingUser?.full_name || "this user"}</strong>.
+            </p>
+            <div className="space-y-2">
+              <Label>Role</Label>
+              <Select value={selectedRole} onValueChange={setSelectedRole}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {ASSIGNABLE_ROLES.map(r => <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            {managingUser && (
+              <div className="text-[12px] text-muted-foreground">
+                Current roles: {managingUser.roles.join(", ")}
+              </div>
+            )}
+          </div>
           <DialogFooter>
             <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-            <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+            <Button onClick={handleAssignRole}>Assign Role</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

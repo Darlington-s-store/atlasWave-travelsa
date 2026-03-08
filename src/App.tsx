@@ -37,6 +37,22 @@ import AdminChatbot from "./pages/admin/AdminChatbot";
 import AdminShipments from "./pages/admin/AdminShipments";
 import AdminRefunds from "./pages/admin/AdminRefunds";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminFlights from "./pages/admin/AdminFlights";
+import AdminHotels from "./pages/admin/AdminHotels";
+import AdminVisaApplications from "./pages/admin/AdminVisaApplications";
+import AdminWorkPermits from "./pages/admin/AdminWorkPermits";
+import AdminCredentials from "./pages/admin/AdminCredentials";
+import AdminCustoms from "./pages/admin/AdminCustoms";
+import AdminConsultations from "./pages/admin/AdminConsultations";
+import AdminDocumentation from "./pages/admin/AdminDocumentation";
+import AdminDeals from "./pages/admin/AdminDeals";
+import AdminReviews from "./pages/admin/AdminReviews";
+import AdminNotifications from "./pages/admin/AdminNotifications";
+import AdminBlog from "./pages/admin/AdminBlog";
+import AdminReports from "./pages/admin/AdminReports";
+import AdminRoles from "./pages/admin/AdminRoles";
+import AdminSecurity from "./pages/admin/AdminSecurity";
+import AdminSettings from "./pages/admin/AdminSettings";
 import Payments from "./pages/Payments";
 import ShipmentTracking from "./pages/ShipmentTracking";
 import NotFound from "./pages/NotFound";
@@ -80,14 +96,29 @@ const App = () => (
               {/* Admin Routes */}
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminOverview />} />
-              <Route path="/admin/users" element={<AdminUsers />} />
-              <Route path="/admin/applications" element={<AdminApplications />} />
-              <Route path="/admin/payments" element={<AdminPayments />} />
-              <Route path="/admin/chatbot" element={<AdminChatbot />} />
-              <Route path="/admin/shipments" element={<AdminShipments />} />
-              <Route path="/admin/refunds" element={<AdminRefunds />} />
               <Route path="/admin/analytics" element={<AdminAnalytics />} />
+              <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/admin/roles" element={<AdminRoles />} />
+              <Route path="/admin/flights" element={<AdminFlights />} />
+              <Route path="/admin/hotels" element={<AdminHotels />} />
+              <Route path="/admin/deals" element={<AdminDeals />} />
+              <Route path="/admin/applications" element={<AdminVisaApplications />} />
+              <Route path="/admin/work-permits" element={<AdminWorkPermits />} />
+              <Route path="/admin/credentials" element={<AdminCredentials />} />
+              <Route path="/admin/shipments" element={<AdminShipments />} />
+              <Route path="/admin/customs" element={<AdminCustoms />} />
+              <Route path="/admin/consultations" element={<AdminConsultations />} />
+              <Route path="/admin/documentation" element={<AdminDocumentation />} />
+              <Route path="/admin/payments" element={<AdminPayments />} />
+              <Route path="/admin/refunds" element={<AdminRefunds />} />
+              <Route path="/admin/reviews" element={<AdminReviews />} />
+              <Route path="/admin/notifications" element={<AdminNotifications />} />
+              <Route path="/admin/chatbot" element={<AdminChatbot />} />
               <Route path="/admin/content" element={<AdminContent />} />
+              <Route path="/admin/blog" element={<AdminBlog />} />
+              <Route path="/admin/reports" element={<AdminReports />} />
+              <Route path="/admin/security" element={<AdminSecurity />} />
+              <Route path="/admin/settings" element={<AdminSettings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <ChatBot />
