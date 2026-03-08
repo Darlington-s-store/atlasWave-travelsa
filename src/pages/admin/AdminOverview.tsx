@@ -26,7 +26,7 @@ const AdminOverview = () => {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-5">
           {stats.map((stat) => (
             <Card key={stat.label} className="shadow-card hover:shadow-card-hover transition-all duration-300 rounded-xl border border-border/60 overflow-hidden group">
               <CardContent className="p-5">
