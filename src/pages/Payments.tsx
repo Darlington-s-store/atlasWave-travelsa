@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { motion } from "framer-motion";
@@ -22,6 +22,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -29,16 +31,17 @@ const fadeUp = {
   viewport: { once: true },
 };
 
-const MOCK_TRANSACTIONS = [
-  { id: "TXN-2024-001", date: "2024-03-08", description: "Schengen Work Permit Application", amount: 450, currency: "USD", method: "Mastercard", status: "completed" as const },
-  { id: "TXN-2024-002", date: "2024-03-06", description: "Flight Booking — Accra to London", amount: 1250, currency: "USD", method: "Mobile Money", status: "completed" as const },
-  { id: "TXN-2024-003", date: "2024-03-05", description: "Consultation Booking", amount: 75, currency: "USD", method: "Mastercard", status: "completed" as const },
-  { id: "TXN-2024-004", date: "2024-03-04", description: "Sea Cargo Shipment — GH to UK", amount: 800, currency: "USD", method: "Mobile Money", status: "pending" as const },
-  { id: "TXN-2024-005", date: "2024-03-01", description: "Hotel Accommodation — Paris", amount: 320, currency: "USD", method: "Mastercard", status: "failed" as const },
-  { id: "TXN-2024-006", date: "2024-02-28", description: "Visa Processing Fee", amount: 200, currency: "USD", method: "Mobile Money", status: "refunded" as const },
-];
+interface Transaction {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+  currency: string;
+  method: string;
+  status: "completed" | "pending" | "failed" | "refunded";
+}
 
-const EXCHANGE_RATE = 15.2; // 1 USD = 15.2 GHS (mock)
+const EXCHANGE_RATE = 15.2;
 
 const statusConfig = {
   completed: { icon: CheckCircle2, label: "Completed", className: "bg-secondary/10 text-secondary border-secondary/20" },
@@ -48,12 +51,34 @@ const statusConfig = {
 };
 
 const Payments = () => {
+  const { user, isAuthenticated } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<"card" | "momo">("card");
   const [amount, setAmount] = useState("");
   const [convertFrom, setConvertFrom] = useState<"USD" | "GHS">("USD");
   const [convertAmount, setConvertAmount] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      supabase
+        .from("payments")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .then(({ data }) => {
+          if (data) setTransactions(data.map((d: any) => ({
+            id: `TXN-${d.id.slice(0, 8).toUpperCase()}`,
+            date: new Date(d.created_at).toISOString().split("T")[0],
+            description: d.description || "Payment",
+            amount: Number(d.amount),
+            currency: d.currency || "USD",
+            method: d.payment_method || "Card",
+            status: d.status as Transaction["status"],
+          })));
+        });
+    }
+  }, [isAuthenticated]);
 
   const convertedValue = convertAmount
     ? convertFrom === "USD"
@@ -61,7 +86,7 @@ const Payments = () => {
       : (parseFloat(convertAmount) / EXCHANGE_RATE).toFixed(2)
     : "0.00";
 
-  const filteredTransactions = MOCK_TRANSACTIONS.filter((t) => {
+  const filteredTransactions = transactions.filter((t) => {
     const matchesSearch = t.description.toLowerCase().includes(searchQuery.toLowerCase()) || t.id.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = filterStatus === "all" || t.status === filterStatus;
     return matchesSearch && matchesStatus;

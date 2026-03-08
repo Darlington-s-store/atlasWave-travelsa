@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,6 +23,7 @@ import {
   Box,
   Camera,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -69,13 +70,33 @@ const ShipmentTracking = () => {
   const [shipment, setShipment] = useState<typeof MOCK_SHIPMENT | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleTrack = () => {
+  const handleTrack = async () => {
     if (!trackingId.trim()) return;
     setLoading(true);
-    setTimeout(() => {
+    
+    // Try to find in database first
+    const { data } = await supabase
+      .from("shipments")
+      .select("*")
+      .eq("tracking_number", trackingId.trim().toUpperCase())
+      .maybeSingle();
+    
+    if (data) {
+      setShipment({
+        ...MOCK_SHIPMENT,
+        id: data.tracking_number,
+        origin: data.origin,
+        destination: data.destination,
+        weight: data.weight || "N/A",
+        status: data.status === "delivered" ? "Delivered" : data.status === "customs" ? "Customs" : "In Transit",
+        progress: data.progress,
+        eta: data.eta || "TBD",
+      });
+    } else {
+      // Fallback to mock for demo
       setShipment({ ...MOCK_SHIPMENT, id: trackingId.toUpperCase() || MOCK_SHIPMENT.id });
-      setLoading(false);
-    }, 1200);
+    }
+    setLoading(false);
   };
 
   const ModeIcon = shipment?.modeIcon || Package;

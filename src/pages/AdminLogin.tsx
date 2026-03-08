@@ -19,12 +19,12 @@ const AdminLogin = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const success = await adminLogin(email, password);
+    const result = await adminLogin(email, password);
     setLoading(false);
-    if (success) {
+    if (result.success) {
       navigate("/admin");
     } else {
-      toast({ title: "Access Denied", description: "Invalid admin credentials.", variant: "destructive" });
+      toast({ title: "Access Denied", description: result.error || "Invalid admin credentials.", variant: "destructive" });
     }
   };
 
@@ -162,8 +162,8 @@ const AdminLogin = () => {
 
           <div className="mt-8 p-3.5 rounded-xl bg-muted/50 border border-border">
             <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
-              <span className="font-semibold text-foreground/70">Demo credentials:</span>{" "}
-              admin@africanwaves.com / admin123
+              <span className="font-semibold text-foreground/70">Note:</span>{" "}
+              Only users with the admin role can sign in here.
             </p>
           </div>
         </div>

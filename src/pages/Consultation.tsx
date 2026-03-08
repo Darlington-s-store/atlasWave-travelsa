@@ -9,8 +9,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { ArrowRight, CheckCircle2, Video, Users, Phone, Clock, CreditCard, Shield, Globe, CalendarX, RefreshCw, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -56,12 +58,19 @@ const timezones = [
   { value: "GMT-8", label: "GMT-8 (Los Angeles)" },
 ];
 
-const MOCK_BOOKINGS = [
-  { id: "CON-2024-001", type: "Online Video Consultation", topic: "Work Permits", date: "Mar 10, 2024", time: "10:00 AM", duration: "45 min", status: "upcoming" as const, price: "$50" },
-  { id: "CON-2024-002", type: "Phone Consultation", topic: "Visa Assistance", date: "Feb 25, 2024", time: "02:30 PM", duration: "30 min", status: "completed" as const, price: "$30" },
-];
+interface ConsultationBooking {
+  id: string;
+  type: string;
+  topic: string | null;
+  date: string;
+  time: string;
+  duration: number;
+  status: "upcoming" | "completed" | "cancelled";
+  price: number;
+}
 
 const Consultation = () => {
+  const { user, isAuthenticated } = useAuth();
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("");
@@ -70,6 +79,29 @@ const Consultation = () => {
   const [modeFilter, setModeFilter] = useState<"all" | "online" | "in-person">("all");
   const [step, setStep] = useState(1);
   const [showBookings, setShowBookings] = useState(false);
+  const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
+  const [contactForm, setContactForm] = useState({ firstName: "", lastName: "", email: user?.email || "", phone: user?.phone || "", topic: "", notes: "" });
+
+  useEffect(() => {
+    if (isAuthenticated && showBookings) {
+      supabase
+        .from("consultations")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .then(({ data }) => {
+          if (data) setBookings(data.map((d: any) => ({
+            id: d.id.slice(0, 8).toUpperCase(),
+            type: d.type,
+            topic: d.topic,
+            date: d.date,
+            time: d.time,
+            duration: d.duration,
+            status: d.status,
+            price: Number(d.price),
+          })));
+        });
+    }
+  }, [isAuthenticated, showBookings]);
 
   const selectedConsultation = consultationTypes.find((c) => c.title === selectedType);
   const price = selectedConsultation ? selectedConsultation.prices[duration] : 0;
@@ -114,15 +146,17 @@ const Consultation = () => {
               <div className="container py-12">
                 <h2 className="text-2xl font-display font-bold text-foreground mb-6">My Consultations</h2>
                 <div className="space-y-3">
-                  {MOCK_BOOKINGS.map((b) => (
+                  {bookings.length === 0 ? (
+                    <p className="text-muted-foreground text-sm">No consultations booked yet.</p>
+                  ) : bookings.map((b) => (
                     <div key={b.id} className="bg-card rounded-xl border p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-display font-bold text-foreground text-sm">{b.id}</span>
+                          <span className="font-display font-bold text-foreground text-sm">CON-{b.id}</span>
                           <Badge variant="outline" className={b.status === "upcoming" ? "bg-secondary/10 text-secondary border-secondary/20" : "bg-muted text-muted-foreground"}>{b.status}</Badge>
                         </div>
-                        <p className="text-sm text-foreground">{b.type} — {b.topic}</p>
-                        <p className="text-xs text-muted-foreground">{b.date} at {b.time} · {b.duration} · {b.price}</p>
+                        <p className="text-sm text-foreground">{b.type} — {b.topic || "General"}</p>
+                        <p className="text-xs text-muted-foreground">{b.date} at {b.time} · {b.duration} min · ${b.price}</p>
                       </div>
                       {b.status === "upcoming" && (
                         <div className="flex gap-2">
@@ -394,7 +428,24 @@ const Consultation = () => {
 
                         <div className="flex justify-between">
                           <Button variant="outline" onClick={() => setStep(3)}>Back</Button>
-                          <Button variant="accent" size="lg" onClick={() => {
+                          <Button variant="accent" size="lg" onClick={async () => {
+                            if (isAuthenticated && user) {
+                              await supabase.from("consultations").insert({
+                                user_id: user.id,
+                                type: selectedConsultation.title,
+                                topic: contactForm.topic || null,
+                                duration: parseInt(duration),
+                                date: date?.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) || "",
+                                time: selectedTime,
+                                timezone,
+                                price,
+                                first_name: contactForm.firstName,
+                                last_name: contactForm.lastName,
+                                email: contactForm.email,
+                                phone: contactForm.phone,
+                                notes: contactForm.notes || null,
+                              } as any);
+                            }
                             toast({ title: "Booking Confirmed!", description: `Your ${duration}-min ${selectedConsultation.title} has been booked for ${selectedTime}.` });
                             setShowBookings(true);
                             setSelectedType("");
