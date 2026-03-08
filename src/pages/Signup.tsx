@@ -30,7 +30,7 @@ const Signup = () => {
     setLoading(false);
     if (success) {
       toast({ title: "Account created!", description: "Welcome to AtlasWave." });
-      navigate("/profile");
+      navigate("/dashboard");
     }
   };
 

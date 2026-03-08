@@ -22,7 +22,7 @@ const Login = () => {
     setLoading(false);
     if (success) {
       toast({ title: "Welcome back!", description: "You've been logged in successfully." });
-      navigate("/profile");
+      navigate("/dashboard");
     }
   };
 
