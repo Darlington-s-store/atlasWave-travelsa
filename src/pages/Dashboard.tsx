@@ -659,6 +659,7 @@ function BookingsTab({ bookings, onRefresh, userId }: { bookings: any[]; onRefre
 
 // --- PAYMENTS TAB ---
 function PaymentsTab({ payments, onRefresh, userId }: { payments: any[]; onRefresh: () => void; userId: string }) {
+  const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ amount: "", description: "", payment_method: "card", currency: "USD" });
   const [submitting, setSubmitting] = useState(false);
