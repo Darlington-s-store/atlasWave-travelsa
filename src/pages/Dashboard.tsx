@@ -5,21 +5,23 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import {
   LayoutDashboard, FileText, CalendarDays, Package, FolderOpen, Settings,
   User, LogOut, Upload, Edit, CheckCircle, Clock, AlertCircle, XCircle,
   Plane, ArrowRight, MessageCircle, Bell, ChevronRight, Truck, Eye,
-  BookOpen
+  BookOpen, CreditCard, DollarSign, Shield, Lock, Mail, Smartphone,
+  BellRing, Trash2, MapPin, Search
 } from "lucide-react";
 import logo from "@/assets/logo.jpeg";
 
 // --- Sidebar ---
 const sidebarItems = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard },
-  { id: "applications", label: "My Applications", icon: FileText },
-  { id: "bookings", label: "Bookings", icon: CalendarDays },
-  { id: "shipments", label: "Shipments", icon: Package },
+  { id: "overview", label: "Dashboard", icon: LayoutDashboard },
+  { id: "applications", label: "Applications", icon: FileText },
+  { id: "shipments", label: "Logistics", icon: Package },
+  { id: "bookings", label: "Travel", icon: Plane },
   { id: "documents", label: "Documents", icon: FolderOpen },
   { id: "settings", label: "Settings", icon: Settings },
 ];
@@ -33,9 +35,10 @@ const statusConfig = {
 
 // --- Mock data ---
 const MOCK_ACTIVITIES = [
-  { icon: FileText, color: "text-blue-500", title: "New document requested", desc: "Passport copy needed for Canada LMIA.", time: "2 hours ago" },
-  { icon: CheckCircle, color: "text-emerald-500", title: "Payment confirmed", desc: "Logistics fees for SH-4821 received.", time: "Yesterday" },
-  { icon: Plane, color: "text-amber-500", title: "Flight Alert", desc: "Gate changed for KL 590. Now Gate B12.", time: "2 days ago" },
+  { icon: DollarSign, color: "text-emerald-500", bg: "bg-emerald-50", title: "Payment Confirmed", desc: "Logistics deposit of $1,200 received.", time: "3 HOURS AGO" },
+  { icon: FileText, color: "text-amber-500", bg: "bg-amber-50", title: "Document Requested", desc: "Please upload your birth certificate.", time: "YESTERDAY" },
+  { icon: MessageCircle, color: "text-blue-500", bg: "bg-blue-50", title: "Agent Response", desc: "Sarah replied to your visa inquiry.", time: "1 DAY AGO" },
+  { icon: Package, color: "text-primary", bg: "bg-primary/5", title: "Package Collected", desc: "Courier has picked up your relocation boxes.", time: "2 DAYS AGO" },
 ];
 
 const MOCK_BOOKINGS = [
@@ -77,17 +80,21 @@ const Dashboard = () => {
   const activeApp = applications.find((a) => a.status === "in-review" || a.status === "pending");
   const activeShipment = MOCK_SHIPMENTS.find((s) => s.status === "in-transit");
 
+  const greeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    return "Good Evening";
+  };
+
   return (
     <div className="min-h-screen flex bg-muted/30">
       {/* Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 bg-primary text-primary-foreground fixed top-0 left-0 h-screen z-40">
-        <div className="p-6 border-b border-primary-foreground/10">
+      <aside className="hidden lg:flex flex-col w-64 bg-[hsl(220,30%,15%)] text-primary-foreground fixed top-0 left-0 h-screen z-40">
+        <div className="p-6 border-b border-white/10">
           <Link to="/" className="flex items-center gap-3">
             <img src={logo} alt="AtlasWave" className="h-9 w-9 rounded-lg object-cover" />
-            <div>
-              <span className="font-display font-bold text-base">AtlasWave</span>
-              <p className="text-primary-foreground/50 text-xs">Travel & Logistics</p>
-            </div>
+            <span className="font-display font-bold text-lg text-white">AtlasWave</span>
           </Link>
         </div>
 
@@ -100,8 +107,8 @@ const Dashboard = () => {
                 onClick={() => setActiveTab(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   active
-                    ? "bg-primary-foreground/15 text-primary-foreground"
-                    : "text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/5"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-white/60 hover:text-white hover:bg-white/5"
                 }`}
               >
                 <item.icon className="w-4 h-4" />
@@ -111,12 +118,13 @@ const Dashboard = () => {
           })}
         </nav>
 
-        <div className="p-4">
-          <Link to="/consultation">
-            <Button variant="accent" className="w-full">
-              <BookOpen className="w-4 h-4 mr-2" /> Book Consultation
-            </Button>
-          </Link>
+        {/* Support Hours */}
+        <div className="p-4 border-t border-white/10">
+          <p className="text-white/40 text-[10px] uppercase tracking-wider font-semibold mb-2">Support Hours</p>
+          <p className="text-white/60 text-xs mb-3">Mon-Fri 9am - 6pm EST</p>
+          <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm">
+            <MessageCircle className="w-4 h-4 mr-2" /> Start Live Chat
+          </Button>
         </div>
       </aside>
 
@@ -130,31 +138,29 @@ const Dashboard = () => {
               <img src={logo} alt="AtlasWave" className="h-8 w-8 rounded-lg object-cover" />
             </Link>
 
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="w-5 h-5 text-primary" />
-              </div>
-              <div className="hidden sm:block">
-                <p className="font-display font-bold text-foreground text-sm">{user?.fullName}</p>
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] px-1.5 py-0">
-                    <CheckCircle className="w-2.5 h-2.5 mr-0.5" /> VERIFIED
-                  </Badge>
-                  <span className="text-muted-foreground text-xs">ID: {user?.id}</span>
-                </div>
-              </div>
+            {/* Search */}
+            <div className="hidden md:flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2 w-80">
+              <Search className="w-4 h-4 text-muted-foreground" />
+              <input
+                placeholder="Search applications, flights, or documents..."
+                className="bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground w-full"
+              />
             </div>
 
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="hidden sm:flex">
-                <Upload className="w-4 h-4 mr-2" /> Upload Document
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="w-5 h-5" />
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-destructive rounded-full" />
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setActiveTab("settings")}>
-                <Edit className="w-4 h-4 mr-2" /> <span className="hidden sm:inline">Edit Profile</span>
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => { logout(); navigate("/"); }}>
-                <LogOut className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User className="w-4 h-4 text-primary" />
+                </div>
+                <div className="hidden sm:block">
+                  <p className="font-display font-bold text-foreground text-sm leading-tight">{user?.fullName}</p>
+                  <p className="text-muted-foreground text-[11px]">Premium Member</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -177,9 +183,9 @@ const Dashboard = () => {
           </div>
         </header>
 
-        {/* Content - offset for fixed header */}
+        {/* Content */}
         <main className="flex-1 p-6 lg:p-8 mt-16 lg:mt-16">
-          {activeTab === "overview" && <OverviewTab applications={applications} activeApp={activeApp} activeShipment={activeShipment} />}
+          {activeTab === "overview" && <OverviewTab applications={applications} activeApp={activeApp} activeShipment={activeShipment} userName={user?.fullName || "User"} greeting={greeting()} />}
           {activeTab === "applications" && <ApplicationsTab applications={applications} />}
           {activeTab === "bookings" && <BookingsTab />}
           {activeTab === "shipments" && <ShipmentsTab />}
@@ -194,152 +200,199 @@ const Dashboard = () => {
 };
 
 // --- OVERVIEW TAB ---
-function OverviewTab({ applications, activeApp, activeShipment }: { applications: Application[]; activeApp?: Application; activeShipment?: typeof MOCK_SHIPMENTS[0] }) {
+function OverviewTab({ applications, activeApp, activeShipment, userName, greeting }: { applications: Application[]; activeApp?: Application; activeShipment?: typeof MOCK_SHIPMENTS[0]; userName: string; greeting: string }) {
+  const firstName = userName.split(" ")[0];
+  const barData = [40, 55, 35, 70, 60, 80, 45];
+  const days = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+
   return (
-    <div className="space-y-8">
-      {/* Sub tabs */}
-      <div className="flex gap-6 border-b">
-        {["Overview", "Applications", "Bookings", "Shipments"].map((t, i) => (
-          <button key={t} className={`pb-3 text-sm font-medium border-b-2 transition-colors ${i === 0 ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-            {t}
-          </button>
-        ))}
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-foreground">{greeting}, {firstName}</h1>
+          <p className="text-muted-foreground text-sm">Here's what's happening with your global mobility profile today.</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">Download Reports</Button>
+          <Button size="sm">New Application</Button>
+        </div>
       </div>
 
-      {/* Active Processes */}
-      <section>
-        <h2 className="font-display text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-          <AlertCircle className="w-5 h-5 text-primary" /> Active Processes
-        </h2>
-        <div className="grid md:grid-cols-2 gap-4">
-          {/* Application card */}
-          {activeApp && (
-            <div className="bg-background rounded-xl border p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <Badge className={statusConfig[activeApp.status].color + " text-[10px] border"}>
-                    {statusConfig[activeApp.status].label.toUpperCase()}
-                  </Badge>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Application Status</p>
-              <h3 className="font-display font-bold text-foreground mb-1">{activeApp.title}</h3>
-              <p className="text-sm text-muted-foreground mb-3">{activeApp.details}</p>
-              <div className="flex items-center justify-between">
-                <button className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">
-                  View Details <ChevronRight className="w-3 h-3" />
-                </button>
-                <span className="text-xs text-muted-foreground">Ref: {activeApp.id}</span>
+      {/* Stats Row */}
+      <div className="grid md:grid-cols-3 gap-4">
+        {/* Visa Progress */}
+        <div className="bg-background rounded-xl border p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-display font-semibold text-foreground text-sm">Visa Progress</h3>
+            <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-[10px] border">Canada LMIA</Badge>
+          </div>
+          <div className="flex items-center justify-center mb-3">
+            <div className="relative w-28 h-28">
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" fill="none" strokeWidth="10" className="stroke-muted" />
+                <circle cx="50" cy="50" r="40" fill="none" strokeWidth="10" className="stroke-primary" strokeDasharray={`${70 * 2.51} ${100 * 2.51}`} strokeLinecap="round" />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="font-display font-bold text-2xl text-foreground">70%</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Complete</span>
               </div>
             </div>
-          )}
-
-          {/* Shipment card */}
-          {activeShipment && (
-            <div className="bg-background rounded-xl border p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
-                    <Truck className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-[10px] border">IN TRANSIT</Badge>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Active Shipment</p>
-              <h3 className="font-display font-bold text-foreground mb-1">GP-{activeShipment.id}</h3>
-              <p className="text-sm text-muted-foreground mb-3">
-                Personal Effects • {activeShipment.weight} • {activeShipment.origin} to {activeShipment.dest}
-              </p>
-              <div className="mb-2">
-                <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${activeShipment.progress}%` }} />
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">Arrives in {activeShipment.eta}</span>
-                <button className="text-sm text-primary font-medium hover:underline">Track</button>
-              </div>
-            </div>
-          )}
+          </div>
+          <p className="text-center text-xs text-muted-foreground">Next step: <span className="font-medium text-foreground">Biometrics Appointment</span></p>
         </div>
-      </section>
 
-      {/* Bottom row: Upcoming Travel + Activity + Help */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Upcoming Travel */}
-        <div className="lg:col-span-2 space-y-4">
-          <h2 className="font-display text-xl font-bold text-foreground">Upcoming Travel</h2>
-          <div className="bg-background rounded-xl border overflow-hidden hover:shadow-md transition-shadow">
-            <div className="h-32 bg-gradient-to-r from-primary to-primary/70 flex items-end p-5">
-              <div>
-                <h3 className="text-primary-foreground font-display font-bold text-lg">Flight to Toronto (YYZ)</h3>
-                <p className="text-primary-foreground/70 text-sm">Air Canada • AC 849</p>
+        {/* Spending by Category */}
+        <div className="bg-background rounded-xl border p-6">
+          <h3 className="font-display font-semibold text-foreground text-sm mb-4">Spending by Category</h3>
+          <div className="flex items-center gap-6">
+            <div className="relative w-24 h-24">
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" fill="none" strokeWidth="12" className="stroke-[hsl(220,70%,50%)]" strokeDasharray={`${45 * 2.51} ${100 * 2.51}`} />
+                <circle cx="50" cy="50" r="40" fill="none" strokeWidth="12" className="stroke-primary" strokeDasharray={`${35 * 2.51} ${100 * 2.51}`} strokeDashoffset={`-${45 * 2.51}`} />
+                <circle cx="50" cy="50" r="40" fill="none" strokeWidth="12" className="stroke-amber-400" strokeDasharray={`${20 * 2.51} ${100 * 2.51}`} strokeDashoffset={`-${80 * 2.51}`} />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="font-display font-bold text-sm text-foreground">$3.4k</span>
               </div>
             </div>
-            <div className="p-5 flex flex-wrap items-center gap-6">
-              <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Departure</p>
-                <p className="font-bold text-foreground text-sm">Mar 28, 2026</p>
-                <p className="text-xs text-muted-foreground">10:30 AM (LHR)</p>
-              </div>
-              <ArrowRight className="w-4 h-4 text-muted-foreground hidden sm:block" />
-              <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Arrival</p>
-                <p className="font-bold text-foreground text-sm">Mar 28, 2026</p>
-                <p className="text-xs text-muted-foreground">01:45 PM (YYZ)</p>
-              </div>
-              <div className="ml-auto">
-                <Button variant="outline" size="sm">Manage Booking</Button>
-              </div>
+            <div className="space-y-2 text-xs">
+              <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[hsl(220,70%,50%)]" /> Visas <span className="text-muted-foreground ml-auto">45%</span></div>
+              <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-primary" /> Logistics <span className="text-muted-foreground ml-auto">35%</span></div>
+              <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-amber-400" /> Travel <span className="text-muted-foreground ml-auto">20%</span></div>
             </div>
           </div>
         </div>
 
-        {/* Right column: Activity + Help */}
-        <div className="space-y-6">
-          {/* Activity */}
-          <div className="bg-background rounded-xl border p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display font-bold text-foreground">Activity</h3>
-              <button className="text-xs text-primary font-medium hover:underline">Mark all read</button>
+        {/* Activity Volume */}
+        <div className="bg-background rounded-xl border p-6">
+          <h3 className="font-display font-semibold text-foreground text-sm mb-4">Activity Volume</h3>
+          <div className="flex items-end gap-2 h-20">
+            {barData.map((h, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                <div
+                  className={`w-full rounded-t transition-all ${i === 5 ? "bg-primary" : "bg-primary/30"}`}
+                  style={{ height: `${h}%` }}
+                />
+                <span className="text-[9px] text-muted-foreground">{days[i]}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Active Processes + Recent Activity */}
+      <div className="grid lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-4">
+          <h2 className="font-display text-lg font-bold text-foreground">Active Processes</h2>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {/* Application card */}
+            {activeApp && (
+              <div className="bg-background rounded-xl border p-5 hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-[10px] border">IMMIGRATION</Badge>
+                </div>
+                <h3 className="font-display font-bold text-foreground mb-0.5">{activeApp.title}</h3>
+                <p className="text-xs text-muted-foreground mb-2">Application ID: #{activeApp.id}</p>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-muted-foreground">Verification Stage</span>
+                  <span className="text-xs font-semibold text-foreground">85%</span>
+                </div>
+                <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mb-3">
+                  <div className="h-full bg-primary rounded-full" style={{ width: "85%" }} />
+                </div>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Clock className="w-3 h-3" /> Estimated completion: Oct 24
+                </div>
+              </div>
+            )}
+
+            {/* Shipment card */}
+            {activeShipment && (
+              <div className="bg-background rounded-xl border p-5 hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <Truck className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-[10px] border">IN TRANSIT</Badge>
+                </div>
+                <h3 className="font-display font-bold text-foreground mb-0.5">Household Relocation</h3>
+                <p className="text-xs text-muted-foreground mb-2">Tracking: MY-{activeShipment.id}</p>
+                <div className="flex items-center gap-1 text-xs text-foreground mb-1">
+                  <Truck className="w-3 h-3 text-primary" /> En Route to Port
+                  <span className="ml-auto font-semibold">{activeShipment.progress}%</span>
+                </div>
+                <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mb-3">
+                  <div className="h-full bg-primary rounded-full" style={{ width: `${activeShipment.progress}%` }} />
+                </div>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <MapPin className="w-3 h-3" /> Current: Jersey City Terminal
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Upcoming Flight Card */}
+          <div className="bg-[hsl(220,30%,15%)] rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-white">
+            <div className="flex items-center gap-5">
+              <div>
+                <p className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Upcoming Flight</p>
+                <p className="font-display font-bold text-xl mt-1">JFK → BER</p>
+              </div>
+              <div className="h-10 w-px bg-white/20 hidden sm:block" />
+              <div>
+                <p className="text-[10px] text-white/50 uppercase">Date</p>
+                <p className="font-semibold text-sm">Nov 12, 2024</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-white/50 uppercase">Gate</p>
+                <p className="font-semibold text-sm">B32</p>
+              </div>
+              <div className="hidden sm:block">
+                <p className="text-[10px] text-white/50 uppercase">Booking Ref</p>
+                <p className="font-semibold text-sm">LX-9921</p>
+              </div>
             </div>
-            <div className="space-y-4">
+            <Button variant="outline" size="sm" className="border-white/30 text-white hover:bg-white/10 hover:text-white shrink-0">
+              View Ticket
+            </Button>
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="space-y-4">
+          <h2 className="font-display text-lg font-bold text-foreground">Recent Activity</h2>
+          <div className="bg-background rounded-xl border p-5">
+            <div className="space-y-5">
               {MOCK_ACTIVITIES.map((a, i) => (
                 <div key={i} className="flex gap-3">
-                  <div className={`mt-0.5 ${a.color}`}>
-                    <a.icon className="w-4 h-4" />
+                  <div className={`w-8 h-8 rounded-lg ${a.bg} flex items-center justify-center shrink-0`}>
+                    <a.icon className={`w-4 h-4 ${a.color}`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">{a.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{a.desc}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{a.time}</p>
+                    <p className="text-sm font-semibold text-foreground">{a.title}</p>
+                    <p className="text-xs text-muted-foreground">{a.desc}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider">{a.time}</p>
                   </div>
                 </div>
               ))}
             </div>
-            <button className="text-sm text-primary font-medium mt-4 hover:underline w-full text-center">View All Updates</button>
+            <button className="text-sm text-primary font-semibold mt-5 hover:underline w-full text-center uppercase tracking-wider text-xs">
+              View Full History
+            </button>
           </div>
 
-          {/* Need Help */}
-          <div className="bg-primary rounded-xl p-5 text-primary-foreground">
-            <h3 className="font-display font-bold mb-2">Need Help?</h3>
-            <p className="text-primary-foreground/70 text-sm mb-4">
-              Our dedicated relocation specialists are here to assist you with every step.
+          {/* Need Professional Help */}
+          <div className="bg-background rounded-xl border p-5">
+            <h3 className="font-display font-bold text-foreground mb-2">Need Professional Help?</h3>
+            <p className="text-xs text-muted-foreground mb-4">
+              Our immigration experts are ready to assist you with complex visa requirements and relocation logistics.
             </p>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-primary-foreground/20 flex items-center justify-center">
-                <User className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">Sarah Miller</p>
-                <p className="text-primary-foreground/60 text-xs">Senior Case Manager</p>
-              </div>
-            </div>
-            <Button variant="secondary" className="w-full">
-              <MessageCircle className="w-4 h-4 mr-2" /> Start Chat
+            <Button className="w-full">
+              <MessageCircle className="w-4 h-4 mr-2" /> Start Priority Chat
             </Button>
           </div>
         </div>
@@ -480,55 +533,231 @@ function DocumentsTab() {
 
 // --- SETTINGS TAB ---
 function SettingsTab({ user, form, setForm, editing, setEditing, handleSave, logout, navigate }: any) {
+  const [settingsTab, setSettingsTab] = useState("personal");
+  const [notifications, setNotifications] = useState({ email: true, desktop: true, sms: false });
+
+  const settingsTabs = [
+    { id: "personal", label: "Personal Info", icon: User },
+    { id: "security", label: "Security", icon: Shield },
+    { id: "notifications", label: "Notifications", icon: BellRing },
+    { id: "preferences", label: "Preferences", icon: Settings },
+  ];
+
   return (
-    <div className="max-w-2xl space-y-6">
-      <h2 className="font-display text-xl font-bold text-foreground">Account Settings</h2>
-      <div className="bg-background rounded-xl border p-6 space-y-5">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-            <User className="w-8 h-8 text-primary" />
-          </div>
-          <div>
-            <p className="font-display font-bold text-foreground">{user.fullName}</p>
-            <p className="text-sm text-muted-foreground">{user.email}</p>
-          </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="font-display text-2xl font-bold text-foreground">Account Settings</h1>
+        <p className="text-muted-foreground text-sm">Manage your profile, security, and communication preferences.</p>
+      </div>
+
+      <div className="flex gap-6">
+        {/* Settings sidebar */}
+        <div className="hidden md:block w-48 space-y-1 shrink-0">
+          {settingsTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setSettingsTab(tab.id)}
+              className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                settingsTab === tab.id
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        {editing ? (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Full Name</Label>
-              <Input value={form.fullName} onChange={(e: any) => setForm((p: any) => ({ ...p, fullName: e.target.value }))} className="h-12" />
+        {/* Mobile settings tabs */}
+        <div className="md:hidden flex overflow-x-auto gap-1 mb-4 -mt-2">
+          {settingsTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setSettingsTab(tab.id)}
+              className={`flex items-center gap-1 px-3 py-2 text-xs font-medium whitespace-nowrap rounded-lg ${
+                settingsTab === tab.id ? "bg-primary text-primary-foreground" : "text-muted-foreground bg-muted"
+              }`}
+            >
+              <tab.icon className="w-3.5 h-3.5" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Settings content */}
+        <div className="flex-1 max-w-2xl space-y-6">
+          {settingsTab === "personal" && (
+            <>
+              {/* Profile Picture */}
+              <div className="bg-background rounded-xl border p-6">
+                <h3 className="font-display font-semibold text-foreground mb-4 text-primary">Profile Picture</h3>
+                <div className="flex items-center gap-5">
+                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center relative">
+                    <User className="w-10 h-10 text-muted-foreground" />
+                    <button className="absolute -bottom-1 -right-1 w-7 h-7 bg-primary rounded-full flex items-center justify-center">
+                      <Edit className="w-3.5 h-3.5 text-primary-foreground" />
+                    </button>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">{user.fullName}</p>
+                    <p className="text-xs text-muted-foreground mb-2">JPG, GIF or PNG. Max size of 800K</p>
+                    <div className="flex gap-2">
+                      <Button size="sm" className="text-xs">Upload New Photo</Button>
+                      <Button variant="outline" size="sm" className="text-xs">Remove</Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Personal Information */}
+              <div className="bg-background rounded-xl border p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="font-display font-semibold text-foreground text-primary">Personal Information</h3>
+                  {!editing && (
+                    <button onClick={() => setEditing(true)} className="text-sm text-primary font-medium hover:underline">Edit All</button>
+                  )}
+                </div>
+
+                {editing ? (
+                  <div className="space-y-4">
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Full Name</Label>
+                        <Input value={form.fullName} onChange={(e: any) => setForm((p: any) => ({ ...p, fullName: e.target.value }))} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Email Address</Label>
+                        <Input value={form.email} onChange={(e: any) => setForm((p: any) => ({ ...p, email: e.target.value }))} />
+                      </div>
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Phone Number</Label>
+                        <Input value={form.phone} onChange={(e: any) => setForm((p: any) => ({ ...p, phone: e.target.value }))} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Location</Label>
+                        <Input placeholder="City, Country" />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Bio</Label>
+                      <Input placeholder="Tell us about yourself..." />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button onClick={handleSave}>Save Changes</Button>
+                      <Button variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Full Name</p>
+                      <p className="text-sm font-medium text-foreground">{user.fullName}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Email Address</p>
+                      <p className="text-sm font-medium text-foreground">{user.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Phone Number</p>
+                      <p className="text-sm font-medium text-foreground">{user.phone}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Location</p>
+                      <p className="text-sm font-medium text-foreground">San Francisco, California, USA</p>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Bio</p>
+                      <p className="text-sm text-foreground">Product Designer specialized in logistics and global mapping systems at AtlasWave</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {settingsTab === "security" && (
+            <div className="bg-background rounded-xl border p-6 space-y-6">
+              <h3 className="font-display font-semibold text-foreground text-primary">Account Security</h3>
+
+              <div className="flex items-center justify-between py-4 border-b">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                    <Lock className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground text-sm">Password</p>
+                    <p className="text-xs text-muted-foreground">Last changed 3 months ago</p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm">Change</Button>
+              </div>
+
+              <div className="flex items-center justify-between py-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
+                    <Shield className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground text-sm">Two-Factor Authentication</p>
+                    <p className="text-xs text-muted-foreground">Add an extra layer of security to your account.</p>
+                  </div>
+                </div>
+                <Switch defaultChecked />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Phone</Label>
-              <Input value={form.phone} onChange={(e: any) => setForm((p: any) => ({ ...p, phone: e.target.value }))} className="h-12" />
+          )}
+
+          {settingsTab === "notifications" && (
+            <div className="bg-background rounded-xl border p-6 space-y-6">
+              <h3 className="font-display font-semibold text-foreground text-primary">Notification Preferences</h3>
+
+              <div className="space-y-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-foreground text-sm text-primary">Email Notifications</p>
+                    <p className="text-xs text-muted-foreground">Weekly reports, progress updates, and team alerts</p>
+                  </div>
+                  <Switch checked={notifications.email} onCheckedChange={(v) => setNotifications(p => ({ ...p, email: v }))} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-foreground text-sm text-primary">Desktop Alerts</p>
+                    <p className="text-xs text-muted-foreground">Real-time push notifications for reminders</p>
+                  </div>
+                  <Switch checked={notifications.desktop} onCheckedChange={(v) => setNotifications(p => ({ ...p, desktop: v }))} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-foreground text-sm text-primary">SMS Alerts</p>
+                    <p className="text-xs text-muted-foreground">Urgent mobile phone notifications</p>
+                  </div>
+                  <Switch checked={notifications.sms} onCheckedChange={(v) => setNotifications(p => ({ ...p, sms: v }))} />
+                </div>
+              </div>
+
+              <Button className="w-full sm:w-auto">Save All Changes</Button>
             </div>
-            <div className="flex gap-2">
-              <Button onClick={handleSave}>Save Changes</Button>
-              <Button variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
+          )}
+
+          {settingsTab === "preferences" && (
+            <div className="bg-background rounded-xl border p-6 space-y-6">
+              <h3 className="font-display font-semibold text-foreground text-primary">Preferences</h3>
+              <p className="text-sm text-muted-foreground">Language, timezone, and display preferences coming soon.</p>
             </div>
+          )}
+
+          {/* Deactivate Account - always visible */}
+          <div className="bg-background rounded-xl border border-destructive/30 p-6">
+            <h3 className="font-display font-semibold text-destructive mb-1">Deactivate Account</h3>
+            <p className="text-xs text-muted-foreground mb-4">Once you delete your account, there is no going back. Please be certain.</p>
+            <Button variant="destructive" size="sm" onClick={() => { logout(); navigate("/"); }}>
+              <Trash2 className="w-4 h-4 mr-2" /> Delete Account
+            </Button>
           </div>
-        ) : (
-          <div className="space-y-3">
-            <div className="flex justify-between py-2 border-b">
-              <span className="text-sm text-muted-foreground">Phone</span>
-              <span className="text-sm text-foreground">{user.phone}</span>
-            </div>
-            <div className="flex justify-between py-2 border-b">
-              <span className="text-sm text-muted-foreground">Email</span>
-              <span className="text-sm text-foreground">{user.email}</span>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-                <Edit className="w-4 h-4 mr-2" /> Edit Profile
-              </Button>
-              <Button variant="destructive" size="sm" onClick={() => { logout(); navigate("/"); }}>
-                <LogOut className="w-4 h-4 mr-2" /> Logout
-              </Button>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
