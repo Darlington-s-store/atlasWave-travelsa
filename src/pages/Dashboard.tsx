@@ -550,6 +550,22 @@ function SettingsTab({ user, form, setForm, editing, setEditing, handleSave, log
         <p className="text-muted-foreground text-sm">Manage your profile, security, and communication preferences.</p>
       </div>
 
+      {/* Mobile settings tabs */}
+      <div className="md:hidden flex overflow-x-auto gap-2 pb-2">
+        {settingsTabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setSettingsTab(tab.id)}
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium whitespace-nowrap rounded-lg transition-colors ${
+              settingsTab === tab.id ? "bg-primary text-primary-foreground" : "text-muted-foreground bg-muted"
+            }`}
+          >
+            <tab.icon className="w-3.5 h-3.5" />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <div className="flex gap-6">
         {/* Settings sidebar */}
         <div className="hidden md:block w-48 space-y-1 shrink-0">
@@ -564,22 +580,6 @@ function SettingsTab({ user, form, setForm, editing, setEditing, handleSave, log
               }`}
             >
               <tab.icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Mobile settings tabs */}
-        <div className="md:hidden flex overflow-x-auto gap-1 mb-4 -mt-2">
-          {settingsTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setSettingsTab(tab.id)}
-              className={`flex items-center gap-1 px-3 py-2 text-xs font-medium whitespace-nowrap rounded-lg ${
-                settingsTab === tab.id ? "bg-primary text-primary-foreground" : "text-muted-foreground bg-muted"
-              }`}
-            >
-              <tab.icon className="w-3.5 h-3.5" />
               {tab.label}
             </button>
           ))}
