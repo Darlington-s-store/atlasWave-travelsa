@@ -100,12 +100,18 @@ const AdminWorkPermits = () => {
 
   const handleUpdate = async () => {
     if (!editingApp) return;
+    const previousStatus = editingApp.status;
     const updates: any = { status: editForm.status };
     if (editForm.details.trim()) updates.details = editForm.details;
     const { error } = await supabase.from("applications").update(updates).eq("id", editingApp.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Application Updated" });
     setEditDialogOpen(false);
+    notifyStatusChange({
+      type: "application_status_update",
+      userId: editingApp.user_id,
+      data: { title: editingApp.title, type: editingApp.type, previousStatus, newStatus: editForm.status, notes: editForm.details || "" },
+    });
     fetchApps();
   };
 
