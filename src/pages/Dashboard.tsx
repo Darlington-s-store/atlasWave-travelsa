@@ -19,6 +19,7 @@ import {
   BellRing, Trash2, MapPin, Search, Plus, Download
 } from "lucide-react";
 import logo from "@/assets/logo.jpeg";
+import { generateReceiptPDF } from "@/lib/generateReceipt";
 
 const sidebarItems = [
   { id: "overview", label: "Dashboard", icon: LayoutDashboard },
