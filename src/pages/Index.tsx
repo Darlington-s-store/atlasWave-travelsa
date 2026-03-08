@@ -4,22 +4,26 @@ import HeroSection from "@/components/HeroSection";
 import ServicesSection from "@/components/ServicesSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import PartnersSection from "@/components/PartnersSection";
+import BackToTop from "@/components/BackToTop";
+import WhatsAppButton from "@/components/WhatsAppButton";
 import { WorkPermitsSection, LogisticsSection, CTASection } from "@/components/HomeSections";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background scroll-smooth">
       <Header />
       <main>
-        <HeroSection />
-        <ServicesSection />
-        <WorkPermitsSection />
-        <LogisticsSection />
-        <TestimonialsSection />
-        <PartnersSection />
-        <CTASection />
+        <section id="hero"><HeroSection /></section>
+        <section id="services"><ServicesSection /></section>
+        <section id="work-permits"><WorkPermitsSection /></section>
+        <section id="logistics"><LogisticsSection /></section>
+        <section id="testimonials"><TestimonialsSection /></section>
+        <section id="partners"><PartnersSection /></section>
+        <section id="cta"><CTASection /></section>
       </main>
       <Footer />
+      <BackToTop />
+      <WhatsAppButton />
     </div>
   );
 };
