@@ -46,9 +46,18 @@ const AdminHotels = () => {
   };
 
   const updateStatus = async (id: string, status: string) => {
+    const booking = bookings.find(b => b.id === id);
     const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Status Updated" }); fetchBookings();
+    toast({ title: "Status Updated" });
+    if (booking) {
+      notifyStatusChange({
+        type: "booking_status_update",
+        userId: booking.user_id,
+        data: { route: booking.route, date: booking.date, provider: booking.provider || "", bookingType: "hotel", newStatus: status },
+      });
+    }
+    fetchBookings();
   };
 
   const handleCreate = async () => {

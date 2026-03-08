@@ -132,6 +132,8 @@ const AdminWorkPermits = () => {
     toast({ title: "Application Deleted" }); fetchApps();
   };
   const handleKanbanMove = async (itemId: string, newStatus: string) => {
+    const app = applications.find(a => a.id === itemId);
+    const previousStatus = app?.status || "";
     const { error } = await supabase.from("applications").update({ status: newStatus }).eq("id", itemId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -139,6 +141,13 @@ const AdminWorkPermits = () => {
     }
     setApplications(prev => prev.map(a => a.id === itemId ? { ...a, status: newStatus } : a));
     toast({ title: "Stage Updated", description: `Application moved to ${newStatus.replace(/-/g, " ")}` });
+    if (app) {
+      notifyStatusChange({
+        type: "application_status_update",
+        userId: app.user_id,
+        data: { title: app.title, type: app.type, previousStatus, newStatus, notes: "" },
+      });
+    }
   };
 
   const filtered = applications.filter(a => {
