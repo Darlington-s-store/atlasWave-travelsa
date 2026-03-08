@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { sendNotification } from "@/lib/notifications";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -76,12 +77,25 @@ const AdminRefunds = () => {
       title: actionType === "approve" ? "Refund Approved" : "Refund Rejected",
       description: `${actioning.refundId} — ${actioning.refundAmount} for ${actioning.user}`,
     });
+    // Send email notification
+    sendNotification({
+      type: actionType === "approve" ? "refund_approved" : "refund_rejected",
+      recipientEmail: actioning.email,
+      recipientName: actioning.user,
+      data: { refundId: actioning.refundId, amount: actioning.refundAmount, service: actioning.service, method: actioning.method, reason: actionNote },
+    });
     setActionOpen(false);
   };
 
   const handleProcess = (r: RefundRequest) => {
     setRefunds(prev => prev.map(ref => ref.id === r.id ? { ...ref, status: "processed" } : ref));
     toast({ title: "Refund Processed", description: `${r.refundAmount} refunded to ${r.user} via ${r.method}` });
+    sendNotification({
+      type: "refund_processed",
+      recipientEmail: r.email,
+      recipientName: r.user,
+      data: { refundId: r.refundId, amount: r.refundAmount, method: r.method },
+    });
   };
 
   const filtered = refunds.filter(r => statusFilter === "all" || r.status === statusFilter);

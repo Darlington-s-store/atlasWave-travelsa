@@ -12,11 +12,12 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
-import { LayoutDashboard, Users, FileText, PenTool, LogOut, CreditCard, Bot, Package, RotateCcw } from "lucide-react";
+import { LayoutDashboard, Users, FileText, PenTool, LogOut, CreditCard, Bot, Package, RotateCcw, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
+  { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
   { title: "Applications", url: "/admin/applications", icon: FileText },
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Payments", url: "/admin/payments", icon: CreditCard },
