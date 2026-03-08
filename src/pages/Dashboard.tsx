@@ -19,6 +19,7 @@ import {
   BellRing, Trash2, MapPin, Search, Plus, Download
 } from "lucide-react";
 import logo from "@/assets/logo.jpeg";
+import { generateReceiptPDF } from "@/lib/generateReceipt";
 
 const sidebarItems = [
   { id: "overview", label: "Dashboard", icon: LayoutDashboard },
@@ -658,6 +659,7 @@ function BookingsTab({ bookings, onRefresh, userId }: { bookings: any[]; onRefre
 
 // --- PAYMENTS TAB ---
 function PaymentsTab({ payments, onRefresh, userId }: { payments: any[]; onRefresh: () => void; userId: string }) {
+  const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ amount: "", description: "", payment_method: "card", currency: "USD" });
   const [submitting, setSubmitting] = useState(false);
@@ -759,11 +761,30 @@ function PaymentsTab({ payments, onRefresh, userId }: { payments: any[]; onRefre
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <span className="font-display font-bold text-foreground text-lg">
-                    {p.currency === "USD" ? "$" : p.currency === "EUR" ? "€" : p.currency === "GBP" ? "£" : ""}{Number(p.amount).toLocaleString()}
+                    {p.currency === "USD" ? "$" : p.currency === "EUR" ? "€" : p.currency === "GBP" ? "£" : p.currency === "GHS" ? "₵" : p.currency === "NGN" ? "₦" : ""}{Number(p.amount).toLocaleString()}
                   </span>
                   <Badge className={cfg.color + " border text-[10px]"}>{cfg.label}</Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    title="Download Receipt"
+                    onClick={() => generateReceiptPDF({
+                      reference: p.reference || p.id.slice(0, 8),
+                      date: new Date(p.created_at).toLocaleDateString(),
+                      description: p.description || "Payment",
+                      amount: Number(p.amount),
+                      currency: p.currency || "USD",
+                      paymentMethod: p.payment_method || "Card",
+                      status: p.status,
+                      customerName: user?.fullName || "Customer",
+                      customerEmail: user?.email || "",
+                    })}
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
             );
