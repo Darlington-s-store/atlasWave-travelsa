@@ -24,6 +24,7 @@ const sidebarItems = [
   { id: "overview", label: "Dashboard", icon: LayoutDashboard },
   { id: "applications", label: "Applications", icon: FileText },
   { id: "appointments", label: "Appointments", icon: CalendarDays },
+  { id: "payments", label: "Payments", icon: CreditCard },
   { id: "shipments", label: "Logistics", icon: Package },
   { id: "bookings", label: "Travel", icon: Plane },
   { id: "documents", label: "Documents", icon: FolderOpen },
