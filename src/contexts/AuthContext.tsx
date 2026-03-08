@@ -29,12 +29,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
-const MOCK_APPLICATIONS: Application[] = [
-  { id: "APP-001", type: "work-permit", title: "Germany Opportunity Card", status: "in-review", date: "2026-02-15", details: "Chancenkarte application with 8 points" },
-  { id: "APP-002", type: "visa", title: "Schengen Tourist Visa", status: "approved", date: "2026-01-20", details: "30-day tourist visa to France" },
-  { id: "APP-003", type: "travel", title: "Flight Booking - Accra to London", status: "approved", date: "2026-03-01", details: "Round trip, Economy class" },
-  { id: "APP-004", type: "logistics", title: "Cargo Shipment #SH-4821", status: "pending", date: "2026-03-05", details: "20ft container, Tema to Rotterdam" },
-];
+const MOCK_APPLICATIONS: Application[] = [];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(() => {
