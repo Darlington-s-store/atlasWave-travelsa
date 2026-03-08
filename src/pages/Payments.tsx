@@ -55,30 +55,34 @@ const Payments = () => {
   const { user, isAuthenticated } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<"card" | "momo">("card");
   const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
   const [convertFrom, setConvertFrom] = useState<"USD" | "GHS">("USD");
   const [convertAmount, setConvertAmount] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
+  const fetchTransactions = () => {
+    if (!isAuthenticated) return;
+    supabase
+      .from("payments")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (data) setTransactions(data.map((d: any) => ({
+          id: `TXN-${d.id.slice(0, 8).toUpperCase()}`,
+          date: new Date(d.created_at).toISOString().split("T")[0],
+          description: d.description || "Payment",
+          amount: Number(d.amount),
+          currency: d.currency || "USD",
+          method: d.payment_method || "Card",
+          status: d.status as Transaction["status"],
+        })));
+      });
+  };
+
   useEffect(() => {
-    if (isAuthenticated) {
-      supabase
-        .from("payments")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .then(({ data }) => {
-          if (data) setTransactions(data.map((d: any) => ({
-            id: `TXN-${d.id.slice(0, 8).toUpperCase()}`,
-            date: new Date(d.created_at).toISOString().split("T")[0],
-            description: d.description || "Payment",
-            amount: Number(d.amount),
-            currency: d.currency || "USD",
-            method: d.payment_method || "Card",
-            status: d.status as Transaction["status"],
-          })));
-        });
-    }
+    fetchTransactions();
   }, [isAuthenticated]);
 
   const convertedValue = convertAmount
