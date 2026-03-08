@@ -1,0 +1,311 @@
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { ArrowRight, CheckCircle2, Video, Users, Phone, Clock, CreditCard, Shield } from "lucide-react";
+import { useState } from "react";
+
+const fadeUp = {
+  initial: { opacity: 0, y: 30 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true },
+};
+
+const consultationTypes = [
+  {
+    icon: Video,
+    title: "Online Video Consultation",
+    desc: "Meet with our experts via Zoom or Google Meet from anywhere in the world.",
+    price: "$50",
+    duration: "45 min",
+    features: ["Face-to-face guidance", "Screen sharing for documents", "Recording available", "Flexible scheduling"],
+  },
+  {
+    icon: Phone,
+    title: "Phone Consultation",
+    desc: "Quick phone call with our immigration or travel specialist.",
+    price: "$30",
+    duration: "30 min",
+    features: ["Quick answers", "Follow-up email summary", "No app needed", "Same-day availability"],
+  },
+  {
+    icon: Users,
+    title: "In-Person Consultation",
+    desc: "Visit our Accra office for a comprehensive face-to-face meeting.",
+    price: "$75",
+    duration: "60 min",
+    features: ["Document review on-site", "Comprehensive assessment", "Personalized action plan", "Refreshments included"],
+  },
+];
+
+const timeSlots = [
+  "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM",
+  "11:00 AM", "11:30 AM", "01:00 PM", "01:30 PM",
+  "02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM",
+  "04:00 PM", "04:30 PM",
+];
+
+const Consultation = () => {
+  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [selectedTime, setSelectedTime] = useState<string>("");
+  const [selectedType, setSelectedType] = useState<string>("");
+  const [step, setStep] = useState(1);
+
+  const selectedConsultation = consultationTypes.find((c) => c.title === selectedType);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main>
+        {/* Hero */}
+        <section className="relative pt-32 pb-20 bg-primary overflow-hidden">
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent rounded-full blur-[120px]" />
+            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-secondary rounded-full blur-[100px]" />
+          </div>
+          <div className="container relative z-10">
+            <motion.div {...fadeUp} className="max-w-2xl">
+              <span className="inline-block px-4 py-1.5 bg-accent/20 text-accent text-sm font-semibold rounded-full mb-6 border border-accent/30">
+                Expert Guidance
+              </span>
+              <h1 className="text-4xl md:text-6xl font-display font-bold text-primary-foreground leading-tight">
+                Book a <span className="text-gradient-accent">Consultation</span>
+              </h1>
+              <p className="mt-6 text-lg text-primary-foreground/70 leading-relaxed">
+                Get personalized advice from our travel, immigration, and logistics experts. Choose online or in-person consultations.
+              </p>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Consultation Types */}
+        <section className="py-24">
+          <div className="container">
+            <motion.div {...fadeUp} className="text-center mb-16">
+              <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground">Choose Your Consultation</h2>
+              <p className="text-muted-foreground mt-4 max-w-2xl mx-auto text-lg">Select the type that works best for you.</p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-3 gap-8 mb-16">
+              {consultationTypes.map((type, i) => (
+                <motion.div key={type.title} {...fadeUp} transition={{ delay: i * 0.1 }}>
+                  <button
+                    onClick={() => { setSelectedType(type.title); setStep(2); }}
+                    className={cn(
+                      "w-full text-left bg-card rounded-2xl p-8 border shadow-card hover:shadow-card-hover transition-all duration-300",
+                      selectedType === type.title && "ring-2 ring-secondary border-secondary"
+                    )}
+                  >
+                    <div className="flex items-center justify-between mb-5">
+                      <div className="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center">
+                        <type.icon className="w-6 h-6 text-secondary" />
+                      </div>
+                      <div className="text-right">
+                        <span className="text-2xl font-display font-bold text-foreground">{type.price}</span>
+                        <span className="block text-xs text-muted-foreground">{type.duration}</span>
+                      </div>
+                    </div>
+                    <h3 className="text-lg font-display font-bold text-card-foreground">{type.title}</h3>
+                    <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{type.desc}</p>
+                    <div className="mt-5 space-y-2">
+                      {type.features.map((f) => (
+                        <div key={f} className="flex items-center gap-2 text-sm text-foreground">
+                          <CheckCircle2 className="w-4 h-4 text-secondary shrink-0" />
+                          {f}
+                        </div>
+                      ))}
+                    </div>
+                  </button>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Booking Form */}
+            {selectedType && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto">
+                {/* Progress */}
+                <div className="flex items-center justify-center gap-2 mb-10">
+                  {[
+                    { num: 1, label: "Type" },
+                    { num: 2, label: "Schedule" },
+                    { num: 3, label: "Details" },
+                    { num: 4, label: "Payment" },
+                  ].map((s, i) => (
+                    <div key={s.num} className="flex items-center gap-2">
+                      <div className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors",
+                        step >= s.num ? "bg-secondary text-secondary-foreground" : "bg-muted text-muted-foreground"
+                      )}>
+                        {step > s.num ? <CheckCircle2 className="w-4 h-4" /> : s.num}
+                      </div>
+                      <span className={cn("text-sm font-medium hidden sm:inline", step >= s.num ? "text-foreground" : "text-muted-foreground")}>{s.label}</span>
+                      {i < 3 && <div className={cn("w-8 h-0.5 mx-1", step > s.num ? "bg-secondary" : "bg-border")} />}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="bg-card rounded-2xl p-8 md:p-10 border shadow-card">
+                  {/* Step 2: Schedule */}
+                  {step === 2 && (
+                    <div>
+                      <h3 className="text-xl font-display font-bold text-card-foreground mb-2">Select Date & Time</h3>
+                      <p className="text-sm text-muted-foreground mb-8">Choose your preferred consultation date and time slot.</p>
+                      <div className="grid md:grid-cols-2 gap-8">
+                        <div>
+                          <label className="text-sm font-semibold text-foreground mb-3 block">Pick a Date</label>
+                          <Calendar
+                            mode="single"
+                            selected={date}
+                            onSelect={setDate}
+                            disabled={(d) => d < new Date() || d.getDay() === 0}
+                            className={cn("p-3 pointer-events-auto rounded-xl border")}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-semibold text-foreground mb-3 block">Available Time Slots</label>
+                          <div className="grid grid-cols-2 gap-2">
+                            {timeSlots.map((slot) => (
+                              <button
+                                key={slot}
+                                onClick={() => setSelectedTime(slot)}
+                                className={cn(
+                                  "px-4 py-2.5 rounded-lg border text-sm font-medium transition-all",
+                                  selectedTime === slot
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-background text-foreground border-border hover:border-secondary"
+                                )}
+                              >
+                                <Clock className="w-3 h-3 inline mr-1.5" />
+                                {slot}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex justify-between mt-8">
+                        <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
+                        <Button variant="accent" onClick={() => date && selectedTime && setStep(3)} disabled={!date || !selectedTime}>
+                          Continue <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 3: Details */}
+                  {step === 3 && (
+                    <div>
+                      <h3 className="text-xl font-display font-bold text-card-foreground mb-2">Your Details</h3>
+                      <p className="text-sm text-muted-foreground mb-8">Fill in your contact information and consultation topic.</p>
+                      <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div><label className="text-sm font-medium text-foreground mb-1.5 block">First Name</label><Input placeholder="John" /></div>
+                          <div><label className="text-sm font-medium text-foreground mb-1.5 block">Last Name</label><Input placeholder="Doe" /></div>
+                        </div>
+                        <div><label className="text-sm font-medium text-foreground mb-1.5 block">Email</label><Input type="email" placeholder="john@example.com" /></div>
+                        <div><label className="text-sm font-medium text-foreground mb-1.5 block">Phone</label><Input type="tel" placeholder="+233 XX XXX XXXX" /></div>
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-1.5 block">Consultation Topic</label>
+                          <Select>
+                            <SelectTrigger><SelectValue placeholder="Select topic" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="travel">Travel & Flight Booking</SelectItem>
+                              <SelectItem value="visa">Visa Assistance</SelectItem>
+                              <SelectItem value="work-permit">Work Permits</SelectItem>
+                              <SelectItem value="immigration">Immigration Programs</SelectItem>
+                              <SelectItem value="logistics">Logistics & Shipping</SelectItem>
+                              <SelectItem value="credential">Credential Evaluation</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div><label className="text-sm font-medium text-foreground mb-1.5 block">Additional Notes</label><Textarea placeholder="Briefly describe what you'd like to discuss..." rows={3} /></div>
+                        <div className="flex justify-between">
+                          <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
+                          <Button variant="accent" onClick={() => setStep(4)}>
+                            Continue to Payment <ArrowRight className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+
+                  {/* Step 4: Payment */}
+                  {step === 4 && selectedConsultation && (
+                    <div>
+                      <h3 className="text-xl font-display font-bold text-card-foreground mb-2">Review & Pay</h3>
+                      <p className="text-sm text-muted-foreground mb-8">Review your booking details and complete payment to confirm.</p>
+
+                      <div className="bg-muted rounded-xl p-6 mb-8 space-y-3">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Consultation Type</span>
+                          <span className="font-semibold text-foreground">{selectedConsultation.title}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Date</span>
+                          <span className="font-semibold text-foreground">{date?.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Time</span>
+                          <span className="font-semibold text-foreground">{selectedTime}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Duration</span>
+                          <span className="font-semibold text-foreground">{selectedConsultation.duration}</span>
+                        </div>
+                        <div className="border-t pt-3 flex justify-between">
+                          <span className="font-semibold text-foreground">Total</span>
+                          <span className="text-2xl font-display font-bold text-secondary">{selectedConsultation.price}</span>
+                        </div>
+                      </div>
+
+                      {/* Payment methods */}
+                      <div className="mb-8">
+                        <label className="text-sm font-semibold text-foreground mb-3 block">Payment Method</label>
+                        <div className="grid grid-cols-2 gap-4">
+                          <button className="flex items-center gap-3 p-4 rounded-xl border-2 border-primary bg-primary/5 text-left">
+                            <CreditCard className="w-6 h-6 text-primary" />
+                            <div>
+                              <span className="font-semibold text-foreground text-sm block">Mastercard / Visa</span>
+                              <span className="text-xs text-muted-foreground">Credit or debit card</span>
+                            </div>
+                          </button>
+                          <button className="flex items-center gap-3 p-4 rounded-xl border border-border hover:border-secondary text-left transition-colors">
+                            <Phone className="w-6 h-6 text-secondary" />
+                            <div>
+                              <span className="font-semibold text-foreground text-sm block">Mobile Money</span>
+                              <span className="text-xs text-muted-foreground">MoMo / Airtel Money</span>
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-6">
+                        <Shield className="w-4 h-4 text-secondary" />
+                        Payments are processed securely. Your data is encrypted and protected.
+                      </div>
+
+                      <div className="flex justify-between">
+                        <Button variant="outline" onClick={() => setStep(3)}>Back</Button>
+                        <Button variant="accent" size="lg">
+                          Pay {selectedConsultation.price} & Confirm Booking <ArrowRight className="w-5 h-5" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default Consultation;
