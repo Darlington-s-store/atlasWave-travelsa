@@ -428,7 +428,24 @@ const Consultation = () => {
 
                         <div className="flex justify-between">
                           <Button variant="outline" onClick={() => setStep(3)}>Back</Button>
-                          <Button variant="accent" size="lg" onClick={() => {
+                          <Button variant="accent" size="lg" onClick={async () => {
+                            if (isAuthenticated && user) {
+                              await supabase.from("consultations").insert({
+                                user_id: user.id,
+                                type: selectedConsultation.title,
+                                topic: contactForm.topic || null,
+                                duration: parseInt(duration),
+                                date: date?.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) || "",
+                                time: selectedTime,
+                                timezone,
+                                price,
+                                first_name: contactForm.firstName,
+                                last_name: contactForm.lastName,
+                                email: contactForm.email,
+                                phone: contactForm.phone,
+                                notes: contactForm.notes || null,
+                              } as any);
+                            }
                             toast({ title: "Booking Confirmed!", description: `Your ${duration}-min ${selectedConsultation.title} has been booked for ${selectedTime}.` });
                             setShowBookings(true);
                             setSelectedType("");
