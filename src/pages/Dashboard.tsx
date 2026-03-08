@@ -118,13 +118,22 @@ const Dashboard = () => {
           })}
         </nav>
 
-        {/* Support Hours */}
-        <div className="p-4 border-t border-white/10">
-          <p className="text-white/40 text-[10px] uppercase tracking-wider font-semibold mb-2">Support Hours</p>
-          <p className="text-white/60 text-xs mb-3">Mon-Fri 9am - 6pm EST</p>
-          <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm">
-            <MessageCircle className="w-4 h-4 mr-2" /> Start Live Chat
+        {/* Logout + Support */}
+        <div className="p-4 border-t border-white/10 space-y-3">
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-white/60 hover:text-white hover:bg-white/5 text-sm"
+            onClick={() => { logout(); navigate("/"); }}
+          >
+            <LogOut className="w-4 h-4 mr-2" /> Sign Out
           </Button>
+          <div className="pt-2 border-t border-white/10">
+            <p className="text-white/40 text-[10px] uppercase tracking-wider font-semibold mb-2">Support Hours</p>
+            <p className="text-white/60 text-xs mb-3">Mon-Fri 9am - 6pm EST</p>
+            <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm">
+              <MessageCircle className="w-4 h-4 mr-2" /> Start Live Chat
+            </Button>
+          </div>
         </div>
       </aside>
 
