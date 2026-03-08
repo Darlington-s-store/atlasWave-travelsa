@@ -301,6 +301,8 @@ const AdminWorkPermits = () => {
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => { setViewingApp(app); setViewDialogOpen(true); }}><Eye className="w-4 h-4 mr-2" /> View Details</DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => { setEditingApp(app); setEditForm({ status: app.status, details: app.details || "" }); setEditDialogOpen(true); }}><Pencil className="w-4 h-4 mr-2" /> Update Stage</DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => handleDelete(app.id)} className="text-destructive"><Trash2 className="w-4 h-4 mr-2" /> Delete</DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </TableCell>
