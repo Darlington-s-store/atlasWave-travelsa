@@ -51,12 +51,34 @@ const statusConfig = {
 };
 
 const Payments = () => {
+  const { user, isAuthenticated } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<"card" | "momo">("card");
   const [amount, setAmount] = useState("");
   const [convertFrom, setConvertFrom] = useState<"USD" | "GHS">("USD");
   const [convertAmount, setConvertAmount] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      supabase
+        .from("payments")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .then(({ data }) => {
+          if (data) setTransactions(data.map((d: any) => ({
+            id: `TXN-${d.id.slice(0, 8).toUpperCase()}`,
+            date: new Date(d.created_at).toISOString().split("T")[0],
+            description: d.description || "Payment",
+            amount: Number(d.amount),
+            currency: d.currency || "USD",
+            method: d.payment_method || "Card",
+            status: d.status as Transaction["status"],
+          })));
+        });
+    }
+  }, [isAuthenticated]);
 
   const convertedValue = convertAmount
     ? convertFrom === "USD"
@@ -64,7 +86,7 @@ const Payments = () => {
       : (parseFloat(convertAmount) / EXCHANGE_RATE).toFixed(2)
     : "0.00";
 
-  const filteredTransactions = MOCK_TRANSACTIONS.filter((t) => {
+  const filteredTransactions = transactions.filter((t) => {
     const matchesSearch = t.description.toLowerCase().includes(searchQuery.toLowerCase()) || t.id.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = filterStatus === "all" || t.status === filterStatus;
     return matchesSearch && matchesStatus;
