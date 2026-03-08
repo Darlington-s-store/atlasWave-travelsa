@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Plane, Ship, Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin } from "lucide-react";
+import logo from "@/assets/logo.jpeg";
 
 const Footer = () => {
   return (
@@ -9,10 +10,9 @@ const Footer = () => {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <Plane className="w-5 h-5 text-accent" />
-              <Ship className="w-5 h-5 text-accent" />
+              <img src={logo} alt="AtlasWave" className="w-8 h-8 rounded-full object-cover" />
               <span className="font-display text-xl font-bold">
-                Globe<span className="text-gradient-accent">Link</span>
+                Atlas<span className="text-gradient-accent">Wave</span>
               </span>
             </div>
             <p className="text-sm text-primary-foreground/60 leading-relaxed">
@@ -62,7 +62,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-2 text-sm text-primary-foreground/60">
                 <Mail className="w-4 h-4 text-accent shrink-0" />
-                info@globelink.com
+                info@atlaswave.com
               </li>
             </ul>
           </div>
@@ -70,7 +70,7 @@ const Footer = () => {
 
         <div className="border-t border-primary-foreground/10 mt-12 pt-8 text-center">
           <p className="text-sm text-primary-foreground/40">
-            © {new Date().getFullYear()} GlobeLink Travel & Logistics. All rights reserved.
+            © {new Date().getFullYear()} AtlasWave Travel & Tours. All rights reserved.
           </p>
         </div>
       </div>

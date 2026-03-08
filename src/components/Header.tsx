@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Plane, Ship } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
+import logo from "@/assets/logo.jpeg";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -28,22 +30,21 @@ const navLinks = [
     ],
   },
   { label: "Logistics", href: "/logistics" },
-  { label: "Consultation", href: "/consultation" },
+  { label: "Documentation", href: "/documentation" },
+  { label: "Contact", href: "/contact" },
 ];
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-primary/95 backdrop-blur-md border-b border-primary-foreground/10">
       <div className="container flex items-center justify-between h-16 md:h-20">
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            <Plane className="w-5 h-5 text-accent" />
-            <Ship className="w-5 h-5 text-accent" />
-          </div>
+          <img src={logo} alt="AtlasWave" className="w-10 h-10 rounded-full object-cover" />
           <span className="font-display text-xl font-bold text-primary-foreground tracking-tight">
-            Globe<span className="text-gradient-accent">Link</span>
+            Atlas<span className="text-gradient-accent">Wave</span>
           </span>
         </Link>
 
@@ -80,9 +81,15 @@ const Header = () => {
           <Button variant="hero-outline" size="sm" asChild>
             <Link to="/tracking">Track Shipment</Link>
           </Button>
-          <Button variant="accent" size="sm" asChild>
-            <Link to="/consultation">Book Now</Link>
-          </Button>
+          {isAuthenticated ? (
+            <Button variant="accent" size="sm" asChild>
+              <Link to="/profile">My Profile</Link>
+            </Button>
+          ) : (
+            <Button variant="accent" size="sm" asChild>
+              <Link to="/login">Sign In</Link>
+            </Button>
+          )}
         </div>
 
         <button
@@ -128,9 +135,15 @@ const Header = () => {
                 <Button variant="hero-outline" size="sm" className="flex-1" asChild>
                   <Link to="/tracking" onClick={() => setMobileOpen(false)}>Track Shipment</Link>
                 </Button>
-                <Button variant="accent" size="sm" className="flex-1" asChild>
-                  <Link to="/consultation" onClick={() => setMobileOpen(false)}>Book Now</Link>
-                </Button>
+                {isAuthenticated ? (
+                  <Button variant="accent" size="sm" className="flex-1" asChild>
+                    <Link to="/profile" onClick={() => setMobileOpen(false)}>My Profile</Link>
+                  </Button>
+                ) : (
+                  <Button variant="accent" size="sm" className="flex-1" asChild>
+                    <Link to="/login" onClick={() => setMobileOpen(false)}>Sign In</Link>
+                  </Button>
+                )}
               </div>
             </div>
           </motion.div>
