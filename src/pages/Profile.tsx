@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
@@ -18,18 +18,21 @@ const statusConfig = {
 };
 
 const Profile = () => {
-  const { user, isAuthenticated, logout, updateProfile, applications } = useAuth();
+  const { user, isAuthenticated, loading, logout, updateProfile, applications } = useAuth();
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ fullName: user?.fullName || "", phone: user?.phone || "" });
 
-  if (!isAuthenticated) {
-    navigate("/login");
-    return null;
-  }
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      navigate("/login");
+    }
+  }, [loading, isAuthenticated, navigate]);
 
-  const handleSave = () => {
-    updateProfile(form);
+  if (loading || !isAuthenticated) return null;
+
+  const handleSave = async () => {
+    await updateProfile(form);
     setEditing(false);
     toast({ title: "Profile updated!" });
   };

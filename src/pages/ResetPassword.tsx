@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +19,24 @@ const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isRecovery, setIsRecovery] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check for recovery token in URL hash
+    const hash = window.location.hash;
+    if (hash && hash.includes("type=recovery")) {
+      setIsRecovery(true);
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsRecovery(true);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,11 +49,26 @@ const ResetPassword = () => {
       return;
     }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
+    const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
-    toast({ title: "Password updated!", description: "You can now sign in with your new password." });
-    navigate("/login");
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Password updated!", description: "You can now sign in with your new password." });
+      navigate("/login");
+    }
   };
+
+  if (!isRecovery) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-6">
+        <div className="w-full max-w-md text-center">
+          <p className="text-muted-foreground mb-4">This page is only accessible via a password reset link.</p>
+          <Link to="/forgot-password" className="text-primary hover:underline">Request a new reset link</Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
@@ -63,7 +96,6 @@ const ResetPassword = () => {
               <Input id="confirm" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••" required className="h-12" />
             </div>
 
-            {/* Password requirements */}
             <div className="space-y-2 py-2">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Password Requirements</p>
               {requirements.map((req) => {
