@@ -44,7 +44,7 @@ const PartnersSection = () => {
         <div className="relative overflow-hidden">
           <div className="flex animate-scroll gap-12 w-max">
             {[...partners, ...partners].map((p, i) => {
-              const logoUrl = 'logo_url' in p ? getStorageUrl(p.logo_url) : null;
+              const logoUrl = 'logo_url' in p && typeof p.logo_url === 'string' ? getStorageUrl(p.logo_url) : null;
 
               return (
                 <div
