@@ -1,26 +1,50 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { MessageCircle, X, Send, Loader2 } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   id: number;
   text: string;
   sender: "user" | "bot";
+  logId?: string;
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
 const ChatBot = () => {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    { id: 0, text: "Hello! 👋 Welcome to AtlasWave Travel & Tours. How can I help you today? I can assist with flights, hotels, visas, work permits, logistics, and more!", sender: "bot" },
-  ]);
+  const [greeting, setGreeting] = useState("Hello! 👋 Welcome to AtlasWave Travel & Tours. How can I help you today?");
+  const [botName, setBotName] = useState("AtlasWave AI Assistant");
+  const [botEnabled, setBotEnabled] = useState(true);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sessionId = useRef(`session_${Date.now()}_${Math.random().toString(36).slice(2)}`);
+
+  // Load settings
+  useEffect(() => {
+    const loadSettings = async () => {
+      const { data } = await supabase.from("chatbot_settings").select("key, value");
+      if (data) {
+        for (const row of data as { key: string; value: string }[]) {
+          if (row.key === "greeting") setGreeting(row.value);
+          if (row.key === "bot_name") setBotName(row.value);
+          if (row.key === "bot_enabled") setBotEnabled(row.value === "true");
+        }
+      }
+    };
+    loadSettings();
+  }, []);
+
+  // Set initial greeting once loaded
+  useEffect(() => {
+    setMessages([{ id: 0, text: greeting, sender: "bot" }]);
+  }, [greeting]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -35,7 +59,7 @@ const ChatBot = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       },
-      body: JSON.stringify({ messages: allMessages }),
+      body: JSON.stringify({ messages: allMessages, session_id: sessionId.current }),
     });
 
     if (!resp.ok) {
@@ -51,7 +75,6 @@ const ChatBot = () => {
     let assistantText = "";
     const botId = Date.now() + 1;
 
-    // Create initial bot message
     setMessages((prev) => [...prev, { id: botId, text: "", sender: "bot" }]);
 
     let streamDone = false;
@@ -70,10 +93,7 @@ const ChatBot = () => {
         if (!line.startsWith("data: ")) continue;
 
         const jsonStr = line.slice(6).trim();
-        if (jsonStr === "[DONE]") {
-          streamDone = true;
-          break;
-        }
+        if (jsonStr === "[DONE]") { streamDone = true; break; }
 
         try {
           const parsed = JSON.parse(jsonStr);
@@ -81,9 +101,7 @@ const ChatBot = () => {
           if (content) {
             assistantText += content;
             const currentText = assistantText;
-            setMessages((prev) =>
-              prev.map((m) => (m.id === botId ? { ...m, text: currentText } : m))
-            );
+            setMessages((prev) => prev.map((m) => (m.id === botId ? { ...m, text: currentText } : m)));
           }
         } catch {
           textBuffer = line + "\n" + textBuffer;
@@ -107,9 +125,7 @@ const ChatBot = () => {
           if (content) {
             assistantText += content;
             const currentText = assistantText;
-            setMessages((prev) =>
-              prev.map((m) => (m.id === botId ? { ...m, text: currentText } : m))
-            );
+            setMessages((prev) => prev.map((m) => (m.id === botId ? { ...m, text: currentText } : m)));
           }
         } catch { /* ignore */ }
       }
@@ -127,13 +143,9 @@ const ChatBot = () => {
     setInput("");
     setIsLoading(true);
 
-    // Build conversation history for AI (exclude the initial welcome)
     const history = messages
       .filter((m) => m.id !== 0)
-      .map((m) => ({
-        role: m.sender === "user" ? "user" : "assistant",
-        content: m.text,
-      }));
+      .map((m) => ({ role: m.sender === "user" ? "user" : "assistant", content: m.text }));
     history.push({ role: "user", content: trimmed });
 
     try {
@@ -142,16 +154,14 @@ const ChatBot = () => {
       console.error("Chat error:", e);
       setMessages((prev) => [
         ...prev,
-        {
-          id: Date.now() + 2,
-          text: "I'm sorry, I'm having trouble connecting right now. Please try again or call us at +233 123 456 789 for immediate assistance.",
-          sender: "bot",
-        },
+        { id: Date.now() + 2, text: "I'm sorry, I'm having trouble connecting right now. Please try again or call us at +233 123 456 789 for immediate assistance.", sender: "bot" },
       ]);
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (!botEnabled) return null;
 
   return (
     <>
@@ -172,13 +182,11 @@ const ChatBot = () => {
             className="fixed bottom-24 right-6 z-50 w-[360px] max-w-[calc(100vw-3rem)] bg-card border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
             style={{ height: "520px" }}
           >
-            {/* Header */}
             <div className="bg-primary text-primary-foreground p-4">
-              <h3 className="font-display font-bold text-base">AtlasWave AI Assistant</h3>
+              <h3 className="font-display font-bold text-base">{botName}</h3>
               <p className="text-xs text-primary-foreground/70">Online · Powered by AI</p>
             </div>
 
-            {/* Messages */}
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
               {messages.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
@@ -208,7 +216,6 @@ const ChatBot = () => {
               ))}
             </div>
 
-            {/* Input */}
             <div className="p-3 border-t flex gap-2">
               <Input
                 value={input}
