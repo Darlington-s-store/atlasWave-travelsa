@@ -81,9 +81,27 @@ const AdminShipments = () => {
       status: form.status, weight: form.weight || null, progress: parseInt(form.progress) || 0, eta: form.eta || null,
     };
     if (editing) {
+      const previousStatus = editing.status;
       const { error } = await supabase.from("shipments").update(data).eq("id", editing.id);
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       toast({ title: "Shipment updated" });
+
+      // Send email notification if status changed
+      if (previousStatus !== data.status) {
+        const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", editing.user_id).single();
+        sendNotification({
+          type: "shipment_update",
+          recipientEmail: `user-${editing.user_id.slice(0, 8)}@atlaswave.com`,
+          recipientName: profile?.full_name || "User",
+          data: {
+            trackingId: data.tracking_number,
+            status: data.status,
+            origin: data.origin,
+            destination: data.destination,
+            previousStatus,
+          },
+        });
+      }
     } else {
       const { error } = await supabase.from("shipments").insert({ ...data, user_id: user?.id || "" });
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
