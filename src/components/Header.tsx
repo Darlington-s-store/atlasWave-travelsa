@@ -1,42 +1,75 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { ChevronDown, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/logo.jpeg";
 
-const navLinks = [
+interface NavChild {
+  label: string;
+  href: string;
+}
+
+interface NavSection {
+  label: string;
+  href: string;
+  children?: NavChild[];
+}
+
+interface NavLinkItem {
+  label: string;
+  href: string;
+  children?: NavChild[];
+  sections?: NavSection[];
+}
+
+const navLinks: NavLinkItem[] = [
   { label: "Home", href: "/" },
   { label: "About Us", href: "/about" },
   {
-    label: "Travel Services",
+    label: "Services",
     href: "/travel",
-    children: [
-      { label: "Flight Booking", href: "/travel/flights" },
-      { label: "Hotel & Accommodation", href: "/travel/hotels" },
-      { label: "Visa Assistance", href: "/travel/visa" },
+    sections: [
+      {
+        label: "Travel Services",
+        href: "/travel",
+        children: [
+          { label: "Flight Booking", href: "/travel/flights" },
+          { label: "Hotel & Accommodation", href: "/travel/hotels" },
+          { label: "Visa Assistance", href: "/travel/visa" },
+        ],
+      },
+      {
+        label: "Work Permits",
+        href: "/work-permits",
+        children: [
+          { label: "Schengen Work Permits", href: "/work-permits/schengen" },
+          { label: "Canada LMIA", href: "/work-permits/canada-lmia" },
+          { label: "Germany Opportunity Card", href: "/work-permits/germany-chancenkarte" },
+          { label: "USA NCLEX Pathway", href: "/work-permits/usa-nclex" },
+          { label: "Credential Evaluation", href: "/work-permits/credential-evaluation" },
+        ],
+      },
+      {
+        label: "Logistics",
+        href: "/logistics",
+        children: [
+          { label: "Logistics Overview", href: "/logistics" },
+          { label: "Shipment Tracking", href: "/logistics/tracking" },
+        ],
+      },
     ],
   },
-  {
-    label: "Work Permits",
-    href: "/work-permits",
-    children: [
-      { label: "Schengen Work Permits", href: "/work-permits/schengen" },
-      { label: "Canada LMIA", href: "/work-permits/canada-lmia" },
-      { label: "Germany Opportunity Card", href: "/work-permits/germany-chancenkarte" },
-      { label: "USA NCLEX Pathway", href: "/work-permits/usa-nclex" },
-      { label: "Credential Evaluation", href: "/work-permits/credential-evaluation" },
-    ],
-  },
-  { label: "Logistics", href: "/logistics" },
-  { label: "Videos", href: "/videos" },
+  { label: "Gallery", href: "/videos" },
   { label: "Documentation", href: "/documentation" },
   { label: "Contact", href: "/contact" },
 ];
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopServicesOpen, setDesktopServicesOpen] = useState(false);
+  const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
   const { isAuthenticated } = useAuth();
 
   return (
@@ -52,25 +85,71 @@ const Header = () => {
         {/* Desktop nav */}
         <nav className="hidden lg:flex items-center gap-1">
           {navLinks.map((link) => (
-            <div key={link.label} className="relative group">
-              <Link
-                to={link.href}
-                className="px-3 py-2 text-sm font-medium text-primary-foreground/80 hover:text-accent transition-colors rounded-md"
-              >
-                {link.label}
-              </Link>
-              {link.children && (
-                <div className="absolute top-full left-0 pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200">
-                  <div className="bg-card rounded-lg shadow-card-hover border p-2 min-w-[220px]">
-                    {link.children.map((child) => (
-                      <Link
-                        key={child.label}
-                        to={child.href}
-                        className="block px-3 py-2 text-sm text-foreground hover:bg-muted rounded-md transition-colors"
-                      >
-                        {child.label}
-                      </Link>
-                    ))}
+            <div
+              key={link.label}
+              className="relative"
+              onMouseLeave={() => {
+                if (link.sections) setDesktopServicesOpen(false);
+              }}
+            >
+              {link.sections ? (
+                <button
+                  type="button"
+                  onClick={() => setDesktopServicesOpen((open) => !open)}
+                  onMouseEnter={() => setDesktopServicesOpen(true)}
+                  className="px-3 py-2 text-sm font-medium text-primary-foreground/80 hover:text-accent transition-colors rounded-md inline-flex items-center gap-1.5"
+                >
+                  {link.label}
+                  <ChevronDown className={`w-4 h-4 transition-transform ${desktopServicesOpen ? "rotate-180" : ""}`} />
+                </button>
+              ) : (
+                <Link
+                  to={link.href}
+                  className="px-3 py-2 text-sm font-medium text-primary-foreground/80 hover:text-accent transition-colors rounded-md"
+                >
+                  {link.label}
+                </Link>
+              )}
+              {(link.children || link.sections) && (!link.sections || desktopServicesOpen) && (
+                <div className="absolute top-full left-0 pt-2">
+                  <div className="bg-card rounded-lg shadow-card-hover border p-3 min-w-[280px]">
+                    {link.sections ? (
+                      <div className="space-y-3">
+                        {link.sections.map((section) => (
+                          <div key={section.label}>
+                            <Link
+                              to={section.href}
+                              className="block px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground hover:text-accent transition-colors"
+                            >
+                              {section.label}
+                            </Link>
+                            <div className="space-y-0.5">
+                              {section.children?.map((child) => (
+                                <Link
+                                  key={child.label}
+                                  to={child.href}
+                                  onClick={() => setDesktopServicesOpen(false)}
+                                  className="block px-3 py-2 text-sm text-foreground hover:bg-muted rounded-md transition-colors"
+                                >
+                                  {child.label}
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      link.children?.map((child) => (
+                        <Link
+                          key={child.label}
+                          to={child.href}
+                          onClick={() => setDesktopServicesOpen(false)}
+                          className="block px-3 py-2 text-sm text-foreground hover:bg-muted rounded-md transition-colors"
+                        >
+                          {child.label}
+                        </Link>
+                      ))
+                    )}
                   </div>
                 </div>
               )}
@@ -113,23 +192,64 @@ const Header = () => {
             <div className="container py-4 space-y-1">
               {navLinks.map((link) => (
                 <div key={link.label}>
-                  <Link
-                    to={link.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="block px-3 py-2.5 text-sm font-medium text-primary-foreground/80 hover:text-accent transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                  {link.children?.map((child) => (
-                    <Link
-                      key={child.label}
-                      to={child.href}
-                      onClick={() => setMobileOpen(false)}
-                      className="block pl-8 py-2 text-sm text-primary-foreground/60 hover:text-accent transition-colors"
+                  {link.sections ? (
+                    <button
+                      type="button"
+                      onClick={() => setMobileServicesOpen((open) => !open)}
+                      className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-primary-foreground/80 hover:text-accent transition-colors"
                     >
-                      {child.label}
+                      <span>{link.label}</span>
+                      <ChevronDown className={`w-4 h-4 transition-transform ${mobileServicesOpen ? "rotate-180" : ""}`} />
+                    </button>
+                  ) : (
+                    <Link
+                      to={link.href}
+                      onClick={() => setMobileOpen(false)}
+                      className="block px-3 py-2.5 text-sm font-medium text-primary-foreground/80 hover:text-accent transition-colors"
+                    >
+                      {link.label}
                     </Link>
-                  ))}
+                  )}
+                  {link.sections && mobileServicesOpen ? (
+                    link.sections.map((section) => (
+                      <div key={section.label} className="pl-5 pb-1">
+                        <Link
+                          to={section.href}
+                          onClick={() => {
+                            setMobileOpen(false);
+                            setMobileServicesOpen(false);
+                          }}
+                          className="block py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary-foreground/45 hover:text-accent transition-colors"
+                        >
+                          {section.label}
+                        </Link>
+                        {section.children?.map((child) => (
+                          <Link
+                            key={child.label}
+                            to={child.href}
+                            onClick={() => {
+                              setMobileOpen(false);
+                              setMobileServicesOpen(false);
+                            }}
+                            className="block pl-4 py-2 text-sm text-primary-foreground/65 hover:text-accent transition-colors"
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    ))
+                  ) : !link.sections ? (
+                    link.children?.map((child) => (
+                      <Link
+                        key={child.label}
+                        to={child.href}
+                        onClick={() => setMobileOpen(false)}
+                        className="block pl-8 py-2 text-sm text-primary-foreground/60 hover:text-accent transition-colors"
+                      >
+                        {child.label}
+                      </Link>
+                    ))
+                  ) : null}
                 </div>
               ))}
               <div className="flex gap-3 pt-4">

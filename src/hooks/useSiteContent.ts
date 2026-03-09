@@ -55,6 +55,19 @@ interface PartnerContent {
   logo_url?: string;
 }
 
+export interface DealContent {
+  id: string;
+  type: string;
+  title: string;
+  original_price: string;
+  price: string;
+  discount: string;
+  deadline: string;
+  tag: string;
+  sort_order: string;
+  active: string;
+}
+
 interface ContactContent {
   email: string;
   phone: string;
@@ -72,6 +85,7 @@ export function useSiteContent() {
   const [hero, setHero] = useState<HeroContent | null>(null);
   const [heroSlides, setHeroSlides] = useState<HeroSlideContent[]>([]);
   const [services, setServices] = useState<ServiceContent[]>([]);
+  const [deals, setDeals] = useState<DealContent[]>([]);
   const [testimonials, setTestimonials] = useState<TestimonialContent[]>([]);
   const [partners, setPartners] = useState<PartnerContent[]>([]);
   const [contact, setContact] = useState<ContactContent | null>(null);
@@ -91,6 +105,11 @@ export function useSiteContent() {
 
     const serviceItems = items.filter(i => i.section === "services" && i.value.active !== "false");
     setServices(serviceItems.map(i => i.value as unknown as ServiceContent));
+
+    const dealItems = items
+      .filter(i => i.section === "deals" && i.value.active !== "false")
+      .sort((a, b) => parseInt(a.value.sort_order || "0") - parseInt(b.value.sort_order || "0"));
+    setDeals(dealItems.map(i => ({ id: i.id, ...i.value } as unknown as DealContent)));
 
     const testimonialItems = items.filter(i => i.section === "testimonials" && i.value.visible !== "false");
     setTestimonials(testimonialItems.map(i => i.value as unknown as TestimonialContent));
@@ -144,7 +163,7 @@ export function useSiteContent() {
     };
   }, [fetchContent]);
 
-  return { loading, hero, heroSlides, services, testimonials, partners, contact, refetch: () => fetchContent(true) };
+  return { loading, hero, heroSlides, services, deals, testimonials, partners, contact, refetch: () => fetchContent(true) };
 }
 
 export function getStorageUrl(path: string | undefined): string | null {

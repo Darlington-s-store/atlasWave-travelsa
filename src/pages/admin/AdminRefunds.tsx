@@ -24,6 +24,7 @@ interface RefundRequest {
   refundId: string;
   user: string;
   email: string;
+  phone?: string;
   service: string;
   originalAmount: string;
   refundAmount: string;
@@ -44,11 +45,11 @@ const statusStyle: Record<string, string> = {
 };
 
 const MOCK_REFUNDS: RefundRequest[] = [
-  { id: "1", refundId: "REF-001", user: "Ama Serwaa", email: "ama@example.com", service: "Flight Booking", originalAmount: "$850.00", refundAmount: "$850.00", reason: "Flight cancelled by airline", status: "pending", date: "Mar 7, 2024", method: "Mastercard", transactionId: "#TR-00012" },
-  { id: "2", refundId: "REF-002", user: "Kweku Mensah", email: "kweku@example.com", service: "Visa Processing", originalAmount: "$350.00", refundAmount: "$280.00", reason: "Application withdrawn before processing", status: "approved", date: "Mar 5, 2024", method: "MoMo", transactionId: "#TR-00009" },
-  { id: "3", refundId: "REF-003", user: "Efua Nyarko", email: "efua@example.com", service: "Hotel Booking", originalAmount: "$420.00", refundAmount: "$420.00", reason: "Duplicate booking", status: "processed", date: "Mar 3, 2024", method: "Mastercard", transactionId: "#TR-00007" },
-  { id: "4", refundId: "REF-004", user: "Kofi Asante", email: "kofi@example.com", service: "Consultation Fee", originalAmount: "$150.00", refundAmount: "$150.00", reason: "Consultant no-show", status: "pending", date: "Mar 6, 2024", method: "MoMo", transactionId: "#TR-00011" },
-  { id: "5", refundId: "REF-005", user: "Akua Boateng", email: "akua@example.com", service: "Logistics Support", originalAmount: "$1,200.00", refundAmount: "$0.00", reason: "Shipment already delivered", status: "rejected", date: "Mar 2, 2024", method: "Mastercard", transactionId: "#TR-00005" },
+  { id: "1", refundId: "REF-001", user: "Ama Serwaa", email: "ama@example.com", phone: "233201111111", service: "Flight Booking", originalAmount: "$850.00", refundAmount: "$850.00", reason: "Flight cancelled by airline", status: "pending", date: "Mar 7, 2024", method: "Mastercard", transactionId: "#TR-00012" },
+  { id: "2", refundId: "REF-002", user: "Kweku Mensah", email: "kweku@example.com", phone: "233202222222", service: "Visa Processing", originalAmount: "$350.00", refundAmount: "$280.00", reason: "Application withdrawn before processing", status: "approved", date: "Mar 5, 2024", method: "MoMo", transactionId: "#TR-00009" },
+  { id: "3", refundId: "REF-003", user: "Efua Nyarko", email: "efua@example.com", phone: "233203333333", service: "Hotel Booking", originalAmount: "$420.00", refundAmount: "$420.00", reason: "Duplicate booking", status: "processed", date: "Mar 3, 2024", method: "Mastercard", transactionId: "#TR-00007" },
+  { id: "4", refundId: "REF-004", user: "Kofi Asante", email: "kofi@example.com", phone: "233204444444", service: "Consultation Fee", originalAmount: "$150.00", refundAmount: "$150.00", reason: "Consultant no-show", status: "pending", date: "Mar 6, 2024", method: "MoMo", transactionId: "#TR-00011" },
+  { id: "5", refundId: "REF-005", user: "Akua Boateng", email: "akua@example.com", phone: "233205555555", service: "Logistics Support", originalAmount: "$1,200.00", refundAmount: "$0.00", reason: "Shipment already delivered", status: "rejected", date: "Mar 2, 2024", method: "Mastercard", transactionId: "#TR-00005" },
 ];
 
 const AdminRefunds = () => {
@@ -81,7 +82,9 @@ const AdminRefunds = () => {
     sendNotification({
       type: actionType === "approve" ? "refund_approved" : "refund_rejected",
       recipientEmail: actioning.email,
+      recipientPhone: actioning.phone,
       recipientName: actioning.user,
+      channel: actioning.phone ? "both" : "email",
       data: { refundId: actioning.refundId, amount: actioning.refundAmount, service: actioning.service, method: actioning.method, reason: actionNote },
     });
     setActionOpen(false);
@@ -93,7 +96,9 @@ const AdminRefunds = () => {
     sendNotification({
       type: "refund_processed",
       recipientEmail: r.email,
+      recipientPhone: r.phone,
       recipientName: r.user,
+      channel: r.phone ? "both" : "email",
       data: { refundId: r.refundId, amount: r.refundAmount, method: r.method },
     });
   };

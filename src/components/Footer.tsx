@@ -24,13 +24,13 @@ const Footer = () => {
           <div>
             <h4 className="font-display text-base font-semibold mb-4">Travel & Tours</h4>
             <ul className="space-y-2">
-              {["Flight Booking", "Hotel & Accommodation", "Visa Assistance", "Travel Packages"].map((item) =>
-              <li key={item}>
+              {["Flight Booking", "Hotel & Accommodation", "Visa Assistance", "Travel Packages"].map((item) => (
+                <li key={item}>
                   <Link to="/travel" className="text-sm text-primary-foreground/60 hover:text-accent transition-colors">
                     {item}
                   </Link>
                 </li>
-              )}
+              ))}
             </ul>
           </div>
 
@@ -38,13 +38,13 @@ const Footer = () => {
           <div>
             <h4 className="font-display text-base font-semibold mb-4">Work Permits</h4>
             <ul className="space-y-2">
-              {["Schengen Permits", "Canada LMIA", "Germany Chancenkarte", "USA NCLEX", "Credential Evaluation"].map((item) =>
-              <li key={item}>
+              {["Schengen Permits", "Canada LMIA", "Germany Chancenkarte", "USA NCLEX", "Credential Evaluation"].map((item) => (
+                <li key={item}>
                   <Link to="/work-permits" className="text-sm text-primary-foreground/60 hover:text-accent transition-colors">
                     {item}
                   </Link>
                 </li>
-              )}
+              ))}
             </ul>
           </div>
 
@@ -52,11 +52,11 @@ const Footer = () => {
           <div>
             <h4 className="font-display text-base font-semibold mb-4">Contact Us</h4>
             <ul className="space-y-3">
-              <li className="flex items-start gap-2 text-sm text-primary-foreground/60"> Accra, Ghana
+              <li className="flex items-start gap-2 text-sm text-primary-foreground/60">
                 <MapPin className="w-4 h-4 mt-0.5 text-accent shrink-0" />
                 123 Global Avenue, Accra, Ghana
               </li>
-              <li className="flex items-center gap-2 text-sm text-primary-foreground/60">+233 552 945 333
+              <li className="flex items-center gap-2 text-sm text-primary-foreground/60">
                 <Phone className="w-4 h-4 text-accent shrink-0" />
                 +233 123 456 789
               </li>
@@ -74,8 +74,8 @@ const Footer = () => {
           </p>
         </div>
       </div>
-    </footer>);
-
+    </footer>
+  );
 };
 
 export default Footer;

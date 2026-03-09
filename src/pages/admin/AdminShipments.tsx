@@ -88,11 +88,10 @@ const AdminShipments = () => {
 
       // Send email notification if status changed
       if (previousStatus !== data.status) {
-        const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", editing.user_id).single();
-        sendNotification({
+        await sendNotification({
           type: "shipment_update",
-          recipientEmail: `user-${editing.user_id.slice(0, 8)}@atlaswave.com`,
-          recipientName: profile?.full_name || "User",
+          userId: editing.user_id,
+          channel: "both",
           data: {
             trackingId: data.tracking_number,
             status: data.status,

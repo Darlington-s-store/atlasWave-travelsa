@@ -3,7 +3,8 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
-import { ArrowRight, Clock, Tag, Flame } from "lucide-react";
+import { ArrowRight, Clock, Flame } from "lucide-react";
+import { useSiteContent, type DealContent } from "@/hooks/useSiteContent";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -11,21 +12,23 @@ const fadeUp = {
   viewport: { once: true },
 };
 
-const deals = [
-  { type: "Flight", title: "Accra → London Return", originalPrice: "$890", price: "$649", discount: "27% OFF", deadline: "2024-04-15T00:00:00", tag: "Hot Deal" },
-  { type: "Hotel", title: "5★ Dubai Marina — 3 Nights", originalPrice: "$720", price: "$499", discount: "31% OFF", deadline: "2024-04-10T00:00:00", tag: "Limited" },
-  { type: "Package", title: "Istanbul + Cappadocia — 7 Days", originalPrice: "$1,400", price: "$1,050", discount: "25% OFF", deadline: "2024-04-20T00:00:00", tag: "Popular" },
-  { type: "Flight", title: "Lagos → Toronto One-Way", originalPrice: "$850", price: "$620", discount: "27% OFF", deadline: "2024-04-12T00:00:00", tag: "Flash Sale" },
-];
-
-function useCountdown(deadline: string) {
-  const [time, setTime] = useState(() => calcTime(deadline));
-  useState(() => {
-    const id = setInterval(() => setTime(calcTime(deadline)), 1000);
-    return () => clearInterval(id);
-  });
-  return time;
+interface DealItem {
+  id?: string;
+  type: string;
+  title: string;
+  originalPrice: string;
+  price: string;
+  discount: string;
+  deadline: string;
+  tag: string;
 }
+
+const fallbackDeals: DealItem[] = [
+  { type: "Flight", title: "Accra -> London Return", originalPrice: "GHs 13,530", price: "GHs 9,865", discount: "27% OFF", deadline: "2024-04-15T00:00:00", tag: "Hot Deal" },
+  { type: "Hotel", title: "5 Star Dubai Marina - 3 Nights", originalPrice: "GHs 10,944", price: "GHs 7,585", discount: "31% OFF", deadline: "2024-04-10T00:00:00", tag: "Limited" },
+  { type: "Package", title: "Istanbul + Cappadocia - 7 Days", originalPrice: "GHs 21,280", price: "GHs 15,960", discount: "25% OFF", deadline: "2024-04-20T00:00:00", tag: "Popular" },
+  { type: "Flight", title: "Lagos -> Toronto One-Way", originalPrice: "GHs 12,920", price: "GHs 9,424", discount: "27% OFF", deadline: "2024-04-12T00:00:00", tag: "Flash Sale" },
+];
 
 function calcTime(deadline: string) {
   const diff = Math.max(0, new Date(deadline).getTime() - Date.now());
@@ -37,6 +40,20 @@ function calcTime(deadline: string) {
 
 const DealsSection = () => {
   const [filter, setFilter] = useState<string>("All");
+  const { deals: cmsDeals } = useSiteContent();
+
+  const deals: DealItem[] = cmsDeals.length > 0
+    ? cmsDeals.map((deal: DealContent) => ({
+        id: deal.id,
+        type: deal.type,
+        title: deal.title,
+        originalPrice: deal.original_price,
+        price: deal.price,
+        discount: deal.discount,
+        deadline: deal.deadline,
+        tag: deal.tag,
+      }))
+    : fallbackDeals;
 
   const filtered = filter === "All" ? deals : deals.filter((d) => d.type === filter);
 
@@ -53,7 +70,6 @@ const DealsSection = () => {
           </p>
         </motion.div>
 
-        {/* Filters */}
         <div className="flex justify-center gap-2 mb-10">
           {["All", "Flight", "Hotel", "Package"].map((f) => (
             <Button key={f} variant={filter === f ? "default" : "outline"} size="sm" onClick={() => setFilter(f)} className="text-xs">
@@ -65,6 +81,7 @@ const DealsSection = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {filtered.map((deal, i) => {
             const t = calcTime(deal.deadline);
+
             return (
               <motion.div key={deal.title} {...fadeUp} transition={{ delay: i * 0.08 }} className="bg-card rounded-xl border shadow-card hover:shadow-card-hover transition-all overflow-hidden group">
                 <div className="p-1.5">
@@ -83,7 +100,6 @@ const DealsSection = () => {
                   </div>
                 </div>
                 <div className="px-5 pb-5">
-                  {/* Countdown */}
                   <div className="flex items-center gap-1 text-xs text-muted-foreground mt-3 mb-4">
                     <Clock className="w-3 h-3" />
                     <span>{t.days}d {t.hours}h {t.minutes}m left</span>
@@ -127,7 +143,7 @@ const NewsletterSection = () => {
           </p>
           {subscribed ? (
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="mt-8 bg-secondary/20 rounded-xl p-6 border border-secondary/30">
-              <p className="text-primary-foreground font-semibold">🎉 You're subscribed!</p>
+              <p className="text-primary-foreground font-semibold">You're subscribed!</p>
               <p className="text-primary-foreground/60 text-sm mt-1">Watch your inbox for exclusive deals.</p>
             </motion.div>
           ) : (

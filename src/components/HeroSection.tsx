@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -23,9 +23,9 @@ const defaultSlides: SlideData[] = [
   {
     image: heroTravel,
     badge: "Travel & Tours",
-    title: "Your Gateway to",
-    highlight: "Global",
-    titleEnd: "Opportunities",
+    title: "Explore the World with",
+    highlight: "Confidence",
+    titleEnd: "",
     desc: "From dream vacations to work permits, visa processing, and seamless logistics — we make global travel and immigration effortless.",
     cta: { label: "Book a Flight", link: "/travel/flights" },
     ctaSecondary: { label: "Explore Destinations", link: "/travel" },
@@ -65,36 +65,6 @@ function cmsSlideToSlide(s: HeroSlideContent): SlideData {
   };
 }
 
-function useCounter(end: number, duration = 2000, start = 0) {
-  const [count, setCount] = useState(start);
-  const ref = useRef<HTMLDivElement>(null);
-  const hasAnimated = useRef(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !hasAnimated.current) {
-          hasAnimated.current = true;
-          const startTime = performance.now();
-          const animate = (now: number) => {
-            const elapsed = now - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            const eased = 1 - Math.pow(1 - progress, 3);
-            setCount(Math.floor(start + (end - start) * eased));
-            if (progress < 1) requestAnimationFrame(animate);
-          };
-          requestAnimationFrame(animate);
-        }
-      },
-      { threshold: 0.5 }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [end, duration, start]);
-
-  return { count, ref };
-}
-
 const HeroSection = () => {
   const [current, setCurrent] = useState(0);
   const { heroSlides } = useSiteContent();
@@ -123,15 +93,6 @@ const HeroSection = () => {
   const goTo = (dir: number) => {
     setCurrent((p) => (p + dir + slides.length) % slides.length);
   };
-
-  const stat1 = useCounter(15000, 2000, 0);
-  const stat2 = useCounter(50, 1500, 0);
-  const stat3 = useCounter(98, 1800, 0);
-  const stats = [
-    { ...stat1, suffix: "+", label: "Visas Processed", format: (n: number) => n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}K` : String(n) },
-    { ...stat2, suffix: "+", label: "Countries Served", format: (n: number) => String(n) },
-    { ...stat3, suffix: "%", label: "Success Rate", format: (n: number) => String(n) },
-  ];
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
@@ -213,21 +174,6 @@ const HeroSection = () => {
               </div>
             </motion.div>
           </AnimatePresence>
-
-          <div className="flex flex-wrap gap-8 mt-16 pt-8 border-t justify-center" style={{ borderColor: "hsl(var(--primary-foreground) / 0.15)" }}>
-            {stats.map((stat) => (
-              <div key={stat.label} ref={stat.ref}>
-                <div className="text-2xl md:text-3xl font-display font-bold text-accent">
-                  {stat.format(stat.count)}{stat.suffix}
-                </div>
-                <div className="text-sm" style={{ color: "hsl(var(--primary-foreground) / 0.6)" }}>{stat.label}</div>
-              </div>
-            ))}
-            <div>
-              <div className="text-2xl md:text-3xl font-display font-bold text-accent">24/7</div>
-              <div className="text-sm" style={{ color: "hsl(var(--primary-foreground) / 0.6)" }}>Support Available</div>
-            </div>
-          </div>
         </div>
       </div>
 

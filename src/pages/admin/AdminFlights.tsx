@@ -73,10 +73,18 @@ const AdminFlights = () => {
 
   const handleEdit = async () => {
     if (!editingBooking) return;
+    const previousStatus = editingBooking.status;
     const { error } = await supabase.from("bookings").update({
       route: form.route, date: form.date, provider: form.provider || null, status: form.status,
     }).eq("id", editingBooking.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    if (previousStatus !== form.status) {
+      notifyStatusChange({
+        type: "booking_status_update",
+        userId: editingBooking.user_id,
+        data: { route: form.route, date: form.date, provider: form.provider || "", bookingType: "flight", newStatus: form.status },
+      });
+    }
     toast({ title: "Booking Updated" }); setEditDialogOpen(false); fetchBookings();
   };
 

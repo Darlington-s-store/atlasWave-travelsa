@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { getAuthErrorMessage, normalizeEmail } from "@/lib/authErrors";
 
 export interface AdminUser {
   id: string;
@@ -85,8 +86,9 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const adminLogin = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { success: false, error: error.message };
+    const normalizedEmail = normalizeEmail(email);
+    const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+    if (error) return { success: false, error: getAuthErrorMessage(error, "login") || error.message };
     
     if (data.user) {
       const isAdmin = await checkAdminRole(data.user);

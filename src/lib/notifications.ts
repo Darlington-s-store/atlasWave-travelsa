@@ -1,7 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type NotificationType =
+  | "application_received"
+  | "application_status_update"
+  | "booking_received"
+  | "booking_status_update"
+  | "consultation_booked"
   | "invoice_ready"
+  | "payment_status_update"
+  | "payment_submitted"
   | "refund_approved"
   | "refund_rejected"
   | "refund_processed"
@@ -11,8 +18,11 @@ export type NotificationType =
 
 interface SendNotificationParams {
   type: NotificationType;
-  recipientEmail: string;
-  recipientName: string;
+  userId?: string;
+  recipientEmail?: string;
+  recipientPhone?: string;
+  recipientName?: string;
+  channel?: "email" | "sms" | "both";
   data: Record<string, string>;
 }
 

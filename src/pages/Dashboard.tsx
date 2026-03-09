@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import logo from "@/assets/logo.jpeg";
 import { generateReceiptPDF } from "@/lib/generateReceipt";
+import { sendNotification } from "@/lib/notifications";
 
 const sidebarItems = [
   { id: "overview", label: "Dashboard", icon: LayoutDashboard },
@@ -296,6 +297,7 @@ function OverviewTab({ applications, bookings, shipments, consultations, userNam
 
 // --- APPLICATIONS TAB ---
 function ApplicationsTab({ applications, onRefresh, userId }: { applications: any[]; onRefresh: () => void; userId: string }) {
+  const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [appForm, setAppForm] = useState({ type: "visa", title: "", details: "" });
   const [submitting, setSubmitting] = useState(false);
@@ -318,6 +320,19 @@ function ApplicationsTab({ applications, onRefresh, userId }: { applications: an
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
     }
+    await sendNotification({
+      type: "application_received",
+      userId,
+      recipientEmail: user?.email || undefined,
+      recipientPhone: user?.phone || undefined,
+      recipientName: user?.fullName || undefined,
+      channel: "both",
+      data: {
+        title: appForm.title,
+        type: appForm.type,
+        status: "pending",
+      },
+    });
     toast({ title: "Application submitted successfully!" });
     setDialogOpen(false);
     setAppForm({ type: "visa", title: "", details: "" });
@@ -407,8 +422,9 @@ function ApplicationsTab({ applications, onRefresh, userId }: { applications: an
 
 // --- APPOINTMENTS TAB ---
 function AppointmentsTab({ consultations, onRefresh, userId }: { consultations: any[]; onRefresh: () => void; userId: string }) {
+  const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ type: "immigration", date: "", time: "", first_name: "", last_name: "", email: "", phone: "", topic: "", notes: "" });
+  const [form, setForm] = useState({ type: "immigration", date: "", time: "", first_name: user?.fullName?.split(" ")[0] || "", last_name: user?.fullName?.split(" ").slice(1).join(" ") || "", email: user?.email || "", phone: user?.phone || "", topic: "", notes: "" });
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
@@ -417,7 +433,7 @@ function AppointmentsTab({ consultations, onRefresh, userId }: { consultations: 
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("consultations").insert({
+    const { data: consultation, error } = await supabase.from("consultations").insert({
       user_id: userId,
       type: form.type,
       date: form.date,
@@ -429,16 +445,30 @@ function AppointmentsTab({ consultations, onRefresh, userId }: { consultations: 
       topic: form.topic || null,
       notes: form.notes || null,
       price: form.type === "immigration" ? 150 : form.type === "logistics" ? 100 : 75,
-      status: "upcoming",
-    });
+    }).select("status, duration").single();
     setSubmitting(false);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
     }
+    await sendNotification({
+      type: "consultation_booked",
+      userId,
+      recipientEmail: form.email || user?.email || undefined,
+      recipientPhone: form.phone || user?.phone || undefined,
+      recipientName: `${form.first_name} ${form.last_name}`.trim() || user?.fullName || undefined,
+      channel: "both",
+      data: {
+        type: form.type,
+        date: form.date,
+        time: form.time,
+        duration: `${consultation?.duration || (form.type === "immigration" ? 60 : 45)} min`,
+        status: consultation?.status || "upcoming",
+      },
+    });
     toast({ title: "Appointment booked successfully!" });
     setDialogOpen(false);
-    setForm({ type: "immigration", date: "", time: "", first_name: "", last_name: "", email: "", phone: "", topic: "", notes: "" });
+    setForm({ type: "immigration", date: "", time: "", first_name: user?.fullName?.split(" ")[0] || "", last_name: user?.fullName?.split(" ").slice(1).join(" ") || "", email: user?.email || "", phone: user?.phone || "", topic: "", notes: "" });
     onRefresh();
   };
 
@@ -553,6 +583,7 @@ function AppointmentsTab({ consultations, onRefresh, userId }: { consultations: 
 
 // --- BOOKINGS TAB ---
 function BookingsTab({ bookings, onRefresh, userId }: { bookings: any[]; onRefresh: () => void; userId: string }) {
+  const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ type: "flight", route: "", date: "", provider: "" });
   const [submitting, setSubmitting] = useState(false);
@@ -576,6 +607,21 @@ function BookingsTab({ bookings, onRefresh, userId }: { bookings: any[]; onRefre
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
     }
+    await sendNotification({
+      type: "booking_received",
+      userId,
+      recipientEmail: user?.email || undefined,
+      recipientPhone: user?.phone || undefined,
+      recipientName: user?.fullName || undefined,
+      channel: "both",
+      data: {
+        bookingType: form.type,
+        route: form.route,
+        date: form.date,
+        provider: form.provider || "",
+        status: "pending",
+      },
+    });
     toast({ title: "Booking created successfully!" });
     setDialogOpen(false);
     setForm({ type: "flight", route: "", date: "", provider: "" });
@@ -672,6 +718,7 @@ function PaymentsTab({ payments, onRefresh, userId }: { payments: any[]; onRefre
       toast({ title: "Enter a valid amount", variant: "destructive" });
       return;
     }
+    const reference = `PAY-${Date.now().toString(36).toUpperCase()}`;
     setSubmitting(true);
     const { error } = await supabase.from("payments").insert({
       user_id: userId,
@@ -680,13 +727,28 @@ function PaymentsTab({ payments, onRefresh, userId }: { payments: any[]; onRefre
       description: form.description || null,
       payment_method: form.payment_method,
       status: "pending",
-      reference: `PAY-${Date.now().toString(36).toUpperCase()}`,
+      reference,
     });
     setSubmitting(false);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
     }
+    await sendNotification({
+      type: "payment_submitted",
+      userId,
+      recipientEmail: user?.email || undefined,
+      recipientPhone: user?.phone || undefined,
+      recipientName: user?.fullName || undefined,
+      channel: "both",
+      data: {
+        amount: amount.toFixed(2),
+        currency: form.currency,
+        description: form.description || "Payment",
+        reference,
+        status: "pending",
+      },
+    });
     toast({ title: "Payment submitted successfully!" });
     setDialogOpen(false);
     setForm({ amount: "", description: "", payment_method: "card", currency: "USD" });

@@ -13,6 +13,7 @@ import {
 import { DollarSign, Clock, CheckCircle, Download, Plus, MoreHorizontal, Inbox, Eye, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { sendNotification } from "@/lib/notifications";
 
 const SERVICES = ["Visa Processing", "Logistics Support", "Consultation Fee", "Education Visa", "Work Permit", "Flight Booking"];
 const METHODS = ["Mastercard", "MoMo"];
@@ -70,6 +71,7 @@ const AdminPayments = () => {
       return;
     }
     if (editingTx) {
+      const previousStatus = editingTx.status;
       const { error } = await supabase.from("payments").update({
         description: form.description,
         amount: parseFloat(form.amount),
@@ -77,6 +79,21 @@ const AdminPayments = () => {
         payment_method: form.payment_method,
       }).eq("id", editingTx.id);
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      if (previousStatus !== form.status) {
+        await sendNotification({
+          type: "payment_status_update",
+          userId: editingTx.user_id,
+          channel: "both",
+          data: {
+            reference: editingTx.reference || editingTx.id.slice(0, 8),
+            amount: Number(form.amount).toFixed(2),
+            currency: editingTx.currency || "USD",
+            description: form.description || "Payment",
+            previousStatus,
+            newStatus: form.status,
+          },
+        });
+      }
       toast({ title: "Transaction Updated" });
     }
     setDialogOpen(false);

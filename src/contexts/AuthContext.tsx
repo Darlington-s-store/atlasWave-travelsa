@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import { getAuthErrorMessage, normalizeEmail } from "@/lib/authErrors";
 
 export interface UserProfile {
   id: string;
@@ -81,21 +82,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { success: false, error: error.message };
+    const normalizedEmail = normalizeEmail(email);
+    const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+    if (error) return { success: false, error: getAuthErrorMessage(error, "login") || error.message };
     return { success: true };
   };
 
   const signup = async (data: { email: string; password: string; fullName: string; phone: string }) => {
+    const normalizedEmail = normalizeEmail(data.email);
     const { error } = await supabase.auth.signUp({
-      email: data.email,
+      email: normalizedEmail,
       password: data.password,
       options: {
         data: { full_name: data.fullName, phone: data.phone },
         emailRedirectTo: window.location.origin,
       },
     });
-    if (error) return { success: false, error: error.message };
+    if (error) return { success: false, error: getAuthErrorMessage(error, "signup") || error.message };
     return { success: true };
   };
 

@@ -19,6 +19,7 @@ import {
   Ship, Calendar, Star, Bell, Newspaper, Shield, Settings, Lock, MapPin, Video,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logo from "@/assets/logo.jpeg";
 
 const navGroups = [
   {
@@ -115,14 +116,27 @@ export function AdminSidebar() {
         {/* Brand */}
         <div className="px-4 py-5 mb-1">
           {!collapsed ? (
-            <div>
-              <h1 className="text-lg font-bold text-sidebar-foreground tracking-tight">African Waves</h1>
-              <p className="text-[11px] text-sidebar-foreground/60 uppercase tracking-[0.15em] mt-0.5">Admin Portal</p>
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-white shadow-sm border border-sidebar-border flex items-center justify-center shrink-0 overflow-hidden">
+                <img
+                  src={logo}
+                  alt="AtlasWave Travel and Tours"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-[15px] font-bold text-sidebar-foreground tracking-tight leading-none">AtlasWave Travels</h1>
+                <p className="text-[10px] text-sidebar-foreground/55 uppercase tracking-[0.18em] mt-1">
+                  Admin Portal
+                </p>
+              </div>
             </div>
           ) : (
-            <div className="w-8 h-8 rounded-lg bg-sidebar-accent flex items-center justify-center mx-auto">
-              <span className="text-sidebar-foreground font-bold text-sm">AW</span>
-            </div>
+            <img
+              src={logo}
+              alt="AtlasWave Travel and Tours"
+              className="w-8 h-8 rounded-lg object-cover mx-auto border border-sidebar-border bg-white"
+            />
           )}
         </div>
 

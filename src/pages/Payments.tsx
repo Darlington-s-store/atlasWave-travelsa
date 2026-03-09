@@ -139,8 +139,11 @@ const Payments = () => {
     await supabase.functions.invoke("send-notification", {
       body: {
         type: "invoice_ready",
+        userId: user.id,
         recipientEmail: userEmail,
+        recipientPhone: user.phone || undefined,
         recipientName: profile?.full_name || "Customer",
+        channel: "both",
         data: {
           invoiceNumber: invoice?.invoice_number || "N/A",
           amount: parseFloat(amount).toFixed(2),

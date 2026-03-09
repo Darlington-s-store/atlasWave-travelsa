@@ -1,4 +1,3 @@
-
 export interface ReceiptData {
   reference: string;
   date: string;
@@ -11,13 +10,13 @@ export interface ReceiptData {
   customerEmail: string;
 }
 
-const currencySymbol = (c: string) => {
-  const map: Record<string, string> = { USD: "$", EUR: "€", GBP: "£", GHS: "₵", NGN: "₦" };
-  return map[c] || c + " ";
+const currencySymbol = (currency: string) => {
+  const map: Record<string, string> = { USD: "$", EUR: "EUR ", GBP: "GBP ", GHS: "GHS ", NGN: "NGN " };
+  return map[currency] || `${currency} `;
 };
 
 export function generateReceiptPDF(data: ReceiptData) {
-  const sym = currencySymbol(data.currency);
+  const symbol = currencySymbol(data.currency);
   const html = `
 <!DOCTYPE html>
 <html>
@@ -51,13 +50,13 @@ export function generateReceiptPDF(data: ReceiptData) {
 <body>
 <div class="receipt">
   <div class="header">
-    <h1>AtlasWave Global</h1>
+    <h1>Atlast Wave Travel and Tours</h1>
     <p>Payment Receipt</p>
     <span class="badge ${data.status}">${data.status}</span>
   </div>
   <div class="body">
     <div class="amount-section">
-      <div class="amount">${sym}${data.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+      <div class="amount">${symbol}${data.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
       <div class="currency">${data.currency}</div>
     </div>
     <div class="details">
@@ -71,7 +70,7 @@ export function generateReceiptPDF(data: ReceiptData) {
   </div>
   <div class="footer">
     <p>Thank you for your payment. This receipt was generated on ${new Date().toLocaleDateString()}.</p>
-    <p style="margin-top:4px">AtlasWave Global Services · support@atlaswave.com</p>
+    <p style="margin-top:4px">Atlast Wave Travel and Tours | support@atlaswave.com</p>
   </div>
 </div>
 </body>

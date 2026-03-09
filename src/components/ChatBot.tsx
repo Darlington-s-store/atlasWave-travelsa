@@ -20,6 +20,7 @@ const ChatBot = () => {
   const [greeting, setGreeting] = useState("Hello! 👋 Welcome to AtlasWave Travel & Tours. How can I help you today?");
   const [botName, setBotName] = useState("AtlasWave AI Assistant");
   const [botEnabled, setBotEnabled] = useState(true);
+  const [fallbackMessage, setFallbackMessage] = useState("I'm sorry, I'm having trouble connecting right now. Please try again or call us at +233 123 456 789 for immediate assistance.");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -35,6 +36,7 @@ const ChatBot = () => {
           if (row.key === "greeting") setGreeting(row.value);
           if (row.key === "bot_name") setBotName(row.value);
           if (row.key === "bot_enabled") setBotEnabled(row.value === "true");
+          if (row.key === "fallback") setFallbackMessage(row.value);
         }
       }
     };
@@ -134,6 +136,35 @@ const ChatBot = () => {
     return assistantText;
   }, []);
 
+  const saveChatLog = useCallback(async (userMessage: string, botResponse: string, matched: boolean) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
+    let userName = "Guest";
+
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      userName = profile?.full_name || user.email || "Guest";
+    }
+
+    const { error } = await supabase.from("chat_logs").insert({
+      session_id: sessionId.current,
+      user_id: user?.id ?? null,
+      user_name: userName,
+      user_message: userMessage,
+      bot_response: botResponse,
+      matched,
+    });
+
+    if (error) {
+      console.error("Failed to save chat log:", error);
+    }
+  }, []);
+
   const send = async () => {
     const trimmed = input.trim();
     if (!trimmed || isLoading) return;
@@ -149,12 +180,14 @@ const ChatBot = () => {
     history.push({ role: "user", content: trimmed });
 
     try {
-      await streamChat(history);
+      const assistantText = await streamChat(history);
+      await saveChatLog(trimmed, assistantText, true);
     } catch (e) {
       console.error("Chat error:", e);
+      await saveChatLog(trimmed, fallbackMessage, false);
       setMessages((prev) => [
         ...prev,
-        { id: Date.now() + 2, text: "I'm sorry, I'm having trouble connecting right now. Please try again or call us at +233 123 456 789 for immediate assistance.", sender: "bot" },
+        { id: Date.now() + 2, text: fallbackMessage, sender: "bot" },
       ]);
     } finally {
       setIsLoading(false);

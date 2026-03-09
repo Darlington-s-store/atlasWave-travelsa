@@ -18,13 +18,11 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { sendNotification } from "@/lib/notifications";
 
-const CONSULTATION_STATUSES = ["upcoming", "confirmed", "completed", "cancelled", "rescheduled"];
+const CONSULTATION_STATUSES = ["upcoming", "completed", "cancelled"];
 const statusStyle: Record<string, string> = {
   upcoming: "bg-accent/15 text-accent-foreground",
-  confirmed: "bg-primary/10 text-primary",
   completed: "bg-secondary/15 text-secondary",
   cancelled: "bg-destructive/10 text-destructive",
-  rescheduled: "bg-accent/15 text-accent-foreground",
 };
 
 const AdminConsultations = () => {
@@ -62,14 +60,18 @@ const AdminConsultations = () => {
 
     // Send email notification if status changed
     if (previousStatus !== editForm.status) {
-      const recipientEmail = editingConsultation.email || `user-${editingConsultation.user_id.slice(0, 8)}@atlaswave.com`;
+      const recipientEmail = editingConsultation.email || undefined;
+      const recipientPhone = editingConsultation.phone || undefined;
       const recipientName = `${editingConsultation.first_name || ""} ${editingConsultation.last_name || ""}`.trim() || "User";
       
       const notificationType = editForm.status === "cancelled" ? "consultation_cancelled" : "consultation_confirmed";
       sendNotification({
         type: notificationType,
+        userId: editingConsultation.user_id,
         recipientEmail,
+        recipientPhone,
         recipientName,
+        channel: "both",
         data: {
           type: editingConsultation.type,
           date: editingConsultation.date,
@@ -96,7 +98,7 @@ const AdminConsultations = () => {
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  const upcomingCount = consultations.filter(c => c.status === "upcoming" || c.status === "confirmed").length;
+  const upcomingCount = consultations.filter(c => c.status === "upcoming").length;
   const completedCount = consultations.filter(c => c.status === "completed").length;
   const totalRevenue = consultations.reduce((s, c) => s + Number(c.price || 0), 0);
 
