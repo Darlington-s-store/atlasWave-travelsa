@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,25 +17,10 @@ import {
   Eye, Pencil, Trash2, Inbox, CheckCircle, Clock, AlertTriangle, XCircle,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
-interface Shipment {
-  id: string;
-  trackingId: string;
-  sender: string;
-  receiver: string;
-  origin: string;
-  destination: string;
-  carrier: string;
-  mode: "air" | "sea" | "road";
-  status: "processing" | "in-transit" | "customs" | "delivered" | "delayed";
-  progress: number;
-  date: string;
-  weight: string;
-}
-
-const CARRIERS = ["DHL Express", "FedEx", "Maersk Line", "Emirates SkyCargo", "UPS", "Ghana Post"];
-const MODES: Shipment["mode"][] = ["air", "sea", "road"];
-const STATUSES: Shipment["status"][] = ["processing", "in-transit", "customs", "delivered", "delayed"];
+const STATUSES = ["processing", "in-transit", "customs", "delivered", "delayed"];
 
 const statusStyle: Record<string, { bg: string; icon: typeof CheckCircle }> = {
   processing: { bg: "bg-primary/10 text-primary border-primary/20", icon: Clock },
@@ -45,62 +30,77 @@ const statusStyle: Record<string, { bg: string; icon: typeof CheckCircle }> = {
   delayed: { bg: "bg-destructive/10 text-destructive border-destructive/20", icon: XCircle },
 };
 
-const modeIcon = { air: Plane, sea: Ship, road: Truck };
-
-const MOCK_SHIPMENTS: Shipment[] = [
-  { id: "1", trackingId: "AWL-2024-001", sender: "Daniel Mensah", receiver: "James Okonkwo", origin: "Accra, Ghana", destination: "London, UK", carrier: "DHL Express", mode: "air", status: "in-transit", progress: 65, date: "Mar 5, 2024", weight: "25 kg" },
-  { id: "2", trackingId: "AWL-2024-002", sender: "Abena Osei", receiver: "Marie Dupont", origin: "Accra, Ghana", destination: "Paris, France", carrier: "Maersk Line", mode: "sea", status: "customs", progress: 80, date: "Feb 28, 2024", weight: "150 kg" },
-  { id: "3", trackingId: "AWL-2024-003", sender: "Kwame Adjei", receiver: "Lisa Chen", origin: "Tema, Ghana", destination: "Toronto, Canada", carrier: "FedEx", mode: "air", status: "delivered", progress: 100, date: "Feb 20, 2024", weight: "8 kg" },
-  { id: "4", trackingId: "AWL-2024-004", sender: "Grace Amponsah", receiver: "Ahmed Hassan", origin: "Accra, Ghana", destination: "Dubai, UAE", carrier: "Emirates SkyCargo", mode: "air", status: "processing", progress: 15, date: "Mar 7, 2024", weight: "45 kg" },
-  { id: "5", trackingId: "AWL-2024-005", sender: "Yaw Boateng", receiver: "Sophie Mueller", origin: "Kumasi, Ghana", destination: "Berlin, Germany", carrier: "UPS", mode: "air", status: "delayed", progress: 40, date: "Mar 1, 2024", weight: "12 kg" },
-];
-
-let nextId = 10;
-const genTrackingId = () => `AWL-2024-${String(nextId++).padStart(3, "0")}`;
-
 const AdminShipments = () => {
   const { toast } = useToast();
-  const [shipments, setShipments] = useState<Shipment[]>(MOCK_SHIPMENTS);
+  const { user } = useAuth();
+  const [shipments, setShipments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<Shipment | null>(null);
+  const [editing, setEditing] = useState<any | null>(null);
   const [viewOpen, setViewOpen] = useState(false);
-  const [viewing, setViewing] = useState<Shipment | null>(null);
+  const [viewing, setViewing] = useState<any | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleting, setDeleting] = useState<Shipment | null>(null);
+  const [deleting, setDeleting] = useState<any | null>(null);
 
   const [form, setForm] = useState({
-    sender: "", receiver: "", origin: "", destination: "",
-    carrier: CARRIERS[0], mode: "air" as Shipment["mode"],
-    status: "processing" as Shipment["status"], weight: "", progress: "0",
+    tracking_number: "", origin: "", destination: "",
+    status: "processing", weight: "", progress: "0", eta: "",
   });
 
-  const resetForm = () => setForm({ sender: "", receiver: "", origin: "", destination: "", carrier: CARRIERS[0], mode: "air", status: "processing", weight: "", progress: "0" });
+  useEffect(() => { fetchShipments(); }, []);
+
+  const fetchShipments = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from("shipments").select("*").order("created_at", { ascending: false });
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    setShipments(data || []);
+    setLoading(false);
+  };
+
+  const resetForm = () => setForm({ tracking_number: "", origin: "", destination: "", status: "processing", weight: "", progress: "0", eta: "" });
 
   const openCreate = () => { resetForm(); setEditing(null); setDialogOpen(true); };
-  const openEdit = (s: Shipment) => {
+  const openEdit = (s: any) => {
     setEditing(s);
-    setForm({ sender: s.sender, receiver: s.receiver, origin: s.origin, destination: s.destination, carrier: s.carrier, mode: s.mode, status: s.status, weight: s.weight, progress: String(s.progress) });
+    setForm({
+      tracking_number: s.tracking_number, origin: s.origin, destination: s.destination,
+      status: s.status, weight: s.weight || "", progress: String(s.progress), eta: s.eta || "",
+    });
     setDialogOpen(true);
   };
 
-  const handleSave = () => {
-    if (!form.sender.trim() || !form.receiver.trim()) { toast({ title: "Sender and receiver required", variant: "destructive" }); return; }
-    const data = { ...form, progress: parseInt(form.progress) || 0 };
+  const handleSave = async () => {
+    if (!form.tracking_number.trim() || !form.origin.trim() || !form.destination.trim()) {
+      toast({ title: "Tracking number, origin, and destination are required", variant: "destructive" });
+      return;
+    }
+    const data = {
+      tracking_number: form.tracking_number, origin: form.origin, destination: form.destination,
+      status: form.status, weight: form.weight || null, progress: parseInt(form.progress) || 0, eta: form.eta || null,
+    };
     if (editing) {
-      setShipments(prev => prev.map(s => s.id === editing.id ? { ...s, ...data } : s));
+      const { error } = await supabase.from("shipments").update(data).eq("id", editing.id);
+      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       toast({ title: "Shipment updated" });
     } else {
-      setShipments(prev => [{ id: String(nextId), trackingId: genTrackingId(), date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), ...data }, ...prev]);
+      const { error } = await supabase.from("shipments").insert({ ...data, user_id: user?.id || "" });
+      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       toast({ title: "Shipment created" });
     }
     setDialogOpen(false);
+    fetchShipments();
   };
 
-  const handleDelete = () => {
-    if (deleting) setShipments(prev => prev.filter(s => s.id !== deleting.id));
-    toast({ title: "Shipment deleted" });
+  const handleDelete = async () => {
+    if (deleting) {
+      const { error } = await supabase.from("shipments").delete().eq("id", deleting.id);
+      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      toast({ title: "Shipment deleted" });
+    }
     setDeleteOpen(false);
+    setDeleting(null);
+    fetchShipments();
   };
 
   const filtered = shipments.filter(s => statusFilter === "all" || s.status === statusFilter);
@@ -117,7 +117,7 @@ const AdminShipments = () => {
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
           <div>
             <h2 className="text-[22px] font-sans font-bold text-foreground tracking-tight">Shipment Management</h2>
-            <p className="text-[13px] text-muted-foreground mt-0.5">Monitor and manage all shipments and carriers.</p>
+            <p className="text-[13px] text-muted-foreground mt-0.5">Monitor and manage all shipments.</p>
           </div>
           <Button size="sm" className="gap-1.5 h-9 text-[13px] font-semibold rounded-lg px-4" onClick={openCreate}>
             <Plus className="w-4 h-4" /> New Shipment
@@ -144,32 +144,6 @@ const AdminShipments = () => {
           ))}
         </div>
 
-        {/* Carrier Health */}
-        <Card className="shadow-card rounded-xl border border-border/60">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-[15px] font-semibold">Carrier Performance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-              {CARRIERS.slice(0, 6).map(carrier => {
-                const carrierShipments = shipments.filter(s => s.carrier === carrier);
-                const onTime = carrierShipments.filter(s => s.status !== "delayed").length;
-                const rate = carrierShipments.length > 0 ? Math.round((onTime / carrierShipments.length) * 100) : 100;
-                return (
-                  <div key={carrier} className="p-3 rounded-lg border border-border bg-background">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-medium text-foreground">{carrier}</p>
-                      <Badge variant={rate >= 90 ? "default" : rate >= 70 ? "secondary" : "destructive"} className="text-[10px]">{rate}%</Badge>
-                    </div>
-                    <Progress value={rate} className="h-1.5" />
-                    <p className="text-[11px] text-muted-foreground mt-1">{carrierShipments.length} shipment{carrierShipments.length !== 1 ? "s" : ""}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Table */}
         <Card className="shadow-card rounded-xl border border-border/60 overflow-hidden">
           <CardContent className="p-0">
@@ -184,10 +158,13 @@ const AdminShipments = () => {
               <span className="text-[12px] text-muted-foreground font-medium ml-auto">{filtered.length} shipments</span>
             </div>
 
-            {filtered.length === 0 ? (
+            {loading ? (
+              <div className="flex items-center justify-center py-16"><p className="text-muted-foreground text-[13px]">Loading...</p></div>
+            ) : filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4"><Inbox className="w-8 h-8 text-muted-foreground/40" /></div>
                 <p className="text-[15px] font-semibold text-foreground">No shipments found</p>
+                <p className="text-[13px] text-muted-foreground mt-1">Click "New Shipment" to create one.</p>
               </div>
             ) : (
               <Table>
@@ -195,8 +172,7 @@ const AdminShipments = () => {
                   <TableRow className="bg-muted/30 hover:bg-muted/30">
                     <TableHead className="text-[11px] uppercase tracking-wider font-bold">Tracking</TableHead>
                     <TableHead className="text-[11px] uppercase tracking-wider font-bold">Route</TableHead>
-                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">Carrier</TableHead>
-                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">Mode</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">Weight</TableHead>
                     <TableHead className="text-[11px] uppercase tracking-wider font-bold">Progress</TableHead>
                     <TableHead className="text-[11px] uppercase tracking-wider font-bold">Status</TableHead>
                     <TableHead className="w-10"></TableHead>
@@ -204,11 +180,10 @@ const AdminShipments = () => {
                 </TableHeader>
                 <TableBody>
                   {filtered.map(s => {
-                    const ModeIcon = modeIcon[s.mode];
-                    const st = statusStyle[s.status];
+                    const st = statusStyle[s.status] || statusStyle["processing"];
                     return (
                       <TableRow key={s.id} className="hover:bg-muted/20">
-                        <TableCell className="font-mono text-[12px] text-primary font-bold">{s.trackingId}</TableCell>
+                        <TableCell className="font-mono text-[12px] text-primary font-bold">{s.tracking_number}</TableCell>
                         <TableCell>
                           <div className="text-[12px]">
                             <span className="text-foreground font-medium">{s.origin}</span>
@@ -216,8 +191,7 @@ const AdminShipments = () => {
                             <span className="text-muted-foreground">{s.destination}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-[13px] text-muted-foreground">{s.carrier}</TableCell>
-                        <TableCell><ModeIcon className="w-4 h-4 text-muted-foreground" /></TableCell>
+                        <TableCell className="text-[13px] text-muted-foreground">{s.weight || "—"}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Progress value={s.progress} className="h-1.5 w-16" />
@@ -254,37 +228,31 @@ const AdminShipments = () => {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader><DialogTitle>{editing ? "Edit Shipment" : "New Shipment"}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Sender *</Label><Input value={form.sender} onChange={e => setForm(f => ({ ...f, sender: e.target.value }))} /></div>
-              <div className="space-y-2"><Label>Receiver *</Label><Input value={form.receiver} onChange={e => setForm(f => ({ ...f, receiver: e.target.value }))} /></div>
+            <div className="space-y-2">
+              <Label>Tracking Number *</Label>
+              <Input value={form.tracking_number} onChange={e => setForm(f => ({ ...f, tracking_number: e.target.value }))} placeholder="AWL-2024-001" />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Origin</Label><Input value={form.origin} onChange={e => setForm(f => ({ ...f, origin: e.target.value }))} placeholder="Accra, Ghana" /></div>
-              <div className="space-y-2"><Label>Destination</Label><Input value={form.destination} onChange={e => setForm(f => ({ ...f, destination: e.target.value }))} placeholder="London, UK" /></div>
+              <div className="space-y-2"><Label>Origin *</Label><Input value={form.origin} onChange={e => setForm(f => ({ ...f, origin: e.target.value }))} placeholder="Accra, Ghana" /></div>
+              <div className="space-y-2"><Label>Destination *</Label><Input value={form.destination} onChange={e => setForm(f => ({ ...f, destination: e.target.value }))} placeholder="London, UK" /></div>
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>Carrier</Label>
-                <Select value={form.carrier} onValueChange={v => setForm(f => ({ ...f, carrier: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{CARRIERS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Mode</Label>
-                <Select value={form.mode} onValueChange={v => setForm(f => ({ ...f, mode: v as Shipment["mode"] }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{MODES.map(m => <SelectItem key={m} value={m} className="capitalize">{m}</SelectItem>)}</SelectContent></Select>
+                <Label>Status</Label>
+                <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s} className="capitalize">{s.replace("-", " ")}</SelectItem>)}</SelectContent></Select>
               </div>
               <div className="space-y-2">
                 <Label>Weight</Label>
                 <Input value={form.weight} onChange={e => setForm(f => ({ ...f, weight: e.target.value }))} placeholder="25 kg" />
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v as Shipment["status"] }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s} className="capitalize">{s.replace("-", " ")}</SelectItem>)}</SelectContent></Select>
-              </div>
               <div className="space-y-2">
                 <Label>Progress (%)</Label>
                 <Input type="number" min="0" max="100" value={form.progress} onChange={e => setForm(f => ({ ...f, progress: e.target.value }))} />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label>ETA</Label>
+              <Input value={form.eta} onChange={e => setForm(f => ({ ...f, eta: e.target.value }))} placeholder="Mar 15, 2024" />
             </div>
           </div>
           <DialogFooter>
@@ -301,19 +269,19 @@ const AdminShipments = () => {
           {viewing && (
             <div className="space-y-3 py-2 text-[13px]">
               <div className="grid grid-cols-2 gap-3">
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Tracking ID</span><span className="font-mono font-bold text-primary">{viewing.trackingId}</span></div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Date</span>{viewing.date}</div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Sender</span><span className="font-semibold">{viewing.sender}</span></div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Receiver</span><span className="font-semibold">{viewing.receiver}</span></div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Tracking</span><span className="font-mono font-bold text-primary">{viewing.tracking_number}</span></div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Status</span><span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold border capitalize ${statusStyle[viewing.status]?.bg || ""}`}>{viewing.status}</span></div>
                 <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Origin</span>{viewing.origin}</div>
                 <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Destination</span>{viewing.destination}</div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Carrier</span>{viewing.carrier}</div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Weight</span>{viewing.weight}</div>
-              </div>
-              <div>
-                <span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-1">Progress</span>
-                <Progress value={viewing.progress} className="h-2 mb-1" />
-                <span className="text-[11px] text-muted-foreground">{viewing.progress}%</span>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Weight</span>{viewing.weight || "—"}</div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">ETA</span>{viewing.eta || "—"}</div>
+                <div className="col-span-2">
+                  <span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-1">Progress</span>
+                  <div className="flex items-center gap-2">
+                    <Progress value={viewing.progress} className="h-2 flex-1" />
+                    <span className="text-sm font-bold">{viewing.progress}%</span>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -321,11 +289,11 @@ const AdminShipments = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Dialog */}
+      {/* Delete Confirmation */}
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader><DialogTitle>Delete Shipment</DialogTitle></DialogHeader>
-          <p className="text-[13px] text-muted-foreground py-2">Delete shipment <span className="font-bold text-foreground">{deleting?.trackingId}</span>? This cannot be undone.</p>
+          <p className="text-[13px] text-muted-foreground py-2">Are you sure you want to delete shipment <strong className="text-foreground">{deleting?.tracking_number}</strong>? This cannot be undone.</p>
           <DialogFooter>
             <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
             <Button variant="destructive" onClick={handleDelete}>Delete</Button>
