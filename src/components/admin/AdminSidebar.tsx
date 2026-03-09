@@ -16,7 +16,7 @@ import { NavLink } from "@/components/NavLink";
 import {
   LayoutDashboard, Users, FileText, PenTool, LogOut, CreditCard, Bot, Package,
   RotateCcw, BarChart3, Plane, Hotel, Tag, Globe, Briefcase, GraduationCap,
-  Ship, Calendar, Star, Bell, Newspaper, Shield, Settings, Lock, MapPin,
+  Ship, Calendar, Star, Bell, Newspaper, Shield, Settings, Lock, MapPin, Video,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
