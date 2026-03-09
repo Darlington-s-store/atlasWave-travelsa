@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { PenTool, Globe, Star, Handshake, Save, Plus, Trash2, Inbox, Loader2 } from "lucide-react";
+import { PenTool, Globe, Star, Handshake, Save, Plus, Trash2, Inbox, Loader2, Upload, ImageIcon } from "lucide-react";
+import { getStorageUrl } from "@/hooks/useSiteContent";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -36,6 +37,8 @@ const AdminContent = () => {
   const [heroCtaText, setHeroCtaText] = useState("");
   const [heroCtaLink, setHeroCtaLink] = useState("");
   const [heroId, setHeroId] = useState<string | null>(null);
+  const [heroImageUrl, setHeroImageUrl] = useState("");
+  const [uploadingHeroImage, setUploadingHeroImage] = useState(false);
 
   // Contact form state
   const [contactEmail, setContactEmail] = useState("");
@@ -61,6 +64,8 @@ const AdminContent = () => {
   const [partDialogOpen, setPartDialogOpen] = useState(false);
   const [editingPart, setEditingPart] = useState<SiteContent | null>(null);
   const [partForm, setPartForm] = useState({ name: "", category: CATEGORIES[0] });
+  const [partLogoFile, setPartLogoFile] = useState<File | null>(null);
+  const [uploadingPartLogo, setUploadingPartLogo] = useState(false);
 
   // Delete dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -69,6 +74,17 @@ const AdminContent = () => {
   useEffect(() => {
     fetchContent();
   }, []);
+
+  const uploadImage = async (file: File, folder: string): Promise<string | null> => {
+    const ext = file.name.split(".").pop();
+    const path = `${folder}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("cms-images").upload(path, file, { upsert: true });
+    if (error) {
+      toast({ title: "Upload Error", description: error.message, variant: "destructive" });
+      return null;
+    }
+    return path;
+  };
 
   const fetchContent = async () => {
     setLoading(true);
@@ -91,6 +107,7 @@ const AdminContent = () => {
         setHeroSubtitle(hero.value.subtitle || "");
         setHeroCtaText(hero.value.cta_text || "");
         setHeroCtaLink(hero.value.cta_link || "");
+        setHeroImageUrl(hero.value.image_url || "");
       }
 
       // Parse contact content
@@ -117,7 +134,19 @@ const AdminContent = () => {
 
   const saveHero = async () => {
     setSaving(true);
-    const value = { title: heroTitle, subtitle: heroSubtitle, cta_text: heroCtaText, cta_link: heroCtaLink };
+    let imageUrl = heroImageUrl;
+    
+    // Upload hero image if a new file was selected
+    const heroFileInput = document.getElementById("hero-image-input") as HTMLInputElement;
+    if (heroFileInput?.files?.[0]) {
+      setUploadingHeroImage(true);
+      const path = await uploadImage(heroFileInput.files[0], "hero");
+      if (path) imageUrl = path;
+      setUploadingHeroImage(false);
+      heroFileInput.value = "";
+    }
+    
+    const value = { title: heroTitle, subtitle: heroSubtitle, cta_text: heroCtaText, cta_link: heroCtaLink, image_url: imageUrl };
     
     if (heroId) {
       const { error } = await supabase
@@ -280,6 +309,7 @@ const AdminContent = () => {
   // Partner handlers
   const openPartCreate = () => {
     setPartForm({ name: "", category: CATEGORIES[0] });
+    setPartLogoFile(null);
     setEditingPart(null);
     setPartDialogOpen(true);
   };
@@ -299,7 +329,16 @@ const AdminContent = () => {
       return;
     }
     setSaving(true);
-    const value = { ...partForm };
+    let logoUrl = editingPart?.value.logo_url || "";
+    
+    if (partLogoFile) {
+      setUploadingPartLogo(true);
+      const path = await uploadImage(partLogoFile, "partners");
+      if (path) logoUrl = path;
+      setUploadingPartLogo(false);
+    }
+    
+    const value = { ...partForm, logo_url: logoUrl };
     
     if (editingPart) {
       const { error } = await supabase
@@ -399,9 +438,33 @@ const AdminContent = () => {
                   <Label>Hero Subtitle</Label>
                   <Textarea value={heroSubtitle} onChange={e => setHeroSubtitle(e.target.value)} rows={2} placeholder="Professional immigration, travel, and logistics services" />
                 </div>
-                <div className="space-y-2">
-                  <Label>CTA Link</Label>
-                  <Input value={heroCtaLink} onChange={e => setHeroCtaLink(e.target.value)} placeholder="/consultation" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>CTA Link</Label>
+                    <Input value={heroCtaLink} onChange={e => setHeroCtaLink(e.target.value)} placeholder="/consultation" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Hero Background Image</Label>
+                    <div className="flex items-center gap-3">
+                      {heroImageUrl && (
+                        <img
+                          src={getStorageUrl(heroImageUrl) || ""}
+                          alt="Hero preview"
+                          className="w-16 h-10 object-cover rounded border border-border"
+                        />
+                      )}
+                      <label className="flex items-center gap-2 px-3 py-2 rounded-md border border-border bg-muted/50 cursor-pointer hover:bg-muted transition-colors text-sm">
+                        <Upload className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">{heroImageUrl ? "Change Image" : "Upload Image"}</span>
+                        <input
+                          id="hero-image-input"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
                 </div>
                 <Button onClick={saveHero} disabled={saving}>
                   {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
@@ -696,6 +759,30 @@ const AdminContent = () => {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Partner Logo</Label>
+              <div className="flex items-center gap-3">
+                {editingPart?.value.logo_url && (
+                  <img
+                    src={getStorageUrl(editingPart.value.logo_url) || ""}
+                    alt="Logo preview"
+                    className="w-12 h-12 object-contain rounded border border-border"
+                  />
+                )}
+                <label className="flex items-center gap-2 px-3 py-2 rounded-md border border-border bg-muted/50 cursor-pointer hover:bg-muted transition-colors text-sm">
+                  <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">
+                    {partLogoFile ? partLogoFile.name : "Upload Logo"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => setPartLogoFile(e.target.files?.[0] || null)}
+                  />
+                </label>
+              </div>
             </div>
           </div>
           <DialogFooter>
