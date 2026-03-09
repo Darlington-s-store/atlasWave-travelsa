@@ -106,6 +106,8 @@ const HeroSection = () => {
     ? getVideoStorageUrl(heroVideo.file_path)
     : null;
 
+  console.log("HERO_DEBUG:", { heroVideosCount: heroVideos.length, heroVideo: heroVideo ? { id: heroVideo.id, video_type: heroVideo.video_type, file_path: heroVideo.file_path } : null, heroVideoSrc });
+
   // Use CMS slides if available, otherwise defaults
   const slides: SlideData[] = heroSlides.length > 0
     ? heroSlides.map(cmsSlideToSlide)
