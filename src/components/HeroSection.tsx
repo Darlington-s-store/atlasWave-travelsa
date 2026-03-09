@@ -133,8 +133,8 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
-      {/* Background: video or image */}
-      {heroVideoSrc && current === 0 ? (
+      {/* Background video (persistent across all slides) */}
+      {heroVideoSrc ? (
         <div className="absolute inset-0 z-[1]">
           <video
             src={heroVideoSrc}
@@ -146,7 +146,7 @@ const HeroSection = () => {
           />
           <div className="absolute inset-0" style={{ background: "var(--hero-overlay)" }} />
         </div>
-      ) : heroVideo?.video_type === "embed" && heroVideo.video_url && current === 0 ? (
+      ) : heroVideo?.video_type === "embed" && heroVideo.video_url ? (
         <div className="absolute inset-0 z-[1]">
           <iframe
             src={`${getEmbedUrl(heroVideo.video_url)}?autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`}
