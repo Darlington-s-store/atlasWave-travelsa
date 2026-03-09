@@ -107,6 +107,7 @@ const AdminContent = () => {
         setHeroSubtitle(hero.value.subtitle || "");
         setHeroCtaText(hero.value.cta_text || "");
         setHeroCtaLink(hero.value.cta_link || "");
+        setHeroImageUrl(hero.value.image_url || "");
       }
 
       // Parse contact content
