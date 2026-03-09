@@ -1,56 +1,104 @@
 import { motion } from "framer-motion";
-import { Plane, Hotel, FileCheck, Briefcase, Ship, Truck, Globe, CreditCard } from "lucide-react";
+import { Briefcase, CreditCard, FileCheck, Globe, Hotel, Plane, Ship, Truck } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const services = [
-  { icon: Plane, title: "Flight Booking", desc: "International & local flights with competitive pricing and custom travel packages.", link: "/travel/flights", category: "travel" },
-  { icon: Hotel, title: "Hotel & Accommodation", desc: "Premium hotel search, booking, and reservation system worldwide.", link: "/travel/hotels", category: "travel" },
-  { icon: FileCheck, title: "Visa Assistance", desc: "Tourist, student, and work visa processing with expert guidance.", link: "/travel/visa", category: "travel" },
-  { icon: Briefcase, title: "Work Permits", desc: "Schengen, Canada LMIA, Germany Chancenkarte, and USA NCLEX pathways.", link: "/work-permits", category: "travel" },
-  { icon: Globe, title: "Credential Evaluation", desc: "ECA, nursing credential verification, and qualification reviews.", link: "/work-permits/credential-evaluation", category: "travel" },
-  { icon: Ship, title: "Sea & Air Freight", desc: "Reliable cargo shipping by sea and air to destinations worldwide.", link: "/logistics", category: "logistics" },
-  { icon: Truck, title: "Road Transport", desc: "Efficient ground transportation and customs clearance services.", link: "/logistics", category: "logistics" },
-  { icon: CreditCard, title: "Online Payments", desc: "Secure payments via Mastercard and Mobile Money for all services.", link: "/payments", category: "logistics" },
+  {
+    icon: Plane,
+    title: "Flight Booking",
+    desc: "International and local flights with competitive pricing and custom travel packages.",
+    link: "/travel/flights",
+    category: "travel",
+  },
+  {
+    icon: Hotel,
+    title: "Hotel & Accommodation",
+    desc: "Premium hotel search, booking, and reservation support worldwide.",
+    link: "/travel/hotels",
+    category: "travel",
+  },
+  {
+    icon: FileCheck,
+    title: "Visa Assistance",
+    desc: "Tourist, student, and work visa processing with expert guidance.",
+    link: "/travel/visa",
+    category: "travel",
+  },
+  {
+    icon: Briefcase,
+    title: "Work Permits",
+    desc: "Schengen, Canada LMIA, Germany Opportunity Card, and USA NCLEX pathways.",
+    link: "/work-permits",
+    category: "travel",
+  },
+  {
+    icon: Globe,
+    title: "Credential Evaluation",
+    desc: "ECA, nursing credential verification, and qualification reviews.",
+    link: "/work-permits/credential-evaluation",
+    category: "travel",
+  },
+  {
+    icon: Ship,
+    title: "Sea & Air Freight",
+    desc: "Reliable cargo shipping by sea and air to destinations worldwide.",
+    link: "/logistics",
+    category: "logistics",
+  },
+  {
+    icon: Truck,
+    title: "Road Transport",
+    desc: "Efficient ground transportation and customs clearance services.",
+    link: "/logistics",
+    category: "logistics",
+  },
+  {
+    icon: CreditCard,
+    title: "Online Payments",
+    desc: "Secure payments via Mastercard and Mobile Money for all services.",
+    link: "/payments",
+    category: "logistics",
+  },
 ];
 
 const ServicesSection = () => {
   return (
-    <section className="py-24 lg:pt-36 bg-background">
+    <section className="bg-background py-20 lg:pt-36">
       <div className="container">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="mb-12 text-center sm:mb-16"
         >
-          <span className="text-sm font-semibold text-accent uppercase tracking-widest">What We Offer</span>
-          <h2 className="text-3xl md:text-5xl font-display font-bold mt-3 text-foreground">
+          <span className="text-sm font-semibold uppercase tracking-widest text-accent">What We Offer</span>
+          <h2 className="mt-3 font-display text-3xl font-bold text-foreground md:text-5xl">
             Comprehensive Global Services
           </h2>
-          <p className="text-muted-foreground mt-4 max-w-2xl mx-auto text-lg">
-            From booking your next trip to securing work permits and shipping cargo — we've got you covered.
+          <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground sm:text-lg">
+            From booking your next trip to securing work permits and shipping cargo, we have you covered.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {services.map((service, i) => (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+          {services.map((service, index) => (
             <motion.div
               key={service.title}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
+              transition={{ delay: index * 0.08 }}
             >
               <Link
                 to={service.link}
-                className="group block bg-card rounded-xl p-6 border shadow-card hover:shadow-card-hover transition-all duration-300 h-full"
+                className="group block h-full rounded-xl border bg-card p-5 shadow-card transition-all duration-300 hover:shadow-card-hover sm:p-6"
               >
-                <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center mb-4 group-hover:bg-accent/20 transition-colors">
-                  <service.icon className="w-6 h-6 text-accent" />
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-accent/10 transition-colors group-hover:bg-accent/20">
+                  <service.icon className="h-6 w-6 text-accent" />
                 </div>
-                <h3 className="font-display font-semibold text-lg text-card-foreground mb-2">{service.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{service.desc}</p>
-                <span className="inline-block mt-3 text-xs font-semibold uppercase tracking-wider text-accent">
+                <h3 className="mb-2 font-display text-lg font-semibold text-card-foreground">{service.title}</h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">{service.desc}</p>
+                <span className="mt-3 inline-block text-xs font-semibold uppercase tracking-wider text-accent">
                   {service.category === "travel" ? "Travel & Immigration" : "Logistics"}
                 </span>
               </Link>

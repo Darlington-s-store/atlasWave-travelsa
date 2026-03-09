@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { ArrowRight, Clock, Flame } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
-import { ArrowRight, Clock, Flame } from "lucide-react";
 import { useSiteContent, type DealContent } from "@/hooks/useSiteContent";
 
 const fadeUp = {
@@ -24,88 +24,138 @@ interface DealItem {
 }
 
 const fallbackDeals: DealItem[] = [
-  { type: "Flight", title: "Accra -> London Return", originalPrice: "GHs 13,530", price: "GHs 9,865", discount: "27% OFF", deadline: "2024-04-15T00:00:00", tag: "Hot Deal" },
-  { type: "Hotel", title: "5 Star Dubai Marina - 3 Nights", originalPrice: "GHs 10,944", price: "GHs 7,585", discount: "31% OFF", deadline: "2024-04-10T00:00:00", tag: "Limited" },
-  { type: "Package", title: "Istanbul + Cappadocia - 7 Days", originalPrice: "GHs 21,280", price: "GHs 15,960", discount: "25% OFF", deadline: "2024-04-20T00:00:00", tag: "Popular" },
-  { type: "Flight", title: "Lagos -> Toronto One-Way", originalPrice: "GHs 12,920", price: "GHs 9,424", discount: "27% OFF", deadline: "2024-04-12T00:00:00", tag: "Flash Sale" },
+  {
+    type: "Flight",
+    title: "Accra to London Return",
+    originalPrice: "GHs 13,530",
+    price: "GHs 9,865",
+    discount: "27% OFF",
+    deadline: "2026-04-15T00:00:00",
+    tag: "Hot Deal",
+  },
+  {
+    type: "Hotel",
+    title: "5 Star Dubai Marina - 3 Nights",
+    originalPrice: "GHs 10,944",
+    price: "GHs 7,585",
+    discount: "31% OFF",
+    deadline: "2026-04-10T00:00:00",
+    tag: "Limited",
+  },
+  {
+    type: "Package",
+    title: "Istanbul + Cappadocia - 7 Days",
+    originalPrice: "GHs 21,280",
+    price: "GHs 15,960",
+    discount: "25% OFF",
+    deadline: "2026-04-20T00:00:00",
+    tag: "Popular",
+  },
+  {
+    type: "Flight",
+    title: "Lagos to Toronto One-Way",
+    originalPrice: "GHs 12,920",
+    price: "GHs 9,424",
+    discount: "27% OFF",
+    deadline: "2026-04-12T00:00:00",
+    tag: "Flash Sale",
+  },
 ];
 
 function calcTime(deadline: string) {
   const diff = Math.max(0, new Date(deadline).getTime() - Date.now());
-  const d = Math.floor(diff / 86400000);
-  const h = Math.floor((diff % 86400000) / 3600000);
-  const m = Math.floor((diff % 3600000) / 60000);
-  return { days: d, hours: h, minutes: m };
+  const days = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const minutes = Math.floor((diff % 3600000) / 60000);
+  return { days, hours, minutes };
 }
 
 const DealsSection = () => {
-  const [filter, setFilter] = useState<string>("All");
+  const [filter, setFilter] = useState("All");
   const { deals: cmsDeals } = useSiteContent();
 
-  const deals: DealItem[] = cmsDeals.length > 0
-    ? cmsDeals.map((deal: DealContent) => ({
-        id: deal.id,
-        type: deal.type,
-        title: deal.title,
-        originalPrice: deal.original_price,
-        price: deal.price,
-        discount: deal.discount,
-        deadline: deal.deadline,
-        tag: deal.tag,
-      }))
-    : fallbackDeals;
+  const deals: DealItem[] =
+    cmsDeals.length > 0
+      ? cmsDeals.map((deal: DealContent) => ({
+          id: deal.id,
+          type: deal.type,
+          title: deal.title,
+          originalPrice: deal.original_price,
+          price: deal.price,
+          discount: deal.discount,
+          deadline: deal.deadline,
+          tag: deal.tag,
+        }))
+      : fallbackDeals;
 
-  const filtered = filter === "All" ? deals : deals.filter((d) => d.type === filter);
+  const filtered = filter === "All" ? deals : deals.filter((deal) => deal.type === filter);
 
   return (
-    <section className="py-24 bg-background">
+    <section className="bg-background py-20 sm:py-24">
       <div className="container">
-        <motion.div {...fadeUp} className="text-center mb-12">
-          <span className="text-sm font-semibold text-accent uppercase tracking-widest">Limited Time Offers</span>
-          <h2 className="text-3xl md:text-5xl font-display font-bold mt-3 text-foreground">
+        <motion.div {...fadeUp} className="mb-10 text-center sm:mb-12">
+          <span className="text-sm font-semibold uppercase tracking-widest text-accent">Limited Time Offers</span>
+          <h2 className="mt-3 font-display text-3xl font-bold text-foreground md:text-5xl">
             Featured <span className="text-gradient-accent">Deals</span>
           </h2>
-          <p className="text-muted-foreground mt-4 max-w-2xl mx-auto text-lg">
+          <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground sm:text-lg">
             Grab exclusive discounts on flights, hotels, and travel packages before they expire.
           </p>
         </motion.div>
 
-        <div className="flex justify-center gap-2 mb-10">
-          {["All", "Flight", "Hotel", "Package"].map((f) => (
-            <Button key={f} variant={filter === f ? "default" : "outline"} size="sm" onClick={() => setFilter(f)} className="text-xs">
-              {f}s
+        <div className="mb-8 flex flex-wrap justify-center gap-2 sm:mb-10">
+          {["All", "Flight", "Hotel", "Package"].map((item) => (
+            <Button
+              key={item}
+              variant={filter === item ? "default" : "outline"}
+              size="sm"
+              className="min-w-[82px] text-xs"
+              onClick={() => setFilter(item)}
+            >
+              {item}s
             </Button>
           ))}
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {filtered.map((deal, i) => {
-            const t = calcTime(deal.deadline);
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+          {filtered.map((deal, index) => {
+            const timeLeft = calcTime(deal.deadline);
 
             return (
-              <motion.div key={deal.title} {...fadeUp} transition={{ delay: i * 0.08 }} className="bg-card rounded-xl border shadow-card hover:shadow-card-hover transition-all overflow-hidden group">
+              <motion.div
+                key={deal.id || `${deal.title}-${index}`}
+                {...fadeUp}
+                transition={{ delay: index * 0.08 }}
+                className="group overflow-hidden rounded-xl border bg-card shadow-card transition-all hover:shadow-card-hover"
+              >
                 <div className="p-1.5">
-                  <div className="bg-primary/5 rounded-lg p-4 relative">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-semibold px-2 py-1 bg-accent/10 text-accent rounded-full flex items-center gap-1">
-                        <Flame className="w-3 h-3" /> {deal.tag}
+                  <div className="relative rounded-lg bg-primary/5 p-4">
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                      <span className="flex items-center gap-1 rounded-full bg-accent/10 px-2 py-1 text-xs font-semibold text-accent">
+                        <Flame className="h-3 w-3" /> {deal.tag}
                       </span>
-                      <span className="text-xs font-bold text-secondary bg-secondary/10 px-2 py-1 rounded-full">{deal.discount}</span>
+                      <span className="rounded-full bg-secondary/10 px-2 py-1 text-xs font-bold text-secondary">
+                        {deal.discount}
+                      </span>
                     </div>
-                    <h3 className="font-display font-bold text-card-foreground text-sm">{deal.title}</h3>
-                    <div className="flex items-baseline gap-2 mt-2">
-                      <span className="text-2xl font-display font-bold text-accent">{deal.price}</span>
+                    <h3 className="text-sm font-bold text-card-foreground">{deal.title}</h3>
+                    <div className="mt-2 flex flex-wrap items-baseline gap-2">
+                      <span className="font-display text-2xl font-bold text-accent">{deal.price}</span>
                       <span className="text-sm text-muted-foreground line-through">{deal.originalPrice}</span>
                     </div>
                   </div>
                 </div>
                 <div className="px-5 pb-5">
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground mt-3 mb-4">
-                    <Clock className="w-3 h-3" />
-                    <span>{t.days}d {t.hours}h {t.minutes}m left</span>
+                  <div className="mb-4 mt-3 flex items-center gap-1 text-xs text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    <span>
+                      {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m left
+                    </span>
                   </div>
                   <Button variant="accent" size="sm" className="w-full" asChild>
-                    <Link to="/consultation">Book Now <ArrowRight className="w-3 h-3 ml-1" /></Link>
+                    <Link to="/consultation">
+                      Book Now <ArrowRight className="ml-1 h-3 w-3" />
+                    </Link>
                   </Button>
                 </div>
               </motion.div>
@@ -129,39 +179,41 @@ const NewsletterSection = () => {
   };
 
   return (
-    <section className="py-20 bg-primary relative overflow-hidden">
+    <section className="relative overflow-hidden bg-primary py-20">
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 left-1/3 w-80 h-80 bg-accent rounded-full blur-[150px]" />
+        <div className="absolute left-1/3 top-0 h-80 w-80 rounded-full bg-accent blur-[150px]" />
       </div>
       <div className="container relative z-10">
-        <motion.div {...fadeUp} className="max-w-xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-primary-foreground">
-            Stay in the Loop
-          </h2>
-          <p className="text-primary-foreground/70 mt-4 text-lg">
+        <motion.div {...fadeUp} className="mx-auto max-w-xl text-center">
+          <h2 className="font-display text-3xl font-bold text-primary-foreground md:text-4xl">Stay in the Loop</h2>
+          <p className="mt-4 text-base text-primary-foreground/70 sm:text-lg">
             Get exclusive travel deals, immigration updates, and logistics news delivered to your inbox.
           </p>
           {subscribed ? (
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="mt-8 bg-secondary/20 rounded-xl p-6 border border-secondary/30">
-              <p className="text-primary-foreground font-semibold">You're subscribed!</p>
-              <p className="text-primary-foreground/60 text-sm mt-1">Watch your inbox for exclusive deals.</p>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="mt-8 rounded-xl border border-secondary/30 bg-secondary/20 p-6"
+            >
+              <p className="font-semibold text-primary-foreground">You are subscribed.</p>
+              <p className="mt-1 text-sm text-primary-foreground/60">Watch your inbox for exclusive deals.</p>
             </motion.div>
           ) : (
-            <div className="flex gap-3 mt-8 max-w-md mx-auto">
+            <div className="mx-auto mt-8 flex max-w-md flex-col gap-3 sm:flex-row">
               <Input
                 placeholder="Enter your email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSubscribe()}
-                className="h-12 bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/40"
+                onChange={(event) => setEmail(event.target.value)}
+                onKeyDown={(event) => event.key === "Enter" && handleSubscribe()}
+                className="h-12 border-primary-foreground/20 bg-primary-foreground/10 text-primary-foreground placeholder:text-primary-foreground/40"
               />
-              <Button variant="accent" className="h-12 px-6 shrink-0" onClick={handleSubscribe}>
+              <Button variant="accent" className="h-12 shrink-0 px-6 sm:w-auto" onClick={handleSubscribe}>
                 Subscribe
               </Button>
             </div>
           )}
-          <p className="text-primary-foreground/40 text-xs mt-4">No spam, unsubscribe anytime.</p>
+          <p className="mt-4 text-xs text-primary-foreground/40">No spam, unsubscribe anytime.</p>
         </motion.div>
       </div>
     </section>

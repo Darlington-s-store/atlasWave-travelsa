@@ -100,12 +100,21 @@ const navGroups = [
 ];
 
 export function AdminSidebar() {
-  const { state } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
   const { adminLogout } = useAdmin();
   const navigate = useNavigate();
 
+  const handleNavSelection = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   const handleLogout = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
     adminLogout();
     navigate("/admin/login");
   };
@@ -114,7 +123,7 @@ export function AdminSidebar() {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarContent className="pt-2 overflow-y-auto">
         {/* Brand */}
-        <div className="px-4 py-5 mb-1">
+        <div className="mb-1 px-4 py-5 pr-12 md:pr-4">
           {!collapsed ? (
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-white shadow-sm border border-sidebar-border flex items-center justify-center shrink-0 overflow-hidden">
@@ -155,6 +164,7 @@ export function AdminSidebar() {
                       <NavLink
                         to={item.url}
                         end={item.url === "/admin"}
+                        onClick={handleNavSelection}
                         className="flex items-center gap-3 px-3 py-2 rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all text-[13px]"
                         activeClassName="!bg-sidebar-accent !text-sidebar-foreground font-semibold"
                       >
