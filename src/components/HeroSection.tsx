@@ -74,6 +74,7 @@ function useCounter(end: number, duration = 2000, start = 0) {
 const HeroSection = () => {
   const [current, setCurrent] = useState(0);
   const { hero } = useSiteContent();
+  const { videos: heroVideos } = useVideos("hero");
 
   // Build slides - use CMS hero for first slide if available
   const slides = hero
