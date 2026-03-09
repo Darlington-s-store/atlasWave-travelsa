@@ -309,6 +309,7 @@ const AdminContent = () => {
   // Partner handlers
   const openPartCreate = () => {
     setPartForm({ name: "", category: CATEGORIES[0] });
+    setPartLogoFile(null);
     setEditingPart(null);
     setPartDialogOpen(true);
   };
