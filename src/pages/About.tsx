@@ -225,6 +225,9 @@ const About = () => {
             </div>
           </div>
         </section>
+        {/* Videos */}
+        <VideoSection category="about" title="Learn More About Us" subtitle="Watch videos from our team and see how we work." />
+
         {/* Partners & Affiliates */}
         <PartnersSection />
       </main>

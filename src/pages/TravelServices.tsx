@@ -266,6 +266,9 @@ const TravelServices = () => {
           </div>
         </section>
 
+        {/* Videos */}
+        <VideoSection category="services" title="Travel Videos" subtitle="See what awaits you at your dream destinations." />
+
         {/* CTA */}
         <section className="py-20 bg-primary">
           <div className="container text-center">

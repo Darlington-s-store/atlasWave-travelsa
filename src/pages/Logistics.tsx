@@ -189,6 +189,9 @@ const Logistics = () => {
           </div>
         </section>
 
+        {/* Videos */}
+        <VideoSection category="services" title="Logistics in Action" subtitle="See how we handle cargo across the globe." bgClass="bg-muted" />
+
         {/* Why Choose Us */}
         <section className="py-24 bg-primary">
           <div className="container">
