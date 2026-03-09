@@ -134,7 +134,7 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setIsLoading(false), 1600);
+    const timer = window.setTimeout(() => setIsLoading(false), 6000);
     return () => window.clearTimeout(timer);
   }, []);
 

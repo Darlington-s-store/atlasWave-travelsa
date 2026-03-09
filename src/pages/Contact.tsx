@@ -8,9 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { MapPin, Phone, Mail, Clock, Send, Globe } from "lucide-react";
 
 const offices = [
-  { city: "Accra, Ghana (HQ)", address: "123 Global Avenue, East Legon", phone: "+233 123 456 789", email: "accra@atlaswave.com" },
-  { city: "London, UK", address: "45 Kings Road, Westminster", phone: "+44 20 1234 5678", email: "london@atlaswave.com" },
-  { city: "Toronto, Canada", address: "200 Bay Street, Suite 300", phone: "+1 416 555 0199", email: "toronto@atlaswave.com" },
+  { city: "Kasoa, Ghana", address: "Kasoa New Market", phone: "+233548254334", email: "Info@atlaswavetravel.com" },
 ];
 
 const hours = [
@@ -95,7 +93,7 @@ const Contact = () => {
               <div className="bg-card rounded-2xl border shadow-lg overflow-hidden">
                 <iframe
                   title="AtlasWave Office Location"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3970.7229574199284!2d-0.1656!3d5.6145!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNcKwMzYnNTIuMiJOIDDCsDA5JzU2LjIiVw!5e0!3m2!1sen!2sgh!4v1234567890"
+                  src="https://www.google.com/maps?q=Kasoa%20New%20Market&output=embed"
                   width="100%"
                   height="250"
                   style={{ border: 0 }}

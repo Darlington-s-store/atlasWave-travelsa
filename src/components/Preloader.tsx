@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import logo from "@/assets/logo.jpeg";
-import preloaderVideo from "@/assets/mixkit-airplane-taking.mp4";
+import preloaderVideo from "@/assets/admin-login-bg.mp4";
 
 const Preloader = () => {
   return (
@@ -14,7 +14,7 @@ const Preloader = () => {
       >
         <source src={preloaderVideo} type="video/mp4" />
       </video>
-      <div className="absolute inset-0 bg-primary/60 backdrop-blur-[2px]" />
+      <div className="absolute inset-0 bg-primary/25" />
       <motion.img
         src={logo}
         alt="AtlasWave"
