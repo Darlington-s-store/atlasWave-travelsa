@@ -144,7 +144,7 @@ const AdminVideos = () => {
   };
 
   return (
-    <AdminLayout title="Video Management">
+    <AdminLayout>
       <div className="flex items-center justify-between mb-6">
         <p className="text-muted-foreground">Manage videos displayed across the website.</p>
         <Button onClick={() => { resetForm(); setDialogOpen(true); }}>
