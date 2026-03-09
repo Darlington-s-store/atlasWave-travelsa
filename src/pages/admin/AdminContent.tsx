@@ -134,7 +134,19 @@ const AdminContent = () => {
 
   const saveHero = async () => {
     setSaving(true);
-    const value = { title: heroTitle, subtitle: heroSubtitle, cta_text: heroCtaText, cta_link: heroCtaLink };
+    let imageUrl = heroImageUrl;
+    
+    // Upload hero image if a new file was selected
+    const heroFileInput = document.getElementById("hero-image-input") as HTMLInputElement;
+    if (heroFileInput?.files?.[0]) {
+      setUploadingHeroImage(true);
+      const path = await uploadImage(heroFileInput.files[0], "hero");
+      if (path) imageUrl = path;
+      setUploadingHeroImage(false);
+      heroFileInput.value = "";
+    }
+    
+    const value = { title: heroTitle, subtitle: heroSubtitle, cta_text: heroCtaText, cta_link: heroCtaLink, image_url: imageUrl };
     
     if (heroId) {
       const { error } = await supabase
