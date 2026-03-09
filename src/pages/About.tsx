@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import { motion } from "framer-motion";
 import { Target, Eye, Award, Shield, Users, Globe, CheckCircle2 } from "lucide-react";
 import PartnersSection from "../components/PartnersSection";
+import VideoSection from "@/components/VideoSection";
 import teamPhoto from "@/assets/team-photo.jpg";
 import ceoPic from "@/assets/team-ceo.jpg";
 import opsPic from "@/assets/team-ops.jpg";
@@ -224,6 +225,9 @@ const About = () => {
             </div>
           </div>
         </section>
+        {/* Videos */}
+        <VideoSection category="about" title="Learn More About Us" subtitle="Watch videos from our team and see how we work." />
+
         {/* Partners & Affiliates */}
         <PartnersSection />
       </main>

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { Ship, Plane, Truck, FileCheck, Package, Search, ArrowRight, CheckCircle2, Clock, MapPin, Shield } from "lucide-react";
 import { useState } from "react";
+import VideoSection from "@/components/VideoSection";
 import heroLogistics from "@/assets/hero-logistics.jpg";
 
 const fadeUp = {
@@ -187,6 +188,9 @@ const Logistics = () => {
             </div>
           </div>
         </section>
+
+        {/* Videos */}
+        <VideoSection category="services" title="Logistics in Action" subtitle="See how we handle cargo across the globe." bgClass="bg-muted" />
 
         {/* Why Choose Us */}
         <section className="py-24 bg-primary">

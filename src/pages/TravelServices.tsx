@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
 import { Plane, Hotel, FileCheck, ArrowRight, MapPin, Calendar, Users, Star, CheckCircle2, Globe } from "lucide-react";
+import VideoSection from "@/components/VideoSection";
 import heroTravel from "@/assets/hero-travel.jpg";
 
 const fadeUp = {
@@ -264,6 +265,9 @@ const TravelServices = () => {
             </div>
           </div>
         </section>
+
+        {/* Videos */}
+        <VideoSection category="services" title="Travel Videos" subtitle="See what awaits you at your dream destinations." />
 
         {/* CTA */}
         <section className="py-20 bg-primary">
