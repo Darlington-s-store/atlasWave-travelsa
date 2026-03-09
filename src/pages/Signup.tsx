@@ -47,7 +47,7 @@ const Signup = () => {
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           <Link to="/" className="flex items-center gap-3">
             <img src={logo} alt="AtlasWave" className="h-10 w-10 rounded-lg object-cover" />
-            <span className="text-xl font-bold text-primary-foreground font-display">AtlasWave</span>
+            <span className="text-xl font-bold text-primary-foreground font-display">AtlasWave Travel</span>
           </Link>
           <div className="max-w-md">
             <h2 className="font-display text-4xl font-bold text-primary-foreground leading-tight mb-4">
