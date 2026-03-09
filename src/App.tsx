@@ -130,35 +130,66 @@ const AppRoutes = () => {
   );
 };
 
-const App = () => {
-  const [isLoading, setIsLoading] = useState(true);
+const AppContent = () => {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
+  const [isLoading, setIsLoading] = useState(() => {
+    if (location.pathname !== "/" || location.pathname.startsWith("/admin")) {
+      return false;
+    }
+
+    return window.sessionStorage.getItem("atlaswave-preloader-seen") !== "true";
+  });
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setIsLoading(false), 6000);
-    return () => window.clearTimeout(timer);
-  }, []);
+    if (isAdminRoute || location.pathname !== "/") {
+      setIsLoading(false);
+      return;
+    }
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AdminProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <AnimatePresence mode="wait">
-              {isLoading ? (
-                <Preloader />
-              ) : (
-                <BrowserRouter>
-                  <AppRoutes />
-                </BrowserRouter>
-              )}
-            </AnimatePresence>
-          </TooltipProvider>
-        </AdminProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  );
+    const hasSeenPreloader = window.sessionStorage.getItem("atlaswave-preloader-seen") === "true";
+    if (hasSeenPreloader) {
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+
+    const timer = window.setTimeout(() => {
+      window.sessionStorage.setItem("atlaswave-preloader-seen", "true");
+      setIsLoading(false);
+    }, 6000);
+
+    return () => window.clearTimeout(timer);
+  }, [isAdminRoute, location.pathname]);
+
+  if (isAdminRoute) {
+    return <AppRoutes />;
+  }
+
+  if (isLoading) {
+    return <Preloader />;
+  }
+
+  return <AppRoutes />;
 };
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <AdminProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AnimatePresence mode="wait">
+              <AppContent />
+            </AnimatePresence>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AdminProvider>
+    </AuthProvider>
+  </QueryClientProvider>
+);
 
 export default App;

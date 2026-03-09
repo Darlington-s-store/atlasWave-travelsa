@@ -11,6 +11,7 @@ const Preloader = () => {
         muted
         loop
         playsInline
+        preload="auto"
       >
         <source src={preloaderVideo} type="video/mp4" />
       </video>

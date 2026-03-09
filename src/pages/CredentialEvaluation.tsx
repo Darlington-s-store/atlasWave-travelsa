@@ -33,8 +33,8 @@ const CredentialEvaluation = () => {
       <Header />
       <main>
         <section className="relative pt-32 pb-20 bg-primary">
-          <div className="container relative z-10">
-            <motion.div {...fadeUp} className="max-w-2xl">
+          <div className="container relative z-10 text-center">
+            <motion.div {...fadeUp} className="mx-auto max-w-2xl">
               <span className="inline-block px-4 py-1.5 bg-accent/20 text-accent text-sm font-semibold rounded-full mb-6 border border-accent/30">
                 <GraduationCap className="w-4 h-4 inline mr-2" />Credential Evaluation
               </span>

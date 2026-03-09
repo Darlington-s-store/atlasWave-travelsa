@@ -109,7 +109,7 @@ const LogisticsSection = () => {
           >
             <span className="text-sm font-semibold uppercase tracking-widest text-accent">Logistics Solutions</span>
             <h2 className="mt-3 font-display text-3xl font-bold text-foreground md:text-5xl">
-              Reliable Global <span className="text-gradient-accent">Shipping</span>
+              Reliable International <span className="text-gradient-accent">Shipping</span>
             </h2>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
               Air freight, sea cargo, road transport, and customs clearance with real-time tracking and dedicated support.

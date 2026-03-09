@@ -22,8 +22,8 @@ const CanadaLMIA = () => {
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent rounded-full blur-[120px]" />
           </div>
-          <div className="container relative z-10">
-            <motion.div {...fadeUp} className="max-w-2xl">
+          <div className="container relative z-10 text-center">
+            <motion.div {...fadeUp} className="mx-auto max-w-2xl">
               <span className="inline-block px-4 py-1.5 bg-accent/20 text-accent text-sm font-semibold rounded-full mb-6 border border-accent/30">🇨🇦 Canada</span>
               <h1 className="text-4xl md:text-6xl font-display font-bold text-primary-foreground leading-tight">
                 Canada <span className="text-gradient-accent">LMIA</span> Work Permit

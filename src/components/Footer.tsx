@@ -70,7 +70,7 @@ const Footer = () => {
 
         <div className="border-t border-primary-foreground/10 mt-12 pt-8 text-center">
           <p className="text-sm text-primary-foreground/40">
-            © {new Date().getFullYear()} AtlasWave Travel & Tours. All rights reserved.
+            © {new Date().getFullYear()} AtlastWave Travel and Tour. All rights reserved.
           </p>
         </div>
       </div>

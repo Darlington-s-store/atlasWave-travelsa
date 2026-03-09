@@ -111,15 +111,15 @@ const VisaAssistance = () => {
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-10 left-20 w-80 h-80 rounded-full bg-accent blur-[120px]" />
           </div>
-          <div className="container relative z-10">
-            <motion.div {...fadeUp} className="max-w-2xl">
+          <div className="container relative z-10 text-center">
+            <motion.div {...fadeUp} className="mx-auto max-w-2xl">
               <span className="inline-block px-4 py-1.5 bg-accent/20 text-accent text-sm font-semibold rounded-full mb-6 border border-accent/30">
                 <FileCheck className="w-4 h-4 inline mr-2" />Visa Assistance
               </span>
               <h1 className="text-4xl md:text-6xl font-display font-bold text-primary-foreground leading-tight">
                 Expert <span className="text-gradient-accent">Visa</span> Services
               </h1>
-              <p className="text-lg text-primary-foreground/70 mt-6 max-w-xl">
+              <p className="mx-auto mt-6 max-w-xl text-lg text-primary-foreground/70">
                 95%+ approval rate across 50+ countries. We handle your visa from start to finish.
               </p>
             </motion.div>

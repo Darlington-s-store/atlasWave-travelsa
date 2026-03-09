@@ -17,7 +17,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
 const ChatBot = () => {
   const [open, setOpen] = useState(false);
-  const [greeting, setGreeting] = useState("Hello! 👋 Welcome to AtlasWave Travel & Tours. How can I help you today?");
+  const [greeting, setGreeting] = useState("Hello! 👋 Welcome to AtlastWave Travel and Tour. How can I help you today?");
   const [botName, setBotName] = useState("AtlasWave AI Assistant");
   const [botEnabled, setBotEnabled] = useState(true);
   const [fallbackMessage, setFallbackMessage] = useState("I'm sorry, I'm having trouble connecting right now. Please try again or call us at +233 123 456 789 for immediate assistance.");

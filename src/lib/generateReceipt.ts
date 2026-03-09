@@ -47,7 +47,7 @@ export function generateReceiptPDF(data: ReceiptData) {
 <body>
 <div class="receipt">
   <div class="header">
-    <h1>Atlast Wave Travel and Tours</h1>
+    <h1>AtlastWave Travel and Tour</h1>
     <p>Payment Receipt</p>
     <span class="badge ${data.status}">${data.status}</span>
   </div>
@@ -67,7 +67,7 @@ export function generateReceiptPDF(data: ReceiptData) {
   </div>
   <div class="footer">
     <p>Thank you for your payment. This receipt was generated on ${new Date().toLocaleDateString()}.</p>
-    <p style="margin-top:4px">Atlast Wave Travel and Tours | support@atlaswave.com</p>
+    <p style="margin-top:4px">AtlastWave Travel and Tour | support@atlaswave.com</p>
   </div>
 </div>
 </body>

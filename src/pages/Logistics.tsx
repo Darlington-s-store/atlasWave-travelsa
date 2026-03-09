@@ -70,13 +70,13 @@ const Logistics = () => {
             <img src={heroLogistics} alt="Cargo port" className="w-full h-full object-cover" />
             <div className="absolute inset-0" style={{ background: "var(--hero-overlay)" }} />
           </div>
-          <div className="container relative z-10">
-            <motion.div {...fadeUp} className="max-w-2xl">
+          <div className="container relative z-10 text-center">
+            <motion.div {...fadeUp} className="mx-auto max-w-2xl">
               <span className="inline-block px-4 py-1.5 bg-accent/20 text-accent text-sm font-semibold rounded-full mb-6 border border-accent/30">
                 Logistics Solutions
               </span>
               <h1 className="text-4xl md:text-6xl font-display font-bold text-primary-foreground leading-tight">
-                Reliable Global <span className="text-gradient-accent">Shipping</span>
+                Reliable International <span className="text-gradient-accent">Shipping</span>
               </h1>
               <p className="mt-6 text-lg text-primary-foreground/70 leading-relaxed">
                 Air freight, sea cargo, road transport, and customs clearance — all with real-time tracking and dedicated support.
@@ -196,12 +196,12 @@ const Logistics = () => {
         <section className="py-24 bg-primary">
           <div className="container">
             <motion.div {...fadeUp} className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-display font-bold text-primary-foreground">Why Ship With GlobeLink?</h2>
+              <h2 className="text-3xl md:text-4xl font-display font-bold text-primary-foreground">Why Ship With AtlastWave Travel and Tour?</h2>
             </motion.div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {[
                 { icon: Clock, title: "On-Time Delivery", desc: "98% on-time rate across all routes" },
-                { icon: MapPin, title: "Global Network", desc: "Partners in 50+ countries" },
+                { icon: MapPin, title: "International Network", desc: "Partners in 50+ countries" },
                 { icon: Shield, title: "Cargo Insurance", desc: "Full coverage for peace of mind" },
                 { icon: Package, title: "Real-Time Tracking", desc: "Track every shipment live" },
               ].map((item, i) => (

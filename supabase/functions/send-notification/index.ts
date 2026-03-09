@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const BRAND_NAME = "Atlast Wave Travel and Tours";
+const BRAND_NAME = "AtlastWave Travel and Tour";
 const DEFAULT_SMS_SENDER = "AtlastWave";
 
 type NotificationChannel = "email" | "sms" | "both";

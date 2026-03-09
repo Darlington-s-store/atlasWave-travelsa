@@ -135,7 +135,7 @@ const AdminAnalytics = () => {
         @media print { body { padding: 20px; } }
       </style></head><body>
         <div class="report-header"><h1>📊 Analytics Report</h1>
-        <p style="font-size:13px;color:#6B7280">AtlasWave Global — ${new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p></div>
+        <p style="font-size:13px;color:#6B7280">AtlastWave Travel and Tour — ${new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p></div>
         <div class="stats-grid">
           <div class="stat-card"><p class="stat-label">Total Revenue</p><p class="stat-value">${formatCurrency(totalRevenue, DEFAULT_CURRENCY)}</p></div>
           <div class="stat-card"><p class="stat-label">Shipments</p><p class="stat-value">${totalShipments}</p></div>

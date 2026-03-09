@@ -370,6 +370,51 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          admin_notes: string | null
+          approved_at: string | null
+          content: string
+          created_at: string
+          email: string
+          id: string
+          name: string
+          rating: number
+          role: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          content: string
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          rating?: number
+          role?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          content?: string
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          rating?: number
+          role?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       shipments: {
         Row: {
           created_at: string

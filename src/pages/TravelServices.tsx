@@ -26,8 +26,8 @@ const TravelServices = () => {
             <img src={heroTravel} alt="Travel destination" className="w-full h-full object-cover" />
             <div className="absolute inset-0" style={{ background: "var(--hero-overlay)" }} />
           </div>
-          <div className="container relative z-10">
-            <motion.div {...fadeUp} className="max-w-2xl">
+          <div className="container relative z-10 text-center">
+            <motion.div {...fadeUp} className="mx-auto max-w-2xl">
               <span className="inline-block px-4 py-1.5 bg-accent/20 text-accent text-sm font-semibold rounded-full mb-6 border border-accent/30">
                 Travel & Tours
               </span>

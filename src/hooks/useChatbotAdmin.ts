@@ -32,7 +32,7 @@ export interface ChatbotSettings {
 
 const DEFAULT_SETTINGS: ChatbotSettings = {
   bot_name: "AtlasWave Assistant",
-  greeting: "Hello! 👋 Welcome to AtlasWave Travel & Tours. How can I help you today?",
+  greeting: "Hello! 👋 Welcome to AtlastWave Travel and Tour. How can I help you today?",
   fallback: "I'm not sure about that. Would you like to speak with a human agent?",
   bot_enabled: true,
   whatsapp_enabled: false,

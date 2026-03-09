@@ -74,7 +74,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           <main className="flex-1 overflow-auto p-3 sm:p-5 md:p-7 lg:p-8">{children}</main>
           <footer className="border-t border-border bg-background px-4 py-3 md:px-6">
             <p className="text-center text-[11px] text-muted-foreground">
-              &copy; 2026 AtlasWave Travel & Tours Admin. All rights reserved.
+              &copy; 2026 AtlastWave Travel and Tour Admin. All rights reserved.
             </p>
           </footer>
         </div>

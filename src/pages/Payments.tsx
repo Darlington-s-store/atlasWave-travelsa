@@ -176,8 +176,8 @@ const Payments = () => {
             <div className="absolute top-20 left-10 w-72 h-72 rounded-full bg-accent blur-[120px]" />
             <div className="absolute bottom-10 right-20 w-96 h-96 rounded-full bg-secondary blur-[150px]" />
           </div>
-          <div className="container relative z-10">
-            <motion.div {...fadeUp} className="max-w-2xl">
+          <div className="container relative z-10 text-center">
+            <motion.div {...fadeUp} className="mx-auto max-w-2xl">
               <span className="inline-block px-4 py-1.5 bg-accent/20 text-accent text-sm font-semibold rounded-full mb-6 border border-accent/30">
                 <CreditCard className="w-4 h-4 inline mr-2" />Payments
               </span>

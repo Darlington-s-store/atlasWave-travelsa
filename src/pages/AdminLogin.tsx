@@ -53,10 +53,10 @@ const AdminLogin = () => {
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-11 h-11 rounded-xl bg-white shadow-sm border border-white/20 flex items-center justify-center overflow-hidden">
-              <img src={logo} alt="AtlasWave Travel and Tours" className="w-full h-full object-cover" />
+              <img src={logo} alt="AtlastWave Travel and Tour" className="w-full h-full object-cover" />
             </div>
             <span className="text-primary-foreground font-display text-xl font-bold tracking-tight">
-              AtlasWave Travel & Tours
+              AtlastWave Travel and Tour
             </span>
           </div>
         </div>
@@ -85,16 +85,16 @@ const AdminLogin = () => {
         </div>
 
         <p className="relative z-10 text-primary-foreground/30 text-xs">
-          © 2026 AtlasWave Travel & Tours
+          © 2026 AtlastWave Travel and Tour
         </p>
       </div>
 
       <div className="lg:hidden relative px-6 py-8 text-center">
         <div className="flex items-center justify-center gap-2.5 mb-3">
           <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center overflow-hidden">
-            <img src={logo} alt="AtlasWave Travel and Tours" className="w-full h-full object-cover" />
+            <img src={logo} alt="AtlastWave Travel and Tour" className="w-full h-full object-cover" />
           </div>
-          <span className="text-primary-foreground font-display text-lg font-bold">AtlasWave Travel and Tours</span>
+          <span className="text-primary-foreground font-display text-lg font-bold">AtlastWave Travel and Tour</span>
         </div>
         <p className="text-primary-foreground/50 text-xs">Administration Portal</p>
       </div>

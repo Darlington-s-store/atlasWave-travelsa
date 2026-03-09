@@ -73,7 +73,7 @@ const ServicesSection = () => {
         >
           <span className="text-sm font-semibold uppercase tracking-widest text-accent">What We Offer</span>
           <h2 className="mt-3 font-display text-3xl font-bold text-foreground md:text-5xl">
-            Comprehensive Global Services
+            Comprehensive Travel & Logistics Services
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground sm:text-lg">
             From booking your next trip to securing work permits and shipping cargo, we have you covered.

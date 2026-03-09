@@ -129,12 +129,12 @@ export function AdminSidebar() {
               <div className="w-11 h-11 rounded-xl bg-white shadow-sm border border-sidebar-border flex items-center justify-center shrink-0 overflow-hidden">
                 <img
                   src={logo}
-                  alt="AtlasWave Travel and Tours"
+                  alt="AtlastWave Travel and Tour"
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="min-w-0">
-                <h1 className="text-[15px] font-bold text-sidebar-foreground tracking-tight leading-none">AtlasWave Travels</h1>
+                <h1 className="text-[15px] font-bold text-sidebar-foreground tracking-tight leading-none">AtlastWave Travel and Tour</h1>
                 <p className="text-[10px] text-sidebar-foreground/55 uppercase tracking-[0.18em] mt-1">
                   Admin Portal
                 </p>
@@ -143,7 +143,7 @@ export function AdminSidebar() {
           ) : (
             <img
               src={logo}
-              alt="AtlasWave Travel and Tours"
+              alt="AtlastWave Travel and Tour"
               className="w-8 h-8 rounded-lg object-cover mx-auto border border-sidebar-border bg-white"
             />
           )}

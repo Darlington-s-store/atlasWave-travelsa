@@ -6,10 +6,10 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `You are the AtlasWave Travel & Tours AI assistant. You are friendly, professional, and knowledgeable about all AtlasWave services.
+const SYSTEM_PROMPT = `You are the AtlastWave Travel and Tour AI assistant. You are friendly, professional, and knowledgeable about all AtlastWave services.
 
 About AtlasWave:
-- AtlasWave Travel & Tours is a full-service travel, immigration, and logistics company.
+- AtlastWave Travel and Tour is a full-service travel, immigration, and logistics company.
 - Phone: +233 123 456 789
 - Available 24/7
 
