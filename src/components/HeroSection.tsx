@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
-import { ArrowRight, Plane, Package, FileText, MapPin, Calendar, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, Plane, Package, FileText, ChevronLeft, ChevronRight } from "lucide-react";
+import { useSiteContent, getStorageUrl } from "@/hooks/useSiteContent";
 import heroTravel from "@/assets/hero-travel.jpg";
 import heroLogistics from "@/assets/hero-logistics.jpg";
 
-const slides = [
+const defaultSlides = [
   {
     image: heroTravel,
     badge: "Travel & Tours",
@@ -40,8 +40,7 @@ const slides = [
   },
 ];
 
-// Animated counter hook
-function useCounter(end: number, duration = 2000, start = 0, suffix = "") {
+function useCounter(end: number, duration = 2000, start = 0) {
   const [count, setCount] = useState(start);
   const ref = useRef<HTMLDivElement>(null);
   const hasAnimated = useRef(false);
@@ -73,11 +72,29 @@ function useCounter(end: number, duration = 2000, start = 0, suffix = "") {
 
 const HeroSection = () => {
   const [current, setCurrent] = useState(0);
+  const { hero } = useSiteContent();
+
+  // Build slides - use CMS hero for first slide if available
+  const slides = hero
+    ? [
+        {
+          image: getStorageUrl(hero.image_url) || heroTravel,
+          badge: "Travel & Tours",
+          title: hero.title?.split(" ").slice(0, -1).join(" ") || "Your Gateway to",
+          highlight: hero.title?.split(" ").slice(-1)[0] || "Global",
+          titleEnd: "Opportunities",
+          desc: hero.subtitle || defaultSlides[0].desc,
+          cta: { label: hero.cta_text || "Get Started", link: hero.cta_link || "/consultation" },
+          ctaSecondary: { label: "Explore Destinations", link: "/travel" },
+        },
+        ...defaultSlides.slice(1),
+      ]
+    : defaultSlides;
 
   useEffect(() => {
     const timer = setInterval(() => setCurrent((p) => (p + 1) % slides.length), 6000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
   const slide = slides[current];
 
@@ -85,7 +102,6 @@ const HeroSection = () => {
     setCurrent((p) => (p + dir + slides.length) % slides.length);
   };
 
-  // Stats with animated counters
   const stat1 = useCounter(15000, 2000, 0);
   const stat2 = useCounter(50, 1500, 0);
   const stat3 = useCounter(98, 1800, 0);
@@ -97,7 +113,6 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
-      {/* Backgrounds */}
       <AnimatePresence mode="wait">
         <motion.div
           key={current}
@@ -112,7 +127,6 @@ const HeroSection = () => {
         </motion.div>
       </AnimatePresence>
 
-      {/* Carousel Controls */}
       <button onClick={() => goTo(-1)} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors hidden md:flex">
         <ChevronLeft className="w-5 h-5 text-primary-foreground" />
       </button>
@@ -120,7 +134,6 @@ const HeroSection = () => {
         <ChevronRight className="w-5 h-5 text-primary-foreground" />
       </button>
 
-      {/* Dots */}
       <div className="absolute bottom-32 lg:bottom-28 left-1/2 -translate-x-1/2 z-20 flex gap-2">
         {slides.map((_, i) => (
           <button key={i} onClick={() => setCurrent(i)} className={`h-2 rounded-full transition-all duration-300 ${i === current ? "w-8 bg-accent" : "w-2 bg-primary-foreground/30"}`} />
@@ -154,7 +167,6 @@ const HeroSection = () => {
             </motion.div>
           </AnimatePresence>
 
-          {/* Animated Stats */}
           <div className="flex flex-wrap gap-8 mt-16 pt-8 border-t" style={{ borderColor: "hsl(var(--primary-foreground) / 0.15)" }}>
             {stats.map((stat) => (
               <div key={stat.label} ref={stat.ref}>
@@ -172,7 +184,6 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* Quick action cards */}
       <div className="absolute bottom-0 left-0 right-0 z-10 hidden lg:block">
         <div className="container">
           <div className="grid grid-cols-3 gap-4 -mb-20">
