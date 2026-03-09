@@ -64,6 +64,8 @@ const AdminContent = () => {
   const [partDialogOpen, setPartDialogOpen] = useState(false);
   const [editingPart, setEditingPart] = useState<SiteContent | null>(null);
   const [partForm, setPartForm] = useState({ name: "", category: CATEGORIES[0] });
+  const [partLogoFile, setPartLogoFile] = useState<File | null>(null);
+  const [uploadingPartLogo, setUploadingPartLogo] = useState(false);
 
   // Delete dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
