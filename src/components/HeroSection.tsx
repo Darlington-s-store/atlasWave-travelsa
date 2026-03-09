@@ -121,7 +121,34 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
+      {/* Background video (if hero category video exists and is an upload) */}
+      {heroVideoSrc && current === 0 ? (
+        <div className="absolute inset-0">
+          <video
+            src={heroVideoSrc}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0" style={{ background: "var(--hero-overlay)" }} />
+        </div>
+      ) : heroVideo?.video_type === "embed" && heroVideo.video_url && current === 0 ? (
+        <div className="absolute inset-0">
+          <iframe
+            src={`${getEmbedUrl(heroVideo.video_url)}?autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`}
+            allow="autoplay; encrypted-media"
+            className="absolute w-[120%] h-[120%] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+            style={{ border: 0 }}
+          />
+          <div className="absolute inset-0" style={{ background: "var(--hero-overlay)" }} />
+        </div>
+      ) : null}
+
+      {/* Image background fallback */}
       <AnimatePresence mode="wait">
+        {(!heroVideo || current !== 0) && (
         <motion.div
           key={current}
           initial={{ opacity: 0, scale: 1.05 }}
@@ -133,6 +160,7 @@ const HeroSection = () => {
           <img src={slide.image} alt="" className="w-full h-full object-cover" />
           <div className="absolute inset-0" style={{ background: "var(--hero-overlay)" }} />
         </motion.div>
+        )}
       </AnimatePresence>
 
       <button onClick={() => goTo(-1)} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors hidden md:flex">
