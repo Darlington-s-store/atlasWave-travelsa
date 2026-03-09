@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { Ship, Plane, Truck, FileCheck, Package, Search, ArrowRight, CheckCircle2, Clock, MapPin, Shield } from "lucide-react";
 import { useState } from "react";
+import VideoSection from "@/components/VideoSection";
 import heroLogistics from "@/assets/hero-logistics.jpg";
 
 const fadeUp = {
