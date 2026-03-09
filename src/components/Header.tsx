@@ -78,7 +78,7 @@ const Header = () => {
         <Link to="/" className="flex min-w-0 items-center gap-2">
           <img src={logo} alt="AtlasWave" className="h-9 w-9 rounded-full object-cover sm:h-10 sm:w-10" />
           <span className="truncate font-display text-lg font-bold tracking-tight text-primary-foreground sm:text-xl">
-            Atlas<span className="text-gradient-accent">Wave</span>
+            Atlas<span className="text-gradient-accent">Wave travel</span>
           </span>
         </Link>
 

@@ -1,11 +1,14 @@
+import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminProvider } from "@/contexts/AdminContext";
 import ChatBot from "@/components/ChatBot";
+import Preloader from "@/components/Preloader";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import TravelServices from "./pages/TravelServices";
@@ -127,20 +130,35 @@ const AppRoutes = () => {
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <AdminProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </TooltipProvider>
-      </AdminProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setIsLoading(false), 1600);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <AdminProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <AnimatePresence mode="wait">
+              {isLoading ? (
+                <Preloader />
+              ) : (
+                <BrowserRouter>
+                  <AppRoutes />
+                </BrowserRouter>
+              )}
+            </AnimatePresence>
+          </TooltipProvider>
+        </AdminProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
