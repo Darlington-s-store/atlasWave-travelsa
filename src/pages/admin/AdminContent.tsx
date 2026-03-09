@@ -75,6 +75,17 @@ const AdminContent = () => {
     fetchContent();
   }, []);
 
+  const uploadImage = async (file: File, folder: string): Promise<string | null> => {
+    const ext = file.name.split(".").pop();
+    const path = `${folder}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("cms-images").upload(path, file, { upsert: true });
+    if (error) {
+      toast({ title: "Upload Error", description: error.message, variant: "destructive" });
+      return null;
+    }
+    return path;
+  };
+
   const fetchContent = async () => {
     setLoading(true);
     const { data, error } = await supabase
