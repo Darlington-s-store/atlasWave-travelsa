@@ -80,6 +80,93 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_logs: {
+        Row: {
+          bot_response: string
+          created_at: string
+          feedback: string | null
+          id: string
+          matched: boolean
+          session_id: string
+          user_id: string | null
+          user_message: string
+          user_name: string
+        }
+        Insert: {
+          bot_response: string
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          matched?: boolean
+          session_id: string
+          user_id?: string | null
+          user_message: string
+          user_name?: string
+        }
+        Update: {
+          bot_response?: string
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          matched?: boolean
+          session_id?: string
+          user_id?: string | null
+          user_message?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
+      chatbot_settings: {
+        Row: {
+          id: string
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          id?: string
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      chatbot_training: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          id: string
+          keywords: string[]
+          response: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          id?: string
+          keywords?: string[]
+          response: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          id?: string
+          keywords?: string[]
+          response?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       consultations: {
         Row: {
           created_at: string
