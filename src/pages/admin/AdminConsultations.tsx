@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { sendNotification } from "@/lib/notifications";
 
 const CONSULTATION_STATUSES = ["upcoming", "confirmed", "completed", "cancelled", "rescheduled"];
 const statusStyle: Record<string, string> = {
@@ -52,11 +53,34 @@ const AdminConsultations = () => {
 
   const handleUpdate = async () => {
     if (!editingConsultation) return;
+    const previousStatus = editingConsultation.status;
     const updates: any = { status: editForm.status };
     if (editForm.notes.trim()) updates.notes = editForm.notes;
     const { error } = await supabase.from("consultations").update(updates).eq("id", editingConsultation.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Consultation Updated" });
+
+    // Send email notification if status changed
+    if (previousStatus !== editForm.status) {
+      const recipientEmail = editingConsultation.email || `user-${editingConsultation.user_id.slice(0, 8)}@atlaswave.com`;
+      const recipientName = `${editingConsultation.first_name || ""} ${editingConsultation.last_name || ""}`.trim() || "User";
+      
+      const notificationType = editForm.status === "cancelled" ? "consultation_cancelled" : "consultation_confirmed";
+      sendNotification({
+        type: notificationType,
+        recipientEmail,
+        recipientName,
+        data: {
+          type: editingConsultation.type,
+          date: editingConsultation.date,
+          time: editingConsultation.time,
+          duration: `${editingConsultation.duration} min`,
+          previousStatus,
+          newStatus: editForm.status,
+        },
+      });
+    }
+
     setEditDialogOpen(false);
     fetchConsultations();
   };
