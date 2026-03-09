@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { PenTool, Globe, Star, Handshake, Save, Plus, Trash2, Inbox, Loader2 } from "lucide-react";
+import { PenTool, Globe, Star, Handshake, Save, Plus, Trash2, Inbox, Loader2, Upload, ImageIcon } from "lucide-react";
+import { getStorageUrl } from "@/hooks/useSiteContent";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
