@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { sendNotification } from "@/lib/notifications";
 
 const CONSULTATION_STATUSES = ["upcoming", "confirmed", "completed", "cancelled", "rescheduled"];
 const statusStyle: Record<string, string> = {
