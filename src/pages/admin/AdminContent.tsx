@@ -760,6 +760,30 @@ const AdminContent = () => {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label>Partner Logo</Label>
+              <div className="flex items-center gap-3">
+                {editingPart?.value.logo_url && (
+                  <img
+                    src={getStorageUrl(editingPart.value.logo_url) || ""}
+                    alt="Logo preview"
+                    className="w-12 h-12 object-contain rounded border border-border"
+                  />
+                )}
+                <label className="flex items-center gap-2 px-3 py-2 rounded-md border border-border bg-muted/50 cursor-pointer hover:bg-muted transition-colors text-sm">
+                  <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">
+                    {partLogoFile ? partLogoFile.name : "Upload Logo"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => setPartLogoFile(e.target.files?.[0] || null)}
+                  />
+                </label>
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
