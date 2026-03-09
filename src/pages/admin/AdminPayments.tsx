@@ -14,6 +14,7 @@ import { DollarSign, Clock, CheckCircle, Download, Plus, MoreHorizontal, Inbox, 
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { sendNotification } from "@/lib/notifications";
+import { DEFAULT_CURRENCY, formatCurrency } from "@/lib/currency";
 
 const SERVICES = ["Visa Processing", "Logistics Support", "Consultation Fee", "Education Visa", "Work Permit", "Flight Booking"];
 const METHODS = ["Mastercard", "MoMo"];
@@ -87,7 +88,7 @@ const AdminPayments = () => {
           data: {
             reference: editingTx.reference || editingTx.id.slice(0, 8),
             amount: Number(form.amount).toFixed(2),
-            currency: editingTx.currency || "USD",
+            currency: editingTx.currency || DEFAULT_CURRENCY,
             description: form.description || "Payment",
             previousStatus,
             newStatus: form.status,
@@ -142,7 +143,7 @@ const AdminPayments = () => {
                   <DollarSign className="w-4 h-4 text-accent" />
                 </div>
               </div>
-              <p className="text-[28px] font-bold text-foreground tracking-tight">${totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
+              <p className="text-[28px] font-bold text-foreground tracking-tight">{formatCurrency(totalRevenue, DEFAULT_CURRENCY)}</p>
             </CardContent>
           </Card>
           <Card className="shadow-card rounded-xl border border-border/60">
@@ -217,7 +218,7 @@ const AdminPayments = () => {
                         <span className="font-semibold text-[13px] text-foreground">{profiles[tx.user_id] || "Unknown"}</span>
                       </TableCell>
                       <TableCell className="text-[13px] text-muted-foreground">{tx.description || "Payment"}</TableCell>
-                      <TableCell className="text-[13px] font-bold text-foreground">${Number(tx.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}</TableCell>
+                      <TableCell className="text-[13px] font-bold text-foreground">{formatCurrency(Number(tx.amount), tx.currency || DEFAULT_CURRENCY)}</TableCell>
                       <TableCell className="text-[13px] text-muted-foreground">{new Date(tx.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</TableCell>
                       <TableCell>
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold capitalize ${statusStyle[tx.status] || ""}`}>{tx.status}</span>
@@ -268,7 +269,7 @@ const AdminPayments = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Amount ($)</Label>
+                <Label>Amount (GH₵)</Label>
                 <Input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" />
               </div>
               <div className="space-y-2">
@@ -304,7 +305,7 @@ const AdminPayments = () => {
                 <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Reference</span><span className="font-mono font-bold text-primary">{viewingTx.reference || viewingTx.id.slice(0, 8)}</span></div>
                 <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Date</span>{new Date(viewingTx.created_at).toLocaleDateString()}</div>
                 <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">User</span><span className="font-semibold">{profiles[viewingTx.user_id] || "Unknown"}</span></div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Amount</span><span className="font-bold">${Number(viewingTx.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Amount</span><span className="font-bold">{formatCurrency(Number(viewingTx.amount), viewingTx.currency || DEFAULT_CURRENCY)}</span></div>
                 <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Description</span>{viewingTx.description || "Payment"}</div>
                 <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Method</span>{viewingTx.payment_method || "Card"}</div>
               </div>

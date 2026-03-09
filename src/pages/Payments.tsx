@@ -25,6 +25,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { DEFAULT_CURRENCY, formatCurrency } from "@/lib/currency";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -56,7 +57,7 @@ const Payments = () => {
   const [paymentMethod, setPaymentMethod] = useState<"card" | "momo">("card");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
-  const [convertFrom, setConvertFrom] = useState<"USD" | "GHS">("USD");
+  const [convertFrom, setConvertFrom] = useState<"USD" | "GHS">("GHS");
   const [convertAmount, setConvertAmount] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -74,7 +75,7 @@ const Payments = () => {
           date: new Date(d.created_at).toISOString().split("T")[0],
           description: d.description || "Payment",
           amount: Number(d.amount),
-          currency: d.currency || "USD",
+          currency: d.currency || DEFAULT_CURRENCY,
           method: d.payment_method || "Card",
           status: d.status as Transaction["status"],
         })));
@@ -108,13 +109,13 @@ const Payments = () => {
     }
 
     const method = paymentMethod === "card" ? "Mastercard" : "Mobile Money";
-    toast({ title: "Payment Initiated", description: `Processing $${amount} via ${method}...` });
+    toast({ title: "Payment Initiated", description: `Processing ${formatCurrency(amount, DEFAULT_CURRENCY)} via ${method}...` });
 
     // Insert payment into database (trigger auto-creates invoice)
     const { data: payment, error } = await supabase.from("payments").insert({
       user_id: user.id,
       amount: parseFloat(amount),
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
       description: description || "Service Payment",
       payment_method: method,
       status: "completed",
@@ -147,7 +148,7 @@ const Payments = () => {
         data: {
           invoiceNumber: invoice?.invoice_number || "N/A",
           amount: parseFloat(amount).toFixed(2),
-          currency: "USD",
+          currency: DEFAULT_CURRENCY,
           description: description || "Service Payment",
           paymentMethod: method,
           date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
@@ -249,12 +250,12 @@ const Payments = () => {
                 </div>
 
                 <div className="space-y-2 mb-6">
-                  <Label>Amount (USD)</Label>
+                  <Label>Amount (GHS)</Label>
                   <Input placeholder="0.00" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className="h-12 text-lg font-semibold" />
                 </div>
 
                 <Button variant="accent" className="w-full h-12 text-base" onClick={handlePayment}>
-                  Pay ${amount || "0.00"}
+                  Pay {formatCurrency(amount || 0, DEFAULT_CURRENCY)}
                 </Button>
               </motion.div>
 
@@ -380,7 +381,7 @@ const Payments = () => {
                             </div>
                           </div>
                           <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-                            <p className="text-lg font-display font-bold text-foreground">${txn.amount.toFixed(2)}</p>
+                            <p className="text-lg font-display font-bold text-foreground">{formatCurrency(txn.amount, txn.currency)}</p>
                             <Badge variant="outline" className={`gap-1 text-xs ${config.className}`}>
                               <StatusIcon className="w-3 h-3" />
                               {config.label}
@@ -391,7 +392,7 @@ const Payments = () => {
                                 date: txn.date,
                                 description: txn.description,
                                 amount: txn.amount,
-                                currency: txn.currency,
+                                currency: txn.currency || DEFAULT_CURRENCY,
                                 paymentMethod: txn.method,
                                 status: txn.status,
                                 customerName: user?.fullName || "Customer",

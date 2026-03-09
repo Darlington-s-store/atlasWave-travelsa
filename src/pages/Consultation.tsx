@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { DEFAULT_CURRENCY, formatCurrency } from "@/lib/currency";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -156,7 +157,7 @@ const Consultation = () => {
                           <Badge variant="outline" className={b.status === "upcoming" ? "bg-secondary/10 text-secondary border-secondary/20" : "bg-muted text-muted-foreground"}>{b.status}</Badge>
                         </div>
                         <p className="text-sm text-foreground">{b.type} — {b.topic || "General"}</p>
-                        <p className="text-xs text-muted-foreground">{b.date} at {b.time} · {b.duration} min · ${b.price}</p>
+                        <p className="text-xs text-muted-foreground">{b.date} at {b.time} · {b.duration} min · {formatCurrency(b.price, DEFAULT_CURRENCY)}</p>
                       </div>
                       {b.status === "upcoming" && (
                         <div className="flex gap-2">
@@ -220,7 +221,7 @@ const Consultation = () => {
                           <type.icon className="w-6 h-6 text-secondary" />
                         </div>
                         <div className="text-right">
-                          <span className="text-2xl font-display font-bold text-foreground">${type.prices[duration]}</span>
+                          <span className="text-2xl font-display font-bold text-foreground">{formatCurrency(type.prices[duration], DEFAULT_CURRENCY)}</span>
                           <span className="block text-xs text-muted-foreground">{duration} min</span>
                         </div>
                       </div>
@@ -397,7 +398,7 @@ const Consultation = () => {
                           </div>
                           <div className="border-t pt-3 flex justify-between">
                             <span className="font-semibold text-foreground">Total</span>
-                            <span className="text-2xl font-display font-bold text-secondary">${price}</span>
+                            <span className="text-2xl font-display font-bold text-secondary">{formatCurrency(price, DEFAULT_CURRENCY)}</span>
                           </div>
                         </div>
 
@@ -451,7 +452,7 @@ const Consultation = () => {
                             setSelectedType("");
                             setStep(1);
                           }}>
-                            Pay ${price} & Confirm Booking <ArrowRight className="w-5 h-5" />
+                            Pay {formatCurrency(price, DEFAULT_CURRENCY)} & Confirm Booking <ArrowRight className="w-5 h-5" />
                           </Button>
                         </div>
                       </div>

@@ -17,6 +17,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { sendNotification } from "@/lib/notifications";
+import { DEFAULT_CURRENCY, formatCurrency } from "@/lib/currency";
 
 const CONSULTATION_STATUSES = ["upcoming", "completed", "cancelled"];
 const statusStyle: Record<string, string> = {
@@ -116,7 +117,7 @@ const AdminConsultations = () => {
             { label: "Total Consultations", value: consultations.length, icon: Calendar, bg: "bg-primary/10", color: "text-primary" },
             { label: "Upcoming", value: upcomingCount, icon: Clock, bg: "bg-accent/15", color: "text-accent" },
             { label: "Completed", value: completedCount, icon: CheckCircle, bg: "bg-secondary/15", color: "text-secondary" },
-            { label: "Revenue", value: `$${totalRevenue.toLocaleString()}`, icon: Users, bg: "bg-primary/10", color: "text-primary" },
+            { label: "Revenue", value: formatCurrency(totalRevenue, DEFAULT_CURRENCY), icon: Users, bg: "bg-primary/10", color: "text-primary" },
           ].map(s => (
             <Card key={s.label} className="shadow-card rounded-xl border border-border/60">
               <CardContent className="p-4 text-center">
@@ -195,7 +196,7 @@ const AdminConsultations = () => {
                         <TableCell><Badge variant="outline" className="text-[10px] capitalize">{c.type}</Badge></TableCell>
                         <TableCell className="text-[13px] text-muted-foreground">{c.date} · {c.time}</TableCell>
                         <TableCell className="text-[13px] text-muted-foreground">{c.duration} min</TableCell>
-                        <TableCell className="text-[13px] font-bold text-foreground">${Number(c.price).toLocaleString()}</TableCell>
+                        <TableCell className="text-[13px] font-bold text-foreground">{formatCurrency(Number(c.price), DEFAULT_CURRENCY)}</TableCell>
                         <TableCell><span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg capitalize ${statusStyle[c.status] || "bg-muted"}`}>{c.status}</span></TableCell>
                         <TableCell>
                           <DropdownMenu>
@@ -232,7 +233,7 @@ const AdminConsultations = () => {
                 <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Type</span><Badge variant="outline" className="capitalize">{viewingConsultation.type}</Badge></div>
                 <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Date & Time</span>{viewingConsultation.date} · {viewingConsultation.time}</div>
                 <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Duration</span>{viewingConsultation.duration} min</div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Price</span><span className="font-bold">${Number(viewingConsultation.price).toLocaleString()}</span></div>
+                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Price</span><span className="font-bold">{formatCurrency(Number(viewingConsultation.price), DEFAULT_CURRENCY)}</span></div>
                 <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Status</span><span className={`text-[11px] font-bold px-2 py-0.5 rounded capitalize ${statusStyle[viewingConsultation.status]}`}>{viewingConsultation.status}</span></div>
               </div>
               {viewingConsultation.topic && (

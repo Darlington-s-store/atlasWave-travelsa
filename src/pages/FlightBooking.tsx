@@ -13,6 +13,7 @@ import {
   Clock, Filter, SortAsc, CreditCard, User, Luggage, ChevronDown, X, Search,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { DEFAULT_CURRENCY, formatCurrency } from "@/lib/currency";
 
 const fadeUp = { initial: { opacity: 0, y: 30 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true } };
 
@@ -258,7 +259,7 @@ const FlightBooking = () => {
                       </div>
                     </div>
                     <Button variant="accent" className="w-full mt-6 h-12" onClick={() => { setBookingStep("confirm"); toast({ title: "Booking Confirmed!", description: `Your ${selected.airline} flight has been booked.` }); }}>
-                      Confirm & Pay ${selected.price * parseInt(passengers)} <CreditCard className="w-4 h-4 ml-2" />
+                      Confirm & Pay {formatCurrency(selected.price * parseInt(passengers), DEFAULT_CURRENCY)} <CreditCard className="w-4 h-4 ml-2" />
                     </Button>
                   </div>
 
@@ -283,7 +284,7 @@ const FlightBooking = () => {
                       </div>
                       <div className="border-t pt-3 flex justify-between">
                         <span className="font-semibold text-foreground">Total</span>
-                        <span className="text-xl font-display font-bold text-accent">${selected.price * parseInt(passengers)}</span>
+                        <span className="text-xl font-display font-bold text-accent">{formatCurrency(selected.price * parseInt(passengers), DEFAULT_CURRENCY)}</span>
                       </div>
                     </div>
                   </div>
@@ -356,7 +357,7 @@ const FlightBooking = () => {
                           {flight.refundable && <Badge variant="outline" className="text-[10px] bg-secondary/10 text-secondary border-secondary/20">Refundable</Badge>}
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-display font-bold text-accent">${flight.price}</p>
+                          <p className="text-2xl font-display font-bold text-accent">{formatCurrency(flight.price, DEFAULT_CURRENCY)}</p>
                           <p className="text-xs text-muted-foreground">per person</p>
                         </div>
                         <Button variant="accent" size="sm" onClick={() => handleSelectFlight(flight.id)}>
@@ -380,12 +381,12 @@ const FlightBooking = () => {
               </h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[
-                  { from: "Lagos", to: "London", price: "$450", airline: "Turkish Airlines" },
-                  { from: "Accra", to: "New York", price: "$680", airline: "Emirates" },
-                  { from: "Nairobi", to: "Dubai", price: "$380", airline: "Qatar Airways" },
-                  { from: "Lagos", to: "Johannesburg", price: "$320", airline: "Ethiopian Airlines" },
-                  { from: "Accra", to: "Toronto", price: "$720", airline: "KLM" },
-                  { from: "Lagos", to: "Frankfurt", price: "$520", airline: "Lufthansa" },
+                  { from: "Lagos", to: "London", price: formatCurrency(450, DEFAULT_CURRENCY), airline: "Turkish Airlines" },
+                  { from: "Accra", to: "New York", price: formatCurrency(680, DEFAULT_CURRENCY), airline: "Emirates" },
+                  { from: "Nairobi", to: "Dubai", price: formatCurrency(380, DEFAULT_CURRENCY), airline: "Qatar Airways" },
+                  { from: "Lagos", to: "Johannesburg", price: formatCurrency(320, DEFAULT_CURRENCY), airline: "Ethiopian Airlines" },
+                  { from: "Accra", to: "Toronto", price: formatCurrency(720, DEFAULT_CURRENCY), airline: "KLM" },
+                  { from: "Lagos", to: "Frankfurt", price: formatCurrency(520, DEFAULT_CURRENCY), airline: "Lufthansa" },
                 ].map((r, i) => (
                   <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.1 }} className="bg-card rounded-xl p-6 border shadow-card hover:shadow-card-hover transition-all">
                     <div className="flex items-center gap-3 mb-3">

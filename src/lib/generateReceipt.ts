@@ -1,3 +1,5 @@
+import { DEFAULT_CURRENCY, formatCurrency } from "@/lib/currency";
+
 export interface ReceiptData {
   reference: string;
   date: string;
@@ -10,13 +12,8 @@ export interface ReceiptData {
   customerEmail: string;
 }
 
-const currencySymbol = (currency: string) => {
-  const map: Record<string, string> = { USD: "$", EUR: "EUR ", GBP: "GBP ", GHS: "GHS ", NGN: "NGN " };
-  return map[currency] || `${currency} `;
-};
-
 export function generateReceiptPDF(data: ReceiptData) {
-  const symbol = currencySymbol(data.currency);
+  const currency = data.currency || DEFAULT_CURRENCY;
   const html = `
 <!DOCTYPE html>
 <html>
@@ -56,8 +53,8 @@ export function generateReceiptPDF(data: ReceiptData) {
   </div>
   <div class="body">
     <div class="amount-section">
-      <div class="amount">${symbol}${data.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-      <div class="currency">${data.currency}</div>
+      <div class="amount">${formatCurrency(data.amount, currency)}</div>
+      <div class="currency">${currency}</div>
     </div>
     <div class="details">
       <div class="detail-item"><label>Reference</label><span>${data.reference}</span></div>

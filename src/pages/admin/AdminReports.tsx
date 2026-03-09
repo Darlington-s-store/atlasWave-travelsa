@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { DEFAULT_CURRENCY, formatCurrency } from "@/lib/currency";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line,
@@ -171,7 +172,7 @@ const AdminReports = () => {
             { label: "Bookings", value: filteredBookings.length, icon: Plane, bg: "bg-accent/15", color: "text-accent" },
             { label: "Payments", value: filteredPayments.length, icon: CreditCard, bg: "bg-secondary/15", color: "text-secondary" },
             { label: "Shipments", value: filteredShipments.length, icon: Package, bg: "bg-primary/10", color: "text-primary" },
-            { label: "Revenue", value: `$${totalRevenue.toLocaleString()}`, icon: TrendingUp, bg: "bg-secondary/15", color: "text-secondary" },
+            { label: "Revenue", value: formatCurrency(totalRevenue, DEFAULT_CURRENCY), icon: TrendingUp, bg: "bg-secondary/15", color: "text-secondary" },
           ].map(s => (
             <Card key={s.label} className="shadow-card rounded-xl border border-border/60">
               <CardContent className="p-4 text-center">
@@ -208,7 +209,7 @@ const AdminReports = () => {
                   ) : (
                     <div className="h-[250px]">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={revenueChartData}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="month" fontSize={11} /><YAxis fontSize={11} /><Tooltip formatter={(v: number) => `$${v.toLocaleString()}`} /><Bar dataKey="amount" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} /></BarChart>
+                        <BarChart data={revenueChartData}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="month" fontSize={11} /><YAxis fontSize={11} /><Tooltip formatter={(v: number) => formatCurrency(v, DEFAULT_CURRENCY)} /><Bar dataKey="amount" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} /></BarChart>
                       </ResponsiveContainer>
                     </div>
                   )}
@@ -293,7 +294,7 @@ const AdminReports = () => {
                     <TableHeader><TableRow className="bg-muted/30 hover:bg-muted/30"><TableHead className="text-[11px] uppercase tracking-wider font-bold">Amount</TableHead><TableHead className="text-[11px] uppercase tracking-wider font-bold">Method</TableHead><TableHead className="text-[11px] uppercase tracking-wider font-bold">Status</TableHead><TableHead className="text-[11px] uppercase tracking-wider font-bold">Description</TableHead><TableHead className="text-[11px] uppercase tracking-wider font-bold">Date</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {filteredPayments.slice(0, 50).map(p => (
-                        <TableRow key={p.id} className="hover:bg-muted/20"><TableCell className="text-[13px] font-bold">${Number(p.amount).toLocaleString()}</TableCell><TableCell className="text-[13px]">{p.payment_method || "—"}</TableCell><TableCell><span className="text-[11px] font-bold capitalize">{p.status}</span></TableCell><TableCell className="text-[13px] text-muted-foreground">{p.description || "—"}</TableCell><TableCell className="text-[13px] text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</TableCell></TableRow>
+                        <TableRow key={p.id} className="hover:bg-muted/20"><TableCell className="text-[13px] font-bold">{formatCurrency(Number(p.amount), p.currency || DEFAULT_CURRENCY)}</TableCell><TableCell className="text-[13px]">{p.payment_method || "—"}</TableCell><TableCell><span className="text-[11px] font-bold capitalize">{p.status}</span></TableCell><TableCell className="text-[13px] text-muted-foreground">{p.description || "—"}</TableCell><TableCell className="text-[13px] text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</TableCell></TableRow>
                       ))}
                     </TableBody>
                   </Table>

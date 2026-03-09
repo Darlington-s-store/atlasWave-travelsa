@@ -13,6 +13,7 @@ import {
   Download, DollarSign, Package, FileText, Users, TrendingUp,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { DEFAULT_CURRENCY, formatCompactCurrency, formatCurrency } from "@/lib/currency";
 
 const AdminAnalytics = () => {
   const [period, setPeriod] = useState("yearly");
@@ -136,14 +137,14 @@ const AdminAnalytics = () => {
         <div class="report-header"><h1>📊 Analytics Report</h1>
         <p style="font-size:13px;color:#6B7280">AtlasWave Global — ${new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p></div>
         <div class="stats-grid">
-          <div class="stat-card"><p class="stat-label">Total Revenue</p><p class="stat-value">$${totalRevenue.toLocaleString()}</p></div>
+          <div class="stat-card"><p class="stat-label">Total Revenue</p><p class="stat-value">${formatCurrency(totalRevenue, DEFAULT_CURRENCY)}</p></div>
           <div class="stat-card"><p class="stat-label">Shipments</p><p class="stat-value">${totalShipments}</p></div>
           <div class="stat-card"><p class="stat-label">Applications</p><p class="stat-value">${totalApps}</p></div>
           <div class="stat-card"><p class="stat-label">Users</p><p class="stat-value">${totalUsers}</p></div>
         </div>
         <h2>Revenue by Service</h2>
         <table><thead><tr><th>Service</th><th class="text-right">Revenue</th></tr></thead><tbody>
-          ${revenueByService.map(s => `<tr><td>${s.name}</td><td class="text-right font-bold">$${s.value.toLocaleString()}</td></tr>`).join("")}
+          ${revenueByService.map(s => `<tr><td>${s.name}</td><td class="text-right font-bold">${formatCurrency(s.value, DEFAULT_CURRENCY)}</td></tr>`).join("")}
         </tbody></table>
       </body></html>
     `);
@@ -173,7 +174,7 @@ const AdminAnalytics = () => {
         {/* KPI Cards */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
           {[
-            { label: "Total Revenue", value: `$${totalRevenue.toLocaleString()}`, icon: DollarSign, color: "text-accent", bg: "bg-accent/15" },
+            { label: "Total Revenue", value: formatCurrency(totalRevenue, DEFAULT_CURRENCY), icon: DollarSign, color: "text-accent", bg: "bg-accent/15" },
             { label: "Shipments", value: totalShipments, icon: Package, color: "text-primary", bg: "bg-primary/10" },
             { label: "Applications", value: totalApps, icon: FileText, color: "text-secondary", bg: "bg-secondary/15" },
             { label: "Users", value: totalUsers, icon: Users, color: "text-primary", bg: "bg-primary/10" },
@@ -207,8 +208,8 @@ const AdminAnalytics = () => {
                     <BarChart data={revenueByMonth}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(210, 18%, 90%)" />
                       <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                      <YAxis tick={{ fontSize: 12 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
-                      <Tooltip formatter={(v: number) => `$${v.toLocaleString()}`} />
+                      <YAxis tick={{ fontSize: 12 }} tickFormatter={v => formatCompactCurrency(v, DEFAULT_CURRENCY)} />
+                      <Tooltip formatter={(v: number) => formatCurrency(v, DEFAULT_CURRENCY)} />
                       <Bar dataKey="revenue" name="Revenue" fill="hsl(168, 76%, 42%)" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -227,7 +228,7 @@ const AdminAnalytics = () => {
                           <Pie data={revenueByService} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" paddingAngle={2}>
                             {revenueByService.map((s, i) => <Cell key={i} fill={s.color} />)}
                           </Pie>
-                          <Tooltip formatter={(v: number) => `$${v.toLocaleString()}`} />
+                          <Tooltip formatter={(v: number) => formatCurrency(v, DEFAULT_CURRENCY)} />
                         </PieChart>
                       </ResponsiveContainer>
                       <div className="grid grid-cols-2 gap-2 mt-2">

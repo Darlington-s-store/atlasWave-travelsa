@@ -13,6 +13,7 @@ import {
   UtensilsCrossed, ShieldCheck, X,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { DEFAULT_CURRENCY, formatCurrency } from "@/lib/currency";
 
 const fadeUp = { initial: { opacity: 0, y: 30 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true } };
 
@@ -160,7 +161,7 @@ const HotelAccommodation = () => {
                             <p className="text-sm text-muted-foreground">{rt.beds} · {rt.size}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-xl font-display font-bold text-accent">${rt.price}</p>
+                            <p className="text-xl font-display font-bold text-accent">{formatCurrency(rt.price, DEFAULT_CURRENCY)}</p>
                             <p className="text-xs text-muted-foreground">per night</p>
                           </div>
                         </div>
@@ -169,7 +170,7 @@ const HotelAccommodation = () => {
                   </div>
                   {selectedRoom && (
                     <Button variant="accent" className="w-full mt-6 h-12" onClick={() => setBookingStep("guest")}>
-                      Continue — ${room!.price * nights * parseInt(rooms)} for {nights} nights <ArrowRight className="w-4 h-4 ml-2" />
+                      Continue — {formatCurrency(room!.price * nights * parseInt(rooms), DEFAULT_CURRENCY)} for {nights} nights <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   )}
                 </div>
@@ -202,7 +203,7 @@ const HotelAccommodation = () => {
                       <Button variant="outline" className="h-12 gap-2"><Phone className="w-4 h-4" /> Mobile Money</Button>
                     </div>
                     <Button variant="accent" className="w-full h-12" onClick={() => { setBookingStep("confirm"); toast({ title: "Reservation Confirmed!", description: `Your stay at ${hotel.name} has been booked.` }); }}>
-                      Confirm & Pay ${room.price * nights * parseInt(rooms)} <ShieldCheck className="w-4 h-4 ml-2" />
+                      Confirm & Pay {formatCurrency(room.price * nights * parseInt(rooms), DEFAULT_CURRENCY)} <ShieldCheck className="w-4 h-4 ml-2" />
                     </Button>
                   </div>
                   <div className="bg-card rounded-2xl border shadow-card p-6 h-fit sticky top-24">
@@ -214,11 +215,11 @@ const HotelAccommodation = () => {
                         <div className="flex justify-between"><span className="text-muted-foreground">Room</span><span className="text-foreground">{room.type}</span></div>
                         <div className="flex justify-between"><span className="text-muted-foreground">Nights</span><span className="text-foreground">{nights}</span></div>
                         <div className="flex justify-between"><span className="text-muted-foreground">Rooms</span><span className="text-foreground">{rooms}</span></div>
-                        <div className="flex justify-between"><span className="text-muted-foreground">Rate</span><span className="text-foreground">${room.price}/night</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Rate</span><span className="text-foreground">{formatCurrency(room.price, DEFAULT_CURRENCY)}/night</span></div>
                       </div>
                       <div className="border-t pt-2 flex justify-between">
                         <span className="font-semibold">Total</span>
-                        <span className="text-xl font-display font-bold text-accent">${room.price * nights * parseInt(rooms)}</span>
+                        <span className="text-xl font-display font-bold text-accent">{formatCurrency(room.price * nights * parseInt(rooms), DEFAULT_CURRENCY)}</span>
                       </div>
                     </div>
                   </div>
@@ -291,8 +292,8 @@ const HotelAccommodation = () => {
                       </div>
                       <div className="flex items-end justify-between mt-auto pt-3 border-t">
                         <div>
-                          <span className="text-xs text-muted-foreground line-through">${h.originalPrice}</span>
-                          <span className="text-2xl font-display font-bold text-accent ml-2">${h.price}</span>
+                          <span className="text-xs text-muted-foreground line-through">{formatCurrency(h.originalPrice, DEFAULT_CURRENCY)}</span>
+                          <span className="text-2xl font-display font-bold text-accent ml-2">{formatCurrency(h.price, DEFAULT_CURRENCY)}</span>
                           <span className="text-xs text-muted-foreground">/night</span>
                         </div>
                         <Button variant="accent" size="sm" onClick={() => { setSelectedHotel(h.id); setSelectedRoom(null); setBookingStep("rooms"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
@@ -319,7 +320,7 @@ const HotelAccommodation = () => {
                   <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.1 }} className="bg-card rounded-xl p-6 border shadow-card hover:shadow-card-hover transition-all">
                     <div className="flex justify-between items-start mb-3">
                       <h3 className="font-display font-bold text-card-foreground">{h.name}</h3>
-                      <span className="text-accent font-bold text-sm">${h.price}/night</span>
+                      <span className="text-accent font-bold text-sm">{formatCurrency(h.price, DEFAULT_CURRENCY)}/night</span>
                     </div>
                     <div className="flex items-center gap-1 mb-2">
                       <MapPin className="w-3 h-3 text-muted-foreground" />

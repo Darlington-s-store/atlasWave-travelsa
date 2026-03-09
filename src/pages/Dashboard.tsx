@@ -21,6 +21,7 @@ import {
 import logo from "@/assets/logo.jpeg";
 import { generateReceiptPDF } from "@/lib/generateReceipt";
 import { sendNotification } from "@/lib/notifications";
+import { DEFAULT_CURRENCY, formatCurrency } from "@/lib/currency";
 
 const sidebarItems = [
   { id: "overview", label: "Dashboard", icon: LayoutDashboard },
@@ -189,7 +190,7 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <main className="flex-1 p-6 lg:p-8 mt-16 lg:mt-16">
+        <main className="mt-[6.75rem] flex-1 p-4 sm:p-6 lg:mt-16 lg:p-8">
           {activeTab === "overview" && <OverviewTab applications={applications} bookings={bookings} shipments={shipments} consultations={consultations} userName={user?.fullName || "User"} greeting={greeting()} dataLoading={dataLoading} />}
           {activeTab === "applications" && <ApplicationsTab applications={applications} onRefresh={fetchAllData} userId={user?.id || ""} />}
           {activeTab === "appointments" && <AppointmentsTab consultations={consultations} onRefresh={fetchAllData} userId={user?.id || ""} />}
@@ -503,7 +504,7 @@ function AppointmentsTab({ consultations, onRefresh, userId }: { consultations: 
                     <p className="font-medium text-foreground capitalize">{c.type} Consultation</p>
                     <p className="text-sm text-muted-foreground">{c.date} at {c.time}</p>
                     {c.topic && <p className="text-xs text-muted-foreground mt-1">Topic: {c.topic}</p>}
-                    <p className="text-xs font-semibold text-foreground mt-1">${Number(c.price).toLocaleString()}</p>
+                    <p className="text-xs font-semibold text-foreground mt-1">{formatCurrency(Number(c.price), DEFAULT_CURRENCY)}</p>
                   </div>
                 </div>
                 <Badge className={cfg.color + " border shrink-0"}>
@@ -525,10 +526,10 @@ function AppointmentsTab({ consultations, onRefresh, userId }: { consultations: 
               <Select value={form.type} onValueChange={(v) => setForm((f) => ({ ...f, type: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="immigration">Immigration Consultation ($150)</SelectItem>
-                  <SelectItem value="logistics">Logistics Consultation ($100)</SelectItem>
-                  <SelectItem value="travel">Travel Consultation ($75)</SelectItem>
-                  <SelectItem value="general">General Consultation ($75)</SelectItem>
+                  <SelectItem value="immigration">Immigration Consultation ({formatCurrency(150, DEFAULT_CURRENCY)})</SelectItem>
+                  <SelectItem value="logistics">Logistics Consultation ({formatCurrency(100, DEFAULT_CURRENCY)})</SelectItem>
+                  <SelectItem value="travel">Travel Consultation ({formatCurrency(75, DEFAULT_CURRENCY)})</SelectItem>
+                  <SelectItem value="general">General Consultation ({formatCurrency(75, DEFAULT_CURRENCY)})</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -709,7 +710,7 @@ function BookingsTab({ bookings, onRefresh, userId }: { bookings: any[]; onRefre
 function PaymentsTab({ payments, onRefresh, userId }: { payments: any[]; onRefresh: () => void; userId: string }) {
   const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ amount: "", description: "", payment_method: "card", currency: "USD" });
+  const [form, setForm] = useState({ amount: "", description: "", payment_method: "card", currency: DEFAULT_CURRENCY });
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
@@ -751,7 +752,7 @@ function PaymentsTab({ payments, onRefresh, userId }: { payments: any[]; onRefre
     });
     toast({ title: "Payment submitted successfully!" });
     setDialogOpen(false);
-    setForm({ amount: "", description: "", payment_method: "card", currency: "USD" });
+    setForm({ amount: "", description: "", payment_method: "card", currency: DEFAULT_CURRENCY });
     onRefresh();
   };
 
@@ -781,14 +782,14 @@ function PaymentsTab({ payments, onRefresh, userId }: { payments: any[]; onRefre
           <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center mb-3">
             <DollarSign className="w-5 h-5 text-emerald-600" />
           </div>
-          <p className="text-2xl font-bold text-foreground">${totalPaid.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-foreground">{formatCurrency(totalPaid, DEFAULT_CURRENCY)}</p>
           <p className="text-xs text-muted-foreground">Total Paid</p>
         </div>
         <div className="bg-background rounded-xl border p-5">
           <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center mb-3">
             <Clock className="w-5 h-5 text-amber-600" />
           </div>
-          <p className="text-2xl font-bold text-foreground">${totalPending.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-foreground">{formatCurrency(totalPending, DEFAULT_CURRENCY)}</p>
           <p className="text-xs text-muted-foreground">Pending</p>
         </div>
         <div className="bg-background rounded-xl border p-5">
@@ -827,7 +828,7 @@ function PaymentsTab({ payments, onRefresh, userId }: { payments: any[]; onRefre
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="font-display font-bold text-foreground text-lg">
-                    {p.currency === "USD" ? "$" : p.currency === "EUR" ? "€" : p.currency === "GBP" ? "£" : p.currency === "GHS" ? "₵" : p.currency === "NGN" ? "₦" : ""}{Number(p.amount).toLocaleString()}
+                    {formatCurrency(Number(p.amount), p.currency || DEFAULT_CURRENCY)}
                   </span>
                   <Badge className={cfg.color + " border text-[10px]"}>{cfg.label}</Badge>
                   <Button
@@ -840,7 +841,7 @@ function PaymentsTab({ payments, onRefresh, userId }: { payments: any[]; onRefre
                       date: new Date(p.created_at).toLocaleDateString(),
                       description: p.description || "Payment",
                       amount: Number(p.amount),
-                      currency: p.currency || "USD",
+                      currency: p.currency || DEFAULT_CURRENCY,
                       paymentMethod: p.payment_method || "Card",
                       status: p.status,
                       customerName: user?.fullName || "Customer",
@@ -871,11 +872,7 @@ function PaymentsTab({ payments, onRefresh, userId }: { payments: any[]; onRefre
                 <Select value={form.currency} onValueChange={(v) => setForm((f) => ({ ...f, currency: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="USD">USD ($)</SelectItem>
-                    <SelectItem value="EUR">EUR (€)</SelectItem>
-                    <SelectItem value="GBP">GBP (£)</SelectItem>
-                    <SelectItem value="GHS">GHS (₵)</SelectItem>
-                    <SelectItem value="NGN">NGN (₦)</SelectItem>
+                    <SelectItem value="GHS">GHS (GH₵)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -933,8 +930,6 @@ function InvoicesTab({ userId }: { userId: string }) {
     cancelled: { color: "bg-red-100 text-red-800 border-red-200", label: "Cancelled" },
   };
 
-  const currSym = (c: string) => ({ USD: "$", EUR: "€", GBP: "£", GHS: "₵", NGN: "₦" }[c] || c + " ");
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -971,7 +966,7 @@ function InvoicesTab({ userId }: { userId: string }) {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="font-display font-bold text-foreground text-lg">
-                    {currSym(inv.currency)}{Number(inv.amount).toLocaleString()}
+                    {formatCurrency(Number(inv.amount), inv.currency || DEFAULT_CURRENCY)}
                   </span>
                   <Badge className={cfg.color + " border text-[10px]"}>{cfg.label}</Badge>
                   <Button
@@ -984,7 +979,7 @@ function InvoicesTab({ userId }: { userId: string }) {
                       date: new Date(inv.issued_at).toLocaleDateString(),
                       description: inv.description || "Payment",
                       amount: Number(inv.amount),
-                      currency: inv.currency || "USD",
+                      currency: inv.currency || DEFAULT_CURRENCY,
                       paymentMethod: inv.payment_method || "Card",
                       status: inv.status,
                       customerName: user?.fullName || "Customer",
