@@ -438,9 +438,33 @@ const AdminContent = () => {
                   <Label>Hero Subtitle</Label>
                   <Textarea value={heroSubtitle} onChange={e => setHeroSubtitle(e.target.value)} rows={2} placeholder="Professional immigration, travel, and logistics services" />
                 </div>
-                <div className="space-y-2">
-                  <Label>CTA Link</Label>
-                  <Input value={heroCtaLink} onChange={e => setHeroCtaLink(e.target.value)} placeholder="/consultation" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>CTA Link</Label>
+                    <Input value={heroCtaLink} onChange={e => setHeroCtaLink(e.target.value)} placeholder="/consultation" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Hero Background Image</Label>
+                    <div className="flex items-center gap-3">
+                      {heroImageUrl && (
+                        <img
+                          src={getStorageUrl(heroImageUrl) || ""}
+                          alt="Hero preview"
+                          className="w-16 h-10 object-cover rounded border border-border"
+                        />
+                      )}
+                      <label className="flex items-center gap-2 px-3 py-2 rounded-md border border-border bg-muted/50 cursor-pointer hover:bg-muted transition-colors text-sm">
+                        <Upload className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">{heroImageUrl ? "Change Image" : "Upload Image"}</span>
+                        <input
+                          id="hero-image-input"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
                 </div>
                 <Button onClick={saveHero} disabled={saving}>
                   {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
