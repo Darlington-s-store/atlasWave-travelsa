@@ -118,6 +118,7 @@ const App = () => (
               <Route path="/admin/notifications" element={<AdminNotifications />} />
               <Route path="/admin/chatbot" element={<AdminChatbot />} />
               <Route path="/admin/content" element={<AdminContent />} />
+              <Route path="/admin/videos" element={<AdminVideos />} />
               <Route path="/admin/blog" element={<AdminBlog />} />
               <Route path="/admin/reports" element={<AdminReports />} />
               <Route path="/admin/security" element={<AdminSecurity />} />

@@ -84,6 +84,7 @@ const navGroups = [
     label: "Content & Reports",
     items: [
       { title: "Content / CMS", url: "/admin/content", icon: PenTool },
+      { title: "Videos", url: "/admin/videos", icon: Video },
       { title: "Blog / News", url: "/admin/blog", icon: Newspaper },
       { title: "Reports", url: "/admin/reports", icon: BarChart3 },
     ],
