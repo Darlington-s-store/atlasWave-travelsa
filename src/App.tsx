@@ -55,6 +55,8 @@ import AdminSecurity from "./pages/admin/AdminSecurity";
 import AdminSettings from "./pages/admin/AdminSettings";
 import Payments from "./pages/Payments";
 import ShipmentTracking from "./pages/ShipmentTracking";
+import VideoGallery from "./pages/VideoGallery";
+import AdminVideos from "./pages/admin/AdminVideos";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
