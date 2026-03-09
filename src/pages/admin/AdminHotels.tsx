@@ -73,11 +73,30 @@ const AdminHotels = () => {
 
   const handleEdit = async () => {
     if (!editingBooking) return;
+    const previousStatus = editingBooking.status;
     const { error } = await supabase.from("bookings").update({
       route: form.route, date: form.date, provider: form.provider || null, status: form.status,
     }).eq("id", editingBooking.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Booking Updated" }); setEditDialogOpen(false); fetchBookings();
+    toast({ title: "Booking Updated" });
+    
+    // Send notification if status changed
+    if (previousStatus !== form.status) {
+      notifyStatusChange({
+        type: "booking_status_update",
+        userId: editingBooking.user_id,
+        data: { 
+          route: form.route, 
+          date: form.date, 
+          provider: form.provider || "", 
+          bookingType: "hotel", 
+          newStatus: form.status 
+        },
+      });
+    }
+    
+    setEditDialogOpen(false); 
+    fetchBookings();
   };
 
   const handleDelete = async (id: string) => {
