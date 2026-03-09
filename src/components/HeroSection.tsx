@@ -3,12 +3,23 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, Plane, Package, FileText, ChevronLeft, ChevronRight } from "lucide-react";
-import { useSiteContent, getStorageUrl } from "@/hooks/useSiteContent";
+import { useSiteContent, getStorageUrl, type HeroSlideContent } from "@/hooks/useSiteContent";
 import { useVideos, getVideoStorageUrl, getEmbedUrl } from "@/hooks/useVideos";
 import heroTravel from "@/assets/hero-travel.jpg";
 import heroLogistics from "@/assets/hero-logistics.jpg";
 
-const defaultSlides = [
+interface SlideData {
+  image: string;
+  badge: string;
+  title: string;
+  highlight: string;
+  titleEnd: string;
+  desc: string;
+  cta: { label: string; link: string };
+  ctaSecondary: { label: string; link: string };
+}
+
+const defaultSlides: SlideData[] = [
   {
     image: heroTravel,
     badge: "Travel & Tours",
@@ -40,6 +51,19 @@ const defaultSlides = [
     ctaSecondary: { label: "Check Eligibility", link: "/work-permits/germany-chancenkarte" },
   },
 ];
+
+function cmsSlideToSlide(s: HeroSlideContent): SlideData {
+  return {
+    image: getStorageUrl(s.image_url) || heroTravel,
+    badge: s.badge || "",
+    title: s.title || "",
+    highlight: s.highlight || "",
+    titleEnd: s.title_end || "",
+    desc: s.description || "",
+    cta: { label: s.cta_label || "Get Started", link: s.cta_link || "/consultation" },
+    ctaSecondary: { label: s.cta_secondary_label || "Learn More", link: s.cta_secondary_link || "/about" },
+  };
+}
 
 function useCounter(end: number, duration = 2000, start = 0) {
   const [count, setCount] = useState(start);
@@ -73,7 +97,7 @@ function useCounter(end: number, duration = 2000, start = 0) {
 
 const HeroSection = () => {
   const [current, setCurrent] = useState(0);
-  const { hero } = useSiteContent();
+  const { heroSlides } = useSiteContent();
   const { videos: heroVideos } = useVideos("hero");
 
   // Get the first hero video if available
@@ -82,21 +106,9 @@ const HeroSection = () => {
     ? getVideoStorageUrl(heroVideo.file_path)
     : null;
 
-  // Build slides - use CMS hero for first slide if available
-  const slides = hero
-    ? [
-        {
-          image: getStorageUrl(hero.image_url) || heroTravel,
-          badge: "Travel & Tours",
-          title: hero.title?.split(" ").slice(0, -1).join(" ") || "Your Gateway to",
-          highlight: hero.title?.split(" ").slice(-1)[0] || "Global",
-          titleEnd: "Opportunities",
-          desc: hero.subtitle || defaultSlides[0].desc,
-          cta: { label: hero.cta_text || "Get Started", link: hero.cta_link || "/consultation" },
-          ctaSecondary: { label: "Explore Destinations", link: "/travel" },
-        },
-        ...defaultSlides.slice(1),
-      ]
+  // Use CMS slides if available, otherwise defaults
+  const slides: SlideData[] = heroSlides.length > 0
+    ? heroSlides.map(cmsSlideToSlide)
     : defaultSlides;
 
   useEffect(() => {
@@ -121,7 +133,7 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
-      {/* Background video (if hero category video exists and is an upload) */}
+      {/* Background video (if hero category video exists) */}
       {heroVideoSrc && current === 0 ? (
         <div className="absolute inset-0">
           <video

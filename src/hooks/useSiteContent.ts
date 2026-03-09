@@ -17,6 +17,22 @@ interface HeroContent {
   image_url?: string;
 }
 
+export interface HeroSlideContent {
+  id: string;
+  badge: string;
+  title: string;
+  highlight: string;
+  title_end: string;
+  description: string;
+  cta_label: string;
+  cta_link: string;
+  cta_secondary_label: string;
+  cta_secondary_link: string;
+  image_url?: string;
+  sort_order: string;
+  active: string;
+}
+
 interface ServiceContent {
   title: string;
   description: string;
@@ -54,6 +70,7 @@ const CACHE_TTL = 5000; // 5 seconds
 export function useSiteContent() {
   const [loading, setLoading] = useState(true);
   const [hero, setHero] = useState<HeroContent | null>(null);
+  const [heroSlides, setHeroSlides] = useState<HeroSlideContent[]>([]);
   const [services, setServices] = useState<ServiceContent[]>([]);
   const [testimonials, setTestimonials] = useState<TestimonialContent[]>([]);
   const [partners, setPartners] = useState<PartnerContent[]>([]);
@@ -65,6 +82,12 @@ export function useSiteContent() {
 
     const contactItem = items.find(i => i.section === "contact" && i.key === "info");
     if (contactItem) setContact(contactItem.value as unknown as ContactContent);
+
+    // Parse hero slides
+    const slideItems = items
+      .filter(i => i.section === "hero_slides" && i.value.active !== "false")
+      .sort((a, b) => parseInt(a.value.sort_order || "0") - parseInt(b.value.sort_order || "0"));
+    setHeroSlides(slideItems.map(i => ({ id: i.id, ...i.value } as unknown as HeroSlideContent)));
 
     const serviceItems = items.filter(i => i.section === "services" && i.value.active !== "false");
     setServices(serviceItems.map(i => i.value as unknown as ServiceContent));
@@ -121,7 +144,7 @@ export function useSiteContent() {
     };
   }, [fetchContent]);
 
-  return { loading, hero, services, testimonials, partners, contact, refetch: () => fetchContent(true) };
+  return { loading, hero, heroSlides, services, testimonials, partners, contact, refetch: () => fetchContent(true) };
 }
 
 export function getStorageUrl(path: string | undefined): string | null {
