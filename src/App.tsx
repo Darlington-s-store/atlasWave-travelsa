@@ -55,6 +55,8 @@ import AdminSecurity from "./pages/admin/AdminSecurity";
 import AdminSettings from "./pages/admin/AdminSettings";
 import Payments from "./pages/Payments";
 import ShipmentTracking from "./pages/ShipmentTracking";
+import VideoGallery from "./pages/VideoGallery";
+import AdminVideos from "./pages/admin/AdminVideos";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -78,6 +80,7 @@ const App = () => (
               <Route path="/logistics/tracking" element={<ShipmentTracking />} />
               <Route path="/tracking" element={<ShipmentTracking />} />
               <Route path="/payments" element={<Payments />} />
+              <Route path="/videos" element={<VideoGallery />} />
               <Route path="/work-permits" element={<WorkPermits />} />
               <Route path="/work-permits/schengen" element={<SchengenWorkPermits />} />
               <Route path="/work-permits/canada-lmia" element={<CanadaLMIA />} />
@@ -115,6 +118,7 @@ const App = () => (
               <Route path="/admin/notifications" element={<AdminNotifications />} />
               <Route path="/admin/chatbot" element={<AdminChatbot />} />
               <Route path="/admin/content" element={<AdminContent />} />
+              <Route path="/admin/videos" element={<AdminVideos />} />
               <Route path="/admin/blog" element={<AdminBlog />} />
               <Route path="/admin/reports" element={<AdminReports />} />
               <Route path="/admin/security" element={<AdminSecurity />} />

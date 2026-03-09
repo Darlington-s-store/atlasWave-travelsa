@@ -30,6 +30,7 @@ const navLinks = [
     ],
   },
   { label: "Logistics", href: "/logistics" },
+  { label: "Videos", href: "/videos" },
   { label: "Documentation", href: "/documentation" },
   { label: "Contact", href: "/contact" },
 ];

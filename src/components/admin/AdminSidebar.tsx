@@ -16,7 +16,7 @@ import { NavLink } from "@/components/NavLink";
 import {
   LayoutDashboard, Users, FileText, PenTool, LogOut, CreditCard, Bot, Package,
   RotateCcw, BarChart3, Plane, Hotel, Tag, Globe, Briefcase, GraduationCap,
-  Ship, Calendar, Star, Bell, Newspaper, Shield, Settings, Lock, MapPin,
+  Ship, Calendar, Star, Bell, Newspaper, Shield, Settings, Lock, MapPin, Video,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -84,6 +84,7 @@ const navGroups = [
     label: "Content & Reports",
     items: [
       { title: "Content / CMS", url: "/admin/content", icon: PenTool },
+      { title: "Videos", url: "/admin/videos", icon: Video },
       { title: "Blog / News", url: "/admin/blog", icon: Newspaper },
       { title: "Reports", url: "/admin/reports", icon: BarChart3 },
     ],
