@@ -76,6 +76,12 @@ const HeroSection = () => {
   const { hero } = useSiteContent();
   const { videos: heroVideos } = useVideos("hero");
 
+  // Get the first hero video if available
+  const heroVideo = heroVideos.length > 0 ? heroVideos[0] : null;
+  const heroVideoSrc = heroVideo?.video_type === "upload"
+    ? getVideoStorageUrl(heroVideo.file_path)
+    : null;
+
   // Build slides - use CMS hero for first slide if available
   const slides = hero
     ? [
