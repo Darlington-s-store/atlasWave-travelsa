@@ -37,6 +37,8 @@ const AdminContent = () => {
   const [heroCtaText, setHeroCtaText] = useState("");
   const [heroCtaLink, setHeroCtaLink] = useState("");
   const [heroId, setHeroId] = useState<string | null>(null);
+  const [heroImageUrl, setHeroImageUrl] = useState("");
+  const [uploadingHeroImage, setUploadingHeroImage] = useState(false);
 
   // Contact form state
   const [contactEmail, setContactEmail] = useState("");
