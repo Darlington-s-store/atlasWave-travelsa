@@ -187,7 +187,7 @@ const HeroSection = () => {
         ))}
       </div>
 
-      <div className="container relative z-10 pt-24 pb-16">
+      <div className="container relative z-10 pt-24 pb-16 flex flex-col items-center text-center">
         <div className="max-w-3xl">
           <AnimatePresence mode="wait">
             <motion.div key={current} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.5 }}>
@@ -199,11 +199,11 @@ const HeroSection = () => {
                 {slide.title}{" "}<span className="text-gradient-accent">{slide.highlight}</span>{" "}{slide.titleEnd}
               </h1>
 
-              <p className="text-lg md:text-xl leading-relaxed mb-10 max-w-2xl" style={{ color: "hsl(var(--primary-foreground) / 0.75)" }}>
+              <p className="text-lg md:text-xl leading-relaxed mb-10 max-w-2xl mx-auto" style={{ color: "hsl(var(--primary-foreground) / 0.75)" }}>
                 {slide.desc}
               </p>
 
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4 justify-center">
                 <Button variant="hero" size="lg" asChild>
                   <Link to={slide.cta.link}>{slide.cta.label} <ArrowRight className="w-5 h-5" /></Link>
                 </Button>
@@ -214,7 +214,7 @@ const HeroSection = () => {
             </motion.div>
           </AnimatePresence>
 
-          <div className="flex flex-wrap gap-8 mt-16 pt-8 border-t" style={{ borderColor: "hsl(var(--primary-foreground) / 0.15)" }}>
+          <div className="flex flex-wrap gap-8 mt-16 pt-8 border-t justify-center" style={{ borderColor: "hsl(var(--primary-foreground) / 0.15)" }}>
             {stats.map((stat) => (
               <div key={stat.label} ref={stat.ref}>
                 <div className="text-2xl md:text-3xl font-display font-bold text-accent">
