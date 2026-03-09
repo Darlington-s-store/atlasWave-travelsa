@@ -329,7 +329,16 @@ const AdminContent = () => {
       return;
     }
     setSaving(true);
-    const value = { ...partForm };
+    let logoUrl = editingPart?.value.logo_url || "";
+    
+    if (partLogoFile) {
+      setUploadingPartLogo(true);
+      const path = await uploadImage(partLogoFile, "partners");
+      if (path) logoUrl = path;
+      setUploadingPartLogo(false);
+    }
+    
+    const value = { ...partForm, logo_url: logoUrl };
     
     if (editingPart) {
       const { error } = await supabase
