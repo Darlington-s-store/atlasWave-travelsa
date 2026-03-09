@@ -115,7 +115,7 @@ const UsaNclex = () => {
                   <h3 className="font-display text-xl font-bold text-card-foreground mb-2">Start Your NCLEX Journey</h3>
                   <p className="text-sm text-muted-foreground mb-6">Fill out the form and our nursing immigration specialist will contact you.</p>
                   <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div><label className="text-sm font-medium text-foreground mb-1.5 block">First Name</label><Input placeholder="Jane" /></div>
                       <div><label className="text-sm font-medium text-foreground mb-1.5 block">Last Name</label><Input placeholder="Doe" /></div>
                     </div>

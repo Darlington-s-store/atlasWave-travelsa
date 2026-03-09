@@ -115,7 +115,7 @@ const CanadaLMIA = () => {
                 <div className="bg-card rounded-2xl p-8 border shadow-card">
                   <h3 className="font-display text-xl font-bold text-card-foreground mb-6">Apply Now</h3>
                   <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div><label className="text-sm font-medium text-foreground mb-1.5 block">First Name</label><Input placeholder="John" /></div>
                       <div><label className="text-sm font-medium text-foreground mb-1.5 block">Last Name</label><Input placeholder="Doe" /></div>
                     </div>

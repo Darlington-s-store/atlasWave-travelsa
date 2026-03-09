@@ -67,7 +67,7 @@ const TravelServices = () => {
                 <div className="bg-card rounded-2xl p-8 border shadow-card">
                   <h3 className="font-display text-xl font-bold text-card-foreground mb-6">Search Flights</h3>
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
                         <label className="text-sm font-medium text-foreground mb-1.5 block">From</label>
                         <div className="relative">
@@ -83,7 +83,7 @@ const TravelServices = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
                         <label className="text-sm font-medium text-foreground mb-1.5 block">Departure</label>
                         <div className="relative">
@@ -99,7 +99,7 @@ const TravelServices = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
                         <label className="text-sm font-medium text-foreground mb-1.5 block">Passengers</label>
                         <Select>
@@ -146,7 +146,7 @@ const TravelServices = () => {
                         <Input placeholder="City or hotel name" className="pl-9" />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
                         <label className="text-sm font-medium text-foreground mb-1.5 block">Check-in</label>
                         <Input type="date" />
@@ -156,7 +156,7 @@ const TravelServices = () => {
                         <Input type="date" />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
                         <label className="text-sm font-medium text-foreground mb-1.5 block">Rooms</label>
                         <Select>

@@ -336,7 +336,7 @@ const Consultation = () => {
                         <h3 className="text-xl font-display font-bold text-card-foreground mb-2">Your Details</h3>
                         <p className="text-sm text-muted-foreground mb-8">Fill in your contact information and consultation topic.</p>
                         <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div><label className="text-sm font-medium text-foreground mb-1.5 block">First Name</label><Input placeholder="John" /></div>
                             <div><label className="text-sm font-medium text-foreground mb-1.5 block">Last Name</label><Input placeholder="Doe" /></div>
                           </div>
@@ -403,7 +403,7 @@ const Consultation = () => {
 
                         <div className="mb-8">
                           <label className="text-sm font-semibold text-foreground mb-3 block">Payment Method</label>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <button className="flex items-center gap-3 p-4 rounded-xl border-2 border-primary bg-primary/5 text-left">
                               <CreditCard className="w-6 h-6 text-primary" />
                               <div>
