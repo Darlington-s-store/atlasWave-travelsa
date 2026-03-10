@@ -257,6 +257,123 @@ export type Database = {
         }
         Relationships: []
       }
+      flight_offers: {
+        Row: {
+          active: boolean
+          airline: string
+          arrival_time: string
+          baggage: string | null
+          cabin: string
+          created_at: string
+          departure_time: string
+          destination: string
+          duration: string
+          featured: boolean
+          id: string
+          logo: string | null
+          origin: string
+          price: number
+          refundable: boolean
+          sort_order: number
+          stop_city: string | null
+          stops: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          airline: string
+          arrival_time: string
+          baggage?: string | null
+          cabin?: string
+          created_at?: string
+          departure_time: string
+          destination: string
+          duration: string
+          featured?: boolean
+          id?: string
+          logo?: string | null
+          origin: string
+          price: number
+          refundable?: boolean
+          sort_order?: number
+          stop_city?: string | null
+          stops?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          airline?: string
+          arrival_time?: string
+          baggage?: string | null
+          cabin?: string
+          created_at?: string
+          departure_time?: string
+          destination?: string
+          duration?: string
+          featured?: boolean
+          id?: string
+          logo?: string | null
+          origin?: string
+          price?: number
+          refundable?: boolean
+          sort_order?: number
+          stop_city?: string | null
+          stops?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      hotel_offers: {
+        Row: {
+          active: boolean
+          amenities: string[]
+          created_at: string
+          featured: boolean
+          id: string
+          location: string
+          name: string
+          original_price: number | null
+          price: number
+          rating: number
+          reviews: number
+          room_types: Json
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          amenities?: string[]
+          created_at?: string
+          featured?: boolean
+          id?: string
+          location: string
+          name: string
+          original_price?: number | null
+          price: number
+          rating?: number
+          reviews?: number
+          room_types?: Json
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          amenities?: string[]
+          created_at?: string
+          featured?: boolean
+          id?: string
+          location?: string
+          name?: string
+          original_price?: number | null
+          price?: number
+          rating?: number
+          reviews?: number
+          room_types?: Json
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number
@@ -370,6 +487,69 @@ export type Database = {
         }
         Relationships: []
       }
+      refund_requests: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          email: string
+          id: string
+          method: string
+          original_amount: number
+          phone: string | null
+          processed_at: string | null
+          reason: string
+          refund_amount: number
+          refund_id: string
+          requested_at: string
+          service: string
+          status: string
+          transaction_reference: string | null
+          updated_at: string
+          user_id: string | null
+          user_name: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          method: string
+          original_amount?: number
+          phone?: string | null
+          processed_at?: string | null
+          reason: string
+          refund_amount?: number
+          refund_id: string
+          requested_at?: string
+          service: string
+          status?: string
+          transaction_reference?: string | null
+          updated_at?: string
+          user_id?: string | null
+          user_name: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          method?: string
+          original_amount?: number
+          phone?: string | null
+          processed_at?: string | null
+          reason?: string
+          refund_amount?: number
+          refund_id?: string
+          requested_at?: string
+          service?: string
+          status?: string
+          transaction_reference?: string | null
+          updated_at?: string
+          user_id?: string | null
+          user_name?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           admin_notes: string | null
@@ -414,6 +594,47 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      shipment_events: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          location: string
+          occurred_at: string
+          shipment_id: string
+          sort_order: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          location: string
+          occurred_at?: string
+          shipment_id: string
+          sort_order?: number
+          status: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          location?: string
+          occurred_at?: string
+          shipment_id?: string
+          sort_order?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipment_events_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       shipments: {
         Row: {
