@@ -20,7 +20,7 @@ const ChatBot = () => {
   const [greeting, setGreeting] = useState("Hello! 👋 Welcome to AtlastWave Travel and Tour. How can I help you today?");
   const [botName, setBotName] = useState("AtlasWave AI Assistant");
   const [botEnabled, setBotEnabled] = useState(true);
-  const [fallbackMessage, setFallbackMessage] = useState("I'm sorry, I'm having trouble connecting right now. Please try again or call us at +233 123 456 789 for immediate assistance.");
+  const [fallbackMessage, setFallbackMessage] = useState("I'm sorry, I'm having trouble connecting right now. Please try again or use the Contact page for assistance.");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -61,7 +61,12 @@ const ChatBot = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       },
-      body: JSON.stringify({ messages: allMessages, session_id: sessionId.current }),
+      body: JSON.stringify({
+        messages: allMessages,
+        session_id: sessionId.current,
+        page_path: window.location.pathname,
+        page_title: document.title,
+      }),
     });
 
     if (!resp.ok) {

@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, ChevronLeft, ChevronRight, FileText, Package, Plane } from "lucide-react";
+import { ArrowRight, Briefcase, ChevronLeft, ChevronRight, FileCheck, FileText, Globe, Hotel, Package, Plane, Ship, Truck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useSiteContent, getStorageUrl, type HeroSlideContent } from "@/hooks/useSiteContent";
+import { useSiteContent, getStorageUrl, type HeroSlideContent, type ServiceContent } from "@/hooks/useSiteContent";
 import { useVideos, getEmbedUrl, getVideoStorageUrl } from "@/hooks/useVideos";
 import heroTravel from "@/assets/hero-travel.jpg";
-import heroLogistics from "@/assets/hero-logistics.jpg";
 
 interface SlideData {
   image: string;
@@ -18,39 +17,6 @@ interface SlideData {
   cta: { label: string; link: string };
   ctaSecondary: { label: string; link: string };
 }
-
-const defaultSlides: SlideData[] = [
-  {
-    image: heroTravel,
-    badge: "Travel & Tours",
-    title: "Explore the World with",
-    highlight: "Confidence",
-    titleEnd: "",
-    desc: "From dream vacations to work permits, visa processing, and seamless logistics, we make global travel and immigration effortless.",
-    cta: { label: "Book a Flight", link: "/travel/flights" },
-    ctaSecondary: { label: "Explore Destinations", link: "/travel" },
-  },
-  {
-    image: heroLogistics,
-    badge: "Logistics & Shipping",
-    title: "Reliable",
-    highlight: "Cargo",
-    titleEnd: "Worldwide",
-    desc: "Air freight, sea cargo, road transport, and customs clearance with real-time tracking across 50+ countries.",
-    cta: { label: "Track Shipment", link: "/logistics/tracking" },
-    ctaSecondary: { label: "Get a Quote", link: "/consultation" },
-  },
-  {
-    image: heroTravel,
-    badge: "Immigration Services",
-    title: "Secure Your",
-    highlight: "Work Permit",
-    titleEnd: "Today",
-    desc: "Expert guidance for Schengen, Canada LMIA, Germany Opportunity Card, and USA NCLEX pathways.",
-    cta: { label: "Apply Now", link: "/work-permits" },
-    ctaSecondary: { label: "Check Eligibility", link: "/work-permits/germany-chancenkarte" },
-  },
-];
 
 function cmsSlideToSlide(slide: HeroSlideContent): SlideData {
   return {
@@ -70,22 +36,74 @@ function cmsSlideToSlide(slide: HeroSlideContent): SlideData {
 
 const HeroSection = () => {
   const [current, setCurrent] = useState(0);
-  const { heroSlides } = useSiteContent();
+  const { hero, heroSlides, services } = useSiteContent();
   const { videos: heroVideos } = useVideos("hero");
+  const serviceIconMap = { Plane, Hotel, FileCheck, Briefcase, Globe, Ship, Truck, Package, FileText };
 
   const heroVideo = heroVideos.length > 0 ? heroVideos[0] : null;
   const heroVideoSrc = heroVideo?.video_type === "upload" ? getVideoStorageUrl(heroVideo.file_path) : null;
-  const slides = heroSlides.length > 0 ? heroSlides.map(cmsSlideToSlide) : defaultSlides;
-  const slide = slides[current];
+  const slides =
+    heroSlides.length > 0
+      ? heroSlides.map(cmsSlideToSlide)
+      : hero
+        ? [
+            {
+              image: heroTravel,
+              badge: "AtlastWave Travel and Tour",
+              title: hero.title || "",
+              highlight: "",
+              titleEnd: "",
+              desc: hero.subtitle || "",
+              cta: { label: hero.cta_text || "Get Started", link: hero.cta_link || "/consultation" },
+              ctaSecondary: { label: "Learn More", link: "/about" },
+            },
+          ]
+        : [];
+
+  const quickLinks = services.slice(0, 3).map((service: ServiceContent) => {
+    const Icon = serviceIconMap[service.icon as keyof typeof serviceIconMap] || FileText;
+    return {
+      icon: Icon,
+      title: service.title,
+      desc: service.description,
+      link: service.link || "/consultation",
+    };
+  });
+
+  const safeCurrent = slides.length > 0 ? current % slides.length : 0;
+  const slide = slides[safeCurrent];
 
   useEffect(() => {
+    if (slides.length === 0) {
+      return;
+    }
+
     const timer = setInterval(() => setCurrent((previous) => (previous + 1) % slides.length), 6000);
     return () => clearInterval(timer);
   }, [slides.length]);
 
+  useEffect(() => {
+    if (slides.length === 0) {
+      setCurrent(0);
+      return;
+    }
+
+    if (current >= slides.length) {
+      setCurrent(0);
+    }
+  }, [current, slides.length]);
+
   const goTo = (direction: number) => {
+    if (slides.length === 0) {
+      return;
+    }
+
     setCurrent((previous) => (previous + direction + slides.length) % slides.length);
   };
+
+  if (slides.length === 0 || !slide) {
+    return null;
+  }
 
   return (
     <section className="relative flex min-h-screen min-h-[100svh] items-center overflow-hidden">
@@ -107,7 +125,7 @@ const HeroSection = () => {
       ) : (
         <AnimatePresence mode="wait">
           <motion.div
-            key={current}
+            key={safeCurrent}
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
@@ -138,7 +156,7 @@ const HeroSection = () => {
           <button
             key={index}
             onClick={() => setCurrent(index)}
-            className={`h-2 rounded-full transition-all duration-300 ${index === current ? "w-8 bg-accent" : "w-2 bg-primary-foreground/30"}`}
+            className={`h-2 rounded-full transition-all duration-300 ${index === safeCurrent ? "w-8 bg-accent" : "w-2 bg-primary-foreground/30"}`}
           />
         ))}
       </div>
@@ -147,7 +165,7 @@ const HeroSection = () => {
         <div className="max-w-3xl">
           <AnimatePresence mode="wait">
             <motion.div
-              key={current}
+              key={safeCurrent}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -189,11 +207,7 @@ const HeroSection = () => {
       <div className="absolute bottom-0 left-0 right-0 z-10 hidden lg:block">
         <div className="container">
           <div className="-mb-20 grid grid-cols-3 gap-4">
-            {[
-              { icon: Plane, title: "Travel & Tours", desc: "Flights, hotels, and custom packages", link: "/travel" },
-              { icon: FileText, title: "Work Permits", desc: "Immigration and visa processing", link: "/work-permits" },
-              { icon: Package, title: "Logistics", desc: "Cargo shipping and tracking", link: "/logistics" },
-            ].map((card, index) => (
+            {quickLinks.map((card, index) => (
               <motion.div
                 key={card.title}
                 initial={{ opacity: 0, y: 40 }}

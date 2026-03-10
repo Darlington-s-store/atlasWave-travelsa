@@ -1,52 +1,58 @@
-import { useMemo, useState } from "react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  ArrowLeftRight,
+  ArrowRight,
+  Calendar,
+  CreditCard,
+  Filter,
+  MapPin,
+  Plane,
+  Search,
+  SortAsc,
+  User,
+} from "lucide-react";
+
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Plane,
-  MapPin,
-  Calendar,
-  ArrowRight,
-  ArrowLeftRight,
-  Filter,
-  SortAsc,
-  CreditCard,
-  User,
-  Search,
-} from "lucide-react";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { DEFAULT_CURRENCY, formatCurrency } from "@/lib/currency";
 
-const fadeUp = { initial: { opacity: 0, y: 30 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true } };
+const fadeUp = {
+  initial: { opacity: 0, y: 30 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true },
+};
 
-const airports = [
-  "Accra (ACC)", "Lagos (LOS)", "Nairobi (NBO)", "London Heathrow (LHR)", "London Gatwick (LGW)",
-  "New York JFK (JFK)", "Dubai (DXB)", "Toronto (YYZ)", "Frankfurt (FRA)", "Paris CDG (CDG)",
-  "Amsterdam (AMS)", "Istanbul (IST)", "Johannesburg (JNB)", "Cairo (CAI)", "Casablanca (CMN)",
-];
-
-const MOCK_RESULTS = [
-  { id: 1, airline: "Turkish Airlines", logo: "TK", from: "Accra (ACC)", to: "London (LHR)", depart: "08:30", arrive: "16:45", duration: "8h 15m", stops: 1, stopCity: "Istanbul", price: 520, cabin: "Economy", baggage: "23kg", refundable: false },
-  { id: 2, airline: "Emirates", logo: "EK", from: "Accra (ACC)", to: "London (LHR)", depart: "22:15", arrive: "10:30+1", duration: "12h 15m", stops: 1, stopCity: "Dubai", price: 680, cabin: "Economy", baggage: "30kg", refundable: true },
-  { id: 3, airline: "British Airways", logo: "BA", from: "Accra (ACC)", to: "London (LHR)", depart: "23:00", arrive: "05:30+1", duration: "6h 30m", stops: 0, stopCity: "", price: 750, cabin: "Economy", baggage: "23kg", refundable: true },
-  { id: 4, airline: "KLM", logo: "KL", from: "Accra (ACC)", to: "London (LHR)", depart: "10:45", arrive: "22:10", duration: "11h 25m", stops: 1, stopCity: "Amsterdam", price: 490, cabin: "Economy", baggage: "23kg", refundable: false },
-  { id: 5, airline: "Ethiopian Airlines", logo: "ET", from: "Accra (ACC)", to: "London (LHR)", depart: "14:00", arrive: "06:15+1", duration: "16h 15m", stops: 2, stopCity: "Addis Ababa, Rome", price: 420, cabin: "Economy", baggage: "23kg", refundable: false },
-  { id: 6, airline: "Qatar Airways", logo: "QR", from: "Accra (ACC)", to: "London (LHR)", depart: "01:30", arrive: "14:00", duration: "12h 30m", stops: 1, stopCity: "Doha", price: 710, cabin: "Economy", baggage: "30kg", refundable: true },
-];
-
-const popularRoutes = [
-  { from: "Lagos", to: "London", price: formatCurrency(450, DEFAULT_CURRENCY), airline: "Turkish Airlines" },
-  { from: "Accra", to: "New York", price: formatCurrency(680, DEFAULT_CURRENCY), airline: "Emirates" },
-  { from: "Nairobi", to: "Dubai", price: formatCurrency(380, DEFAULT_CURRENCY), airline: "Qatar Airways" },
-  { from: "Lagos", to: "Johannesburg", price: formatCurrency(320, DEFAULT_CURRENCY), airline: "Ethiopian Airlines" },
-  { from: "Accra", to: "Toronto", price: formatCurrency(720, DEFAULT_CURRENCY), airline: "KLM" },
-  { from: "Lagos", to: "Frankfurt", price: formatCurrency(520, DEFAULT_CURRENCY), airline: "Lufthansa" },
-];
+type FlightOffer = {
+  id: string;
+  airline: string;
+  logo: string | null;
+  origin: string;
+  destination: string;
+  departure_time: string;
+  arrival_time: string;
+  duration: string;
+  stops: number;
+  stop_city: string | null;
+  price: number;
+  cabin: string;
+  baggage: string | null;
+  refundable: boolean;
+  featured: boolean;
+};
 
 const FlightBooking = () => {
   const [tripType, setTripType] = useState("round-trip");
@@ -61,39 +67,96 @@ const FlightBooking = () => {
   const [showResults, setShowResults] = useState(false);
   const [sortBy, setSortBy] = useState<"price" | "duration" | "departure">("price");
   const [filterStops, setFilterStops] = useState<string>("all");
-  const [filterAirline, setFilterAirline] = useState<string>("all");
-  const [selectedFlight, setSelectedFlight] = useState<number | null>(null);
+  const [selectedFlight, setSelectedFlight] = useState<string | null>(null);
   const [bookingStep, setBookingStep] = useState<"search" | "details" | "confirm">("search");
+  const [offers, setOffers] = useState<FlightOffer[]>([]);
+  const [loadingOffers, setLoadingOffers] = useState(true);
 
-  const handleAutocomplete = (value: string, setter: (v: string) => void, setSuggestions: (s: string[]) => void) => {
+  useEffect(() => {
+    const loadOffers = async () => {
+      const { data } = await (supabase as any)
+        .from("flight_offers" as never)
+        .select("*")
+        .eq("active", true)
+        .order("featured", { ascending: false })
+        .order("sort_order", { ascending: true });
+
+      setOffers(((data || []) as FlightOffer[]).map((offer) => ({ ...offer, price: Number(offer.price) })));
+      setLoadingOffers(false);
+    };
+
+    loadOffers();
+  }, []);
+
+  const airports = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          offers.flatMap((offer) => [offer.origin, offer.destination]).filter(Boolean),
+        ),
+      ),
+    [offers],
+  );
+
+  const handleAutocomplete = (
+    value: string,
+    setter: (value: string) => void,
+    setSuggestions: (value: string[]) => void,
+  ) => {
     setter(value);
     if (value.length >= 2) {
-      setSuggestions(airports.filter((airport) => airport.toLowerCase().includes(value.toLowerCase())).slice(0, 5));
+      setSuggestions(
+        airports.filter((airport) => airport.toLowerCase().includes(value.toLowerCase())).slice(0, 5),
+      );
     } else {
       setSuggestions([]);
     }
   };
 
   const sortedResults = useMemo(() => {
-    let results = [...MOCK_RESULTS];
+    let results = [...offers];
+
+    if (from.trim()) {
+      results = results.filter((result) => result.origin.toLowerCase().includes(from.toLowerCase()));
+    }
+
+    if (to.trim()) {
+      results = results.filter((result) =>
+        result.destination.toLowerCase().includes(to.toLowerCase()),
+      );
+    }
+
+    if (cabin !== "economy") {
+      results = results.filter((result) => result.cabin.toLowerCase() === cabin.toLowerCase());
+    }
 
     if (filterStops !== "all") {
       const max = filterStops === "direct" ? 0 : filterStops === "1" ? 1 : 3;
       results = results.filter((result) => result.stops <= max);
     }
 
-    if (filterAirline !== "all") {
-      results = results.filter((result) => result.airline === filterAirline);
-    }
-
     results.sort((a, b) => {
       if (sortBy === "price") return a.price - b.price;
       if (sortBy === "duration") return a.duration.localeCompare(b.duration);
-      return a.depart.localeCompare(b.depart);
+      return a.departure_time.localeCompare(b.departure_time);
     });
 
     return results;
-  }, [sortBy, filterStops, filterAirline]);
+  }, [offers, from, to, cabin, filterStops, sortBy]);
+
+  const popularRoutes = useMemo(
+    () =>
+      offers
+        .filter((offer) => offer.featured)
+        .slice(0, 6)
+        .map((offer) => ({
+          from: offer.origin.split(" (")[0],
+          to: offer.destination.split(" (")[0],
+          price: formatCurrency(offer.price, DEFAULT_CURRENCY),
+          airline: offer.airline,
+        })),
+    [offers],
+  );
 
   const handleSearch = () => {
     setShowResults(true);
@@ -101,13 +164,13 @@ const FlightBooking = () => {
     setSelectedFlight(null);
   };
 
-  const handleSelectFlight = (id: number) => {
+  const handleSelectFlight = (id: string) => {
     setSelectedFlight(id);
     setBookingStep("details");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const selected = MOCK_RESULTS.find((result) => result.id === selectedFlight);
+  const selected = offers.find((result) => result.id === selectedFlight);
 
   return (
     <div className="min-h-screen bg-background">
@@ -127,7 +190,7 @@ const FlightBooking = () => {
                 Book Your <span className="text-gradient-accent">Perfect Flight</span>
               </h1>
               <p className="mx-auto mt-6 max-w-xl text-lg text-primary-foreground/70">
-                Access competitive fares on 500+ airlines worldwide with personalized booking assistance.
+                Browse live flight offers stored in Supabase and book with AtlastWave support.
               </p>
             </motion.div>
           </div>
@@ -135,7 +198,10 @@ const FlightBooking = () => {
 
         <section className="py-8">
           <div className="container max-w-5xl">
-            <motion.div {...fadeUp} className="relative z-20 -mt-12 rounded-2xl border bg-card p-4 shadow-card sm:-mt-16 sm:p-6 md:p-8">
+            <motion.div
+              {...fadeUp}
+              className="relative z-20 -mt-12 rounded-2xl border bg-card p-4 shadow-card sm:-mt-16 sm:p-6 md:p-8"
+            >
               <div className="mb-6 flex flex-wrap gap-2">
                 {[
                   { value: "one-way", label: "One-Way" },
@@ -163,7 +229,9 @@ const FlightBooking = () => {
                       placeholder="Departure city"
                       className="h-12 pl-10"
                       value={from}
-                      onChange={(event) => handleAutocomplete(event.target.value, setFrom, setFromSuggestions)}
+                      onChange={(event) =>
+                        handleAutocomplete(event.target.value, setFrom, setFromSuggestions)
+                      }
                     />
                   </div>
                   {fromSuggestions.length > 0 && (
@@ -192,7 +260,9 @@ const FlightBooking = () => {
                       placeholder="Destination"
                       className="h-12 pl-10"
                       value={to}
-                      onChange={(event) => handleAutocomplete(event.target.value, setTo, setToSuggestions)}
+                      onChange={(event) =>
+                        handleAutocomplete(event.target.value, setTo, setToSuggestions)
+                      }
                     />
                   </div>
                   {toSuggestions.length > 0 && (
@@ -224,19 +294,33 @@ const FlightBooking = () => {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Departure</label>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Departure
+                  </label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input type="date" className="h-12 pl-10" value={departDate} onChange={(event) => setDepartDate(event.target.value)} />
+                    <Input
+                      type="date"
+                      className="h-12 pl-10"
+                      value={departDate}
+                      onChange={(event) => setDepartDate(event.target.value)}
+                    />
                   </div>
                 </div>
 
                 {tripType === "round-trip" && (
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Return</label>
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Return
+                    </label>
                     <div className="relative">
                       <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input type="date" className="h-12 pl-10" value={returnDate} onChange={(event) => setReturnDate(event.target.value)} />
+                      <Input
+                        type="date"
+                        className="h-12 pl-10"
+                        value={returnDate}
+                        onChange={(event) => setReturnDate(event.target.value)}
+                      />
                     </div>
                   </div>
                 )}
@@ -244,9 +328,13 @@ const FlightBooking = () => {
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[128px_144px_minmax(0,1fr)] lg:items-end">
                 <div className="w-full">
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Passengers</label>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Passengers
+                  </label>
                   <Select value={passengers} onValueChange={setPassengers}>
-                    <SelectTrigger className="h-12"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-12">
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       {[1, 2, 3, 4, 5, 6].map((number) => (
                         <SelectItem key={number} value={String(number)}>
@@ -260,10 +348,12 @@ const FlightBooking = () => {
                 <div className="w-full">
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Cabin</label>
                   <Select value={cabin} onValueChange={setCabin}>
-                    <SelectTrigger className="h-12"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-12">
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="economy">Economy</SelectItem>
-                      <SelectItem value="premium">Premium Economy</SelectItem>
+                      <SelectItem value="premium economy">Premium Economy</SelectItem>
                       <SelectItem value="business">Business</SelectItem>
                       <SelectItem value="first">First Class</SelectItem>
                     </SelectContent>
@@ -281,17 +371,32 @@ const FlightBooking = () => {
 
         <AnimatePresence>
           {bookingStep === "details" && selected && (
-            <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="py-8">
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="py-8"
+            >
               <div className="container max-w-4xl">
-                <Button variant="ghost" size="sm" onClick={() => setBookingStep("search")} className="mb-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setBookingStep("search")}
+                  className="mb-4"
+                >
                   <ArrowRight className="mr-1 h-4 w-4 rotate-180" />
                   Back to results
                 </Button>
                 <div className="grid gap-6 lg:grid-cols-3">
                   <div className="rounded-2xl border bg-card p-6 shadow-card lg:col-span-2">
-                    <h3 className="mb-6 font-display text-xl font-bold text-card-foreground">Passenger Details</h3>
+                    <h3 className="mb-6 font-display text-xl font-bold text-card-foreground">
+                      Passenger Details
+                    </h3>
                     {Array.from({ length: parseInt(passengers, 10) }).map((_, index) => (
-                      <div key={index} className="mb-6 border-b pb-6 last:mb-0 last:border-0 last:pb-0">
+                      <div
+                        key={index}
+                        className="mb-6 border-b pb-6 last:mb-0 last:border-0 last:pb-0"
+                      >
                         <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
                           <User className="h-4 w-4 text-primary" />
                           Passenger {index + 1}
@@ -330,10 +435,14 @@ const FlightBooking = () => {
                       className="mt-6 h-12 w-full"
                       onClick={() => {
                         setBookingStep("confirm");
-                        toast({ title: "Booking Confirmed!", description: `Your ${selected.airline} flight has been booked.` });
+                        toast({
+                          title: "Booking Confirmed!",
+                          description: `Your ${selected.airline} flight has been booked.`,
+                        });
                       }}
                     >
-                      Confirm & Pay {formatCurrency(selected.price * parseInt(passengers, 10), DEFAULT_CURRENCY)}
+                      Confirm & Pay{" "}
+                      {formatCurrency(selected.price * parseInt(passengers, 10), DEFAULT_CURRENCY)}
                       <CreditCard className="ml-2 h-4 w-4" />
                     </Button>
                   </div>
@@ -343,7 +452,7 @@ const FlightBooking = () => {
                     <div className="space-y-3 text-sm">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
-                          {selected.logo}
+                          {selected.logo || selected.airline.slice(0, 2).toUpperCase()}
                         </div>
                         <div>
                           <p className="font-semibold text-foreground">{selected.airline}</p>
@@ -354,11 +463,15 @@ const FlightBooking = () => {
                       <div className="space-y-2 border-t pt-3">
                         <div className="flex justify-between gap-4">
                           <span className="text-muted-foreground">Route</span>
-                          <span className="text-right font-medium text-foreground">{selected.from.split(" ")[0]} to {selected.to.split(" ")[0]}</span>
+                          <span className="text-right font-medium text-foreground">
+                            {selected.origin.split(" ")[0]} to {selected.destination.split(" ")[0]}
+                          </span>
                         </div>
                         <div className="flex justify-between gap-4">
                           <span className="text-muted-foreground">Time</span>
-                          <span className="text-right text-foreground">{selected.depart} - {selected.arrive}</span>
+                          <span className="text-right text-foreground">
+                            {selected.departure_time} - {selected.arrival_time}
+                          </span>
                         </div>
                         <div className="flex justify-between gap-4">
                           <span className="text-muted-foreground">Duration</span>
@@ -366,11 +479,15 @@ const FlightBooking = () => {
                         </div>
                         <div className="flex justify-between gap-4">
                           <span className="text-muted-foreground">Stops</span>
-                          <span className="text-right text-foreground">{selected.stops === 0 ? "Direct" : `${selected.stops} stop`}</span>
+                          <span className="text-right text-foreground">
+                            {selected.stops === 0 ? "Direct" : `${selected.stops} stop`}
+                          </span>
                         </div>
                         <div className="flex justify-between gap-4">
                           <span className="text-muted-foreground">Baggage</span>
-                          <span className="text-right text-foreground">{selected.baggage}</span>
+                          <span className="text-right text-foreground">
+                            {selected.baggage || "Not specified"}
+                          </span>
                         </div>
                         <div className="flex justify-between gap-4">
                           <span className="text-muted-foreground">Passengers</span>
@@ -421,7 +538,9 @@ const FlightBooking = () => {
                   Sort:
                 </div>
                 <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
-                  <SelectTrigger className="h-9 w-full text-xs sm:w-32"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-9 w-full text-xs sm:w-32">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="price">Price</SelectItem>
                     <SelectItem value="duration">Duration</SelectItem>
@@ -432,72 +551,96 @@ const FlightBooking = () => {
 
               <p className="mb-4 text-sm text-muted-foreground">{sortedResults.length} flights found</p>
 
-              <div className="space-y-3">
-                {sortedResults.map((flight) => (
-                  <motion.div
-                    key={flight.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-card sm:p-5"
-                  >
-                    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-                      <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 sm:h-12 sm:w-12">
-                          <span className="text-sm font-bold text-primary">{flight.logo}</span>
-                        </div>
-
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-foreground">{flight.airline}</p>
-                          <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-center sm:flex sm:items-center sm:gap-3 sm:text-left">
-                            <span className="font-display text-base font-bold text-foreground sm:text-lg">{flight.depart}</span>
-                            <div className="flex flex-col items-center gap-1 text-xs text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <div className="h-2 w-2 rounded-full bg-secondary" />
-                                <div className="relative w-12 border-t border-dashed border-muted-foreground sm:w-16">
-                                  {flight.stops > 0 && (
-                                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-medium text-accent">
-                                      {flight.stops} stop
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="h-2 w-2 rounded-full bg-accent" />
-                              </div>
-                              <span className="text-[11px]">{flight.duration}</span>
-                            </div>
-                            <span className="font-display text-base font-bold text-foreground sm:text-lg">{flight.arrive}</span>
+              {sortedResults.length === 0 ? (
+                <div className="rounded-xl border bg-card p-10 text-center text-sm text-muted-foreground">
+                  No flight offers matched your search. Add offers in Supabase to populate this page.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {sortedResults.map((flight) => (
+                    <motion.div
+                      key={flight.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-card sm:p-5"
+                    >
+                      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+                        <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 sm:h-12 sm:w-12">
+                            <span className="text-sm font-bold text-primary">
+                              {flight.logo || flight.airline.slice(0, 2).toUpperCase()}
+                            </span>
                           </div>
-                          <p className="mt-2 text-xs text-muted-foreground">
-                            {flight.stopCity ? `Via ${flight.stopCity}` : "Direct flight"}
-                          </p>
+
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-foreground">{flight.airline}</p>
+                            <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-center sm:flex sm:items-center sm:gap-3 sm:text-left">
+                              <span className="font-display text-base font-bold text-foreground sm:text-lg">
+                                {flight.departure_time}
+                              </span>
+                              <div className="flex flex-col items-center gap-1 text-xs text-muted-foreground">
+                                <div className="flex items-center gap-1">
+                                  <div className="h-2 w-2 rounded-full bg-secondary" />
+                                  <div className="relative w-12 border-t border-dashed border-muted-foreground sm:w-16">
+                                    {flight.stops > 0 && (
+                                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-medium text-accent">
+                                        {flight.stops} stop
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="h-2 w-2 rounded-full bg-accent" />
+                                </div>
+                                <span className="text-[11px]">{flight.duration}</span>
+                              </div>
+                              <span className="font-display text-base font-bold text-foreground sm:text-lg">
+                                {flight.arrival_time}
+                              </span>
+                            </div>
+                            <p className="mt-2 text-xs text-muted-foreground">
+                              {flight.stop_city ? `Via ${flight.stop_city}` : "Direct flight"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between lg:w-[260px] lg:border-t-0 lg:pt-0">
+                          <div className="flex flex-wrap gap-1.5">
+                            {flight.baggage ? (
+                              <Badge variant="outline" className="text-[10px]">
+                                {flight.baggage}
+                              </Badge>
+                            ) : null}
+                            {flight.refundable ? (
+                              <Badge
+                                variant="outline"
+                                className="border-secondary/20 bg-secondary/10 text-[10px] text-secondary"
+                              >
+                                Refundable
+                              </Badge>
+                            ) : null}
+                          </div>
+
+                          <div className="sm:text-right">
+                            <p className="font-display text-xl font-bold text-accent sm:text-2xl">
+                              {formatCurrency(flight.price, DEFAULT_CURRENCY)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">per person</p>
+                          </div>
+
+                          <Button
+                            variant="accent"
+                            size="sm"
+                            className="w-full sm:w-auto"
+                            onClick={() => handleSelectFlight(flight.id)}
+                          >
+                            Select
+                            <ArrowRight className="ml-1 h-3 w-3" />
+                          </Button>
                         </div>
                       </div>
-
-                      <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between lg:w-[260px] lg:border-t-0 lg:pt-0">
-                        <div className="flex flex-wrap gap-1.5">
-                          <Badge variant="outline" className="text-[10px]">{flight.baggage}</Badge>
-                          {flight.refundable && (
-                            <Badge variant="outline" className="border-secondary/20 bg-secondary/10 text-[10px] text-secondary">
-                              Refundable
-                            </Badge>
-                          )}
-                        </div>
-
-                        <div className="sm:text-right">
-                          <p className="font-display text-xl font-bold text-accent sm:text-2xl">
-                            {formatCurrency(flight.price, DEFAULT_CURRENCY)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">per person</p>
-                        </div>
-
-                        <Button variant="accent" size="sm" className="w-full sm:w-auto" onClick={() => handleSelectFlight(flight.id)}>
-                          Select
-                          <ArrowRight className="ml-1 h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
         )}
@@ -508,19 +651,34 @@ const FlightBooking = () => {
               <h2 className="mb-12 text-center font-display text-3xl font-bold text-foreground">
                 Popular <span className="text-gradient-accent">Routes</span>
               </h2>
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {popularRoutes.map((route, index) => (
-                  <motion.div key={index} {...fadeUp} transition={{ delay: index * 0.1 }} className="rounded-xl border bg-card p-5 shadow-card transition-all hover:shadow-card-hover sm:p-6">
-                    <div className="mb-3 flex items-center gap-3">
-                      <span className="font-semibold text-foreground">{route.from}</span>
-                      <ArrowRight className="h-4 w-4 text-accent" />
-                      <span className="font-semibold text-foreground">{route.to}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{route.airline}</p>
-                    <p className="mt-2 text-2xl font-bold text-accent">From {route.price}</p>
-                  </motion.div>
-                ))}
-              </div>
+              {loadingOffers ? (
+                <div className="rounded-xl border bg-card p-10 text-center text-sm text-muted-foreground">
+                  Loading flight offers...
+                </div>
+              ) : popularRoutes.length === 0 ? (
+                <div className="rounded-xl border bg-card p-10 text-center text-sm text-muted-foreground">
+                  No featured flight offers have been published yet.
+                </div>
+              ) : (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {popularRoutes.map((route, index) => (
+                    <motion.div
+                      key={`${route.from}-${route.to}-${index}`}
+                      {...fadeUp}
+                      transition={{ delay: index * 0.1 }}
+                      className="rounded-xl border bg-card p-5 shadow-card transition-all hover:shadow-card-hover sm:p-6"
+                    >
+                      <div className="mb-3 flex items-center gap-3">
+                        <span className="font-semibold text-foreground">{route.from}</span>
+                        <ArrowRight className="h-4 w-4 text-accent" />
+                        <span className="font-semibold text-foreground">{route.to}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{route.airline}</p>
+                      <p className="mt-2 text-2xl font-bold text-accent">From {route.price}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
         )}

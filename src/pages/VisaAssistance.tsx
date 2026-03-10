@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,6 +29,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -70,14 +72,46 @@ const statusColors = {
   "rejected": "bg-destructive/10 text-destructive border-destructive/20",
 };
 
+const normalizeTrackedApplication = (app: any) => ({
+  ...app,
+  country: app.country || app.title || "Visa Application",
+  type: app.type || "Visa Application",
+  submitted: app.submitted || new Date(app.created_at).toLocaleDateString(),
+});
+
 const VisaAssistance = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<"programs" | "apply" | "track">("programs");
   const [currentStep, setCurrentStep] = useState(1);
+  const [applications, setApplications] = useState<any[]>([]);
+  const [loadingApplications, setLoadingApplications] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "", email: "", phone: "", dob: "", nationality: "",
     destination: "", visaType: "", travelDate: "", returnDate: "", purpose: "",
     documents: [] as string[],
   });
+
+  useEffect(() => {
+    const loadApplications = async () => {
+      if (!user?.id) {
+        setApplications([]);
+        return;
+      }
+
+      setLoadingApplications(true);
+      const { data } = await supabase
+        .from("applications")
+        .select("*")
+        .eq("user_id", user.id)
+        .or("type.ilike.%visa%,title.ilike.%visa%")
+        .order("created_at", { ascending: false });
+
+      setApplications((data || []).map(normalizeTrackedApplication));
+      setLoadingApplications(false);
+    };
+
+    loadApplications();
+  }, [user?.id]);
 
   const updateField = (field: string, value: string) => setFormData((prev) => ({ ...prev, [field]: value }));
 
@@ -88,7 +122,49 @@ const VisaAssistance = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (!user?.id) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in before submitting a visa application.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const title = `${formData.destination || "Visa"} - ${formData.visaType || "Application"}`;
+    const details = JSON.stringify({
+      fullName: formData.fullName,
+      email: formData.email,
+      phone: formData.phone,
+      dob: formData.dob,
+      nationality: formData.nationality,
+      destination: formData.destination,
+      visaType: formData.visaType,
+      travelDate: formData.travelDate,
+      returnDate: formData.returnDate,
+      purpose: formData.purpose,
+      documents: formData.documents,
+    });
+
+    const { data, error } = await supabase
+      .from("applications")
+      .insert({
+        user_id: user.id,
+        type: formData.visaType || "Visa Application",
+        title,
+        details,
+        status: "pending",
+      })
+      .select("*")
+      .single();
+
+    if (error) {
+      toast({ title: "Submission failed", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    setApplications((prev) => [normalizeTrackedApplication(data), ...prev]);
     toast({ title: "Application Submitted!", description: "Your visa application has been received. You'll get email updates on progress." });
     setActiveTab("track");
     setCurrentStep(1);
@@ -470,25 +546,35 @@ const VisaAssistance = () => {
                 <h2 className="text-2xl font-display font-bold text-foreground mb-2">Your Applications</h2>
                 <p className="text-muted-foreground text-sm mb-8">Track the status of your visa applications. You'll also receive email and SMS notifications.</p>
 
-                {MOCK_APPLICATIONS.length === 0 ? (
+                {!user ? (
+                  <div className="bg-card rounded-2xl border p-12 text-center">
+                    <AlertCircle className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground">Sign in to view your visa applications.</p>
+                  </div>
+                ) : loadingApplications ? (
+                  <div className="bg-card rounded-2xl border p-12 text-center">
+                    <Clock className="w-10 h-10 text-muted-foreground mx-auto mb-3 animate-spin" />
+                    <p className="text-muted-foreground">Loading your applications...</p>
+                  </div>
+                ) : applications.length === 0 ? (
                   <div className="bg-card rounded-2xl border p-12 text-center">
                     <AlertCircle className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                     <p className="text-muted-foreground">No applications yet. Start a new application above.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {MOCK_APPLICATIONS.map((app) => (
+                    {applications.map((app) => (
                       <div key={app.id} className="bg-card rounded-xl border shadow-card p-6">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div>
                             <div className="flex items-center gap-2 mb-1">
                               <span className="font-display font-bold text-foreground">{app.id}</span>
-                              <Badge variant="outline" className={statusColors[app.status]}>
-                                {app.status.replace("-", " ")}
+                              <Badge variant="outline" className={statusColors[app.status] || statusColors.pending}>
+                                {String(app.status).replace("-", " ")}
                               </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">{app.country} — {app.type}</p>
-                            <p className="text-xs text-muted-foreground mt-1">Submitted: {app.submitted}</p>
+                            <p className="text-xs text-muted-foreground mt-1">Submitted: {new Date(app.created_at).toLocaleDateString()}</p>
                           </div>
                           <div className="flex gap-2">
                             <Button variant="outline" size="sm">View Details</Button>

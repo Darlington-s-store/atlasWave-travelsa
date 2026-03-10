@@ -14,33 +14,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-const defaultTestimonials = [
-  {
-    name: "Adaeze Okafor",
-    role: "Nurse, Germany",
-    text: "AtlastWave handled my entire Germany work permit process. From credential evaluation to visa approval, everything was seamless.",
-    rating: "5",
-  },
-  {
-    name: "Kwame Mensah",
-    role: "Business Owner, Accra",
-    text: "Their logistics team shipped 3 containers of goods from China to Ghana without a single issue. Real-time tracking and customs clearance were top-notch.",
-    rating: "5",
-  },
-  {
-    name: "Fatima Al-Rashid",
-    role: "Tourist, Dubai",
-    text: "Booked a family vacation through AtlastWave with flights, hotels, and tours all arranged perfectly.",
-    rating: "5",
-  },
-  {
-    name: "Daniel Eze",
-    role: "Engineer, Canada",
-    text: "I got my Canada LMIA work permit approved in record time. The team kept me updated at every step.",
-    rating: "4",
-  },
-];
-
 type ReviewRow = Tables<"reviews">;
 
 const TestimonialsSection = () => {
@@ -121,7 +94,7 @@ const TestimonialsSection = () => {
       return cmsTestimonials;
     }
 
-    return defaultTestimonials;
+    return [];
   }, [approvedReviews, cmsTestimonials]);
 
   const resetForm = () => {
@@ -225,6 +198,11 @@ const TestimonialsSection = () => {
           </div>
         </div>
 
+        {testimonials.length === 0 ? (
+          <div className="rounded-xl border bg-card p-10 text-center text-sm text-muted-foreground">
+            No approved reviews or testimonials are available yet.
+          </div>
+        ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
           {testimonials.map((testimonial, index) => {
             const rating = parseInt(testimonial.rating || "5", 10);
@@ -257,6 +235,7 @@ const TestimonialsSection = () => {
             );
           })}
         </div>
+        )}
 
         {loadingReviews && (
           <div className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">

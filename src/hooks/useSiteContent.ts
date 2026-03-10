@@ -33,7 +33,7 @@ export interface HeroSlideContent {
   active: string;
 }
 
-interface ServiceContent {
+export interface ServiceContent {
   title: string;
   description: string;
   icon: string;
@@ -41,7 +41,7 @@ interface ServiceContent {
   active: string;
 }
 
-interface TestimonialContent {
+export interface TestimonialContent {
   name: string;
   text: string;
   rating: string;
@@ -49,7 +49,7 @@ interface TestimonialContent {
   visible: string;
 }
 
-interface PartnerContent {
+export interface PartnerContent {
   name: string;
   category: string;
   logo_url?: string;

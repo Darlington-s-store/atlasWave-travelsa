@@ -23,45 +23,6 @@ interface DealItem {
   tag: string;
 }
 
-const fallbackDeals: DealItem[] = [
-  {
-    type: "Flight",
-    title: "Accra to London Return",
-    originalPrice: "GHs 13,530",
-    price: "GHs 9,865",
-    discount: "27% OFF",
-    deadline: "2026-04-15T00:00:00",
-    tag: "Hot Deal",
-  },
-  {
-    type: "Hotel",
-    title: "5 Star Dubai Marina - 3 Nights",
-    originalPrice: "GHs 10,944",
-    price: "GHs 7,585",
-    discount: "31% OFF",
-    deadline: "2026-04-10T00:00:00",
-    tag: "Limited",
-  },
-  {
-    type: "Package",
-    title: "Istanbul + Cappadocia - 7 Days",
-    originalPrice: "GHs 21,280",
-    price: "GHs 15,960",
-    discount: "25% OFF",
-    deadline: "2026-04-20T00:00:00",
-    tag: "Popular",
-  },
-  {
-    type: "Flight",
-    title: "Lagos to Toronto One-Way",
-    originalPrice: "GHs 12,920",
-    price: "GHs 9,424",
-    discount: "27% OFF",
-    deadline: "2026-04-12T00:00:00",
-    tag: "Flash Sale",
-  },
-];
-
 function calcTime(deadline: string) {
   const diff = Math.max(0, new Date(deadline).getTime() - Date.now());
   const days = Math.floor(diff / 86400000);
@@ -74,19 +35,16 @@ const DealsSection = () => {
   const [filter, setFilter] = useState("All");
   const { deals: cmsDeals } = useSiteContent();
 
-  const deals: DealItem[] =
-    cmsDeals.length > 0
-      ? cmsDeals.map((deal: DealContent) => ({
-          id: deal.id,
-          type: deal.type,
-          title: deal.title,
-          originalPrice: deal.original_price,
-          price: deal.price,
-          discount: deal.discount,
-          deadline: deal.deadline,
-          tag: deal.tag,
-        }))
-      : fallbackDeals;
+  const deals: DealItem[] = cmsDeals.map((deal: DealContent) => ({
+    id: deal.id,
+    type: deal.type,
+    title: deal.title,
+    originalPrice: deal.original_price,
+    price: deal.price,
+    discount: deal.discount,
+    deadline: deal.deadline,
+    tag: deal.tag,
+  }));
 
   const filtered = filter === "All" ? deals : deals.filter((deal) => deal.type === filter);
 
@@ -117,6 +75,11 @@ const DealsSection = () => {
           ))}
         </div>
 
+        {filtered.length === 0 ? (
+          <div className="rounded-xl border bg-card p-10 text-center text-sm text-muted-foreground">
+            No featured deals have been published yet.
+          </div>
+        ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
           {filtered.map((deal, index) => {
             const timeLeft = calcTime(deal.deadline);
@@ -162,6 +125,7 @@ const DealsSection = () => {
             );
           })}
         </div>
+        )}
       </div>
     </section>
   );

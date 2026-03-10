@@ -1,30 +1,18 @@
 import { motion } from "framer-motion";
 import { useSiteContent, getStorageUrl } from "@/hooks/useSiteContent";
 
-const defaultPartners = [
-  { name: "Emirates Airlines", abbr: "EA" },
-  { name: "Turkish Airlines", abbr: "TK" },
-  { name: "Qatar Airways", abbr: "QR" },
-  { name: "Lufthansa", abbr: "LH" },
-  { name: "DHL Logistics", abbr: "DHL" },
-  { name: "Maersk Shipping", abbr: "MSK" },
-  { name: "IOM Migration", abbr: "IOM" },
-  { name: "IATA Certified", abbr: "IATA" },
-  { name: "Booking.com", abbr: "B.C" },
-  { name: "Marriott Hotels", abbr: "MH" },
-];
-
 const PartnersSection = () => {
   const { partners: cmsPartners } = useSiteContent();
 
-  // Use CMS partners if available, otherwise fall back to defaults
-  const partners = cmsPartners.length > 0
-    ? cmsPartners.map((p) => ({
-        name: p.name,
-        abbr: p.name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 3),
-        logo_url: p.logo_url,
-      }))
-    : defaultPartners;
+  const partners = cmsPartners.map((p) => ({
+    name: p.name,
+    abbr: p.name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 3),
+    logo_url: p.logo_url,
+  }));
+
+  if (partners.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-16 bg-background border-t border-border">
