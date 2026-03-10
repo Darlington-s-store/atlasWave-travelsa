@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { motion } from "framer-motion";
@@ -8,6 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   CreditCard,
   Smartphone,
@@ -19,8 +26,8 @@ import {
   XCircle,
   RefreshCw,
   Shield,
-  Receipt,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,7 +50,7 @@ interface Transaction {
   status: "completed" | "pending" | "failed" | "refunded";
 }
 
-const EXCHANGE_RATE = 15.2;
+const CURRENCIES = ["GHS", "USD", "EUR", "GBP", "NGN"];
 
 const statusConfig = {
   completed: { icon: CheckCircle2, label: "Completed", className: "bg-secondary/10 text-secondary border-secondary/20" },
@@ -54,16 +61,22 @@ const statusConfig = {
 
 const Payments = () => {
   const { user, isAuthenticated } = useAuth();
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "momo">("card");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
-  const [convertFrom, setConvertFrom] = useState<"USD" | "GHS">("GHS");
-  const [convertAmount, setConvertAmount] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [payLoading, setPayLoading] = useState(false);
 
-  const fetchTransactions = () => {
+  // Currency converter state
+  const [convertFrom, setConvertFrom] = useState("GHS");
+  const [convertTo, setConvertTo] = useState("USD");
+  const [convertAmount, setConvertAmount] = useState("");
+  const [exchangeRates, setExchangeRates] = useState<Record<string, number> | null>(null);
+  const [ratesLoading, setRatesLoading] = useState(false);
+  const [ratesBase, setRatesBase] = useState("USD");
+
+  const fetchTransactions = useCallback(() => {
     if (!isAuthenticated) return;
     supabase
       .from("payments")
@@ -71,7 +84,7 @@ const Payments = () => {
       .order("created_at", { ascending: false })
       .then(({ data }) => {
         if (data) setTransactions(data.map((d: any) => ({
-          id: `TXN-${d.id.slice(0, 8).toUpperCase()}`,
+          id: d.reference || `TXN-${d.id.slice(0, 8).toUpperCase()}`,
           date: new Date(d.created_at).toISOString().split("T")[0],
           description: d.description || "Payment",
           amount: Number(d.amount),
@@ -80,17 +93,52 @@ const Payments = () => {
           status: d.status as Transaction["status"],
         })));
       });
-  };
+  }, [isAuthenticated]);
+
+  const fetchRates = useCallback(async (base: string) => {
+    setRatesLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("exchange-rates", {
+        body: { base, targets: CURRENCIES },
+      });
+      if (error) throw error;
+      setExchangeRates(data.rates);
+      setRatesBase(base);
+    } catch (e) {
+      console.error("Failed to fetch rates:", e);
+      // Fallback rates
+      setExchangeRates({ GHS: 15.2, USD: 1, EUR: 0.92, GBP: 0.79, NGN: 1550 });
+      setRatesBase("USD");
+    } finally {
+      setRatesLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchTransactions();
-  }, [isAuthenticated]);
+    fetchRates("USD");
+  }, [isAuthenticated, fetchTransactions, fetchRates]);
 
-  const convertedValue = convertAmount
-    ? convertFrom === "USD"
-      ? (parseFloat(convertAmount) * EXCHANGE_RATE).toFixed(2)
-      : (parseFloat(convertAmount) / EXCHANGE_RATE).toFixed(2)
-    : "0.00";
+  // Compute conversion
+  const computeConversion = (): string => {
+    if (!convertAmount || !exchangeRates) return "0.00";
+    const amt = parseFloat(convertAmount);
+    if (!amt || !isFinite(amt)) return "0.00";
+
+    // Convert from source to base, then base to target
+    const fromRate = ratesBase === convertFrom ? 1 : (exchangeRates[convertFrom] || 1);
+    const toRate = ratesBase === convertTo ? 1 : (exchangeRates[convertTo] || 1);
+    const result = (amt / fromRate) * toRate;
+    return result.toFixed(2);
+  };
+
+  const getDisplayRate = (): string => {
+    if (!exchangeRates) return "Loading...";
+    const fromRate = ratesBase === convertFrom ? 1 : (exchangeRates[convertFrom] || 1);
+    const toRate = ratesBase === convertTo ? 1 : (exchangeRates[convertTo] || 1);
+    const rate = toRate / fromRate;
+    return `1 ${convertFrom} = ${rate.toFixed(4)} ${convertTo}`;
+  };
 
   const filteredTransactions = transactions.filter((t) => {
     const matchesSearch = t.description.toLowerCase().includes(searchQuery.toLowerCase()) || t.id.toLowerCase().includes(searchQuery.toLowerCase());
@@ -108,59 +156,103 @@ const Payments = () => {
       return;
     }
 
-    const method = paymentMethod === "card" ? "Mastercard" : "Mobile Money";
-    toast({ title: "Payment Initiated", description: `Processing ${formatCurrency(amount, DEFAULT_CURRENCY)} via ${method}...` });
+    setPayLoading(true);
 
-    // Insert payment into database (trigger auto-creates invoice)
-    const { data: payment, error } = await supabase.from("payments").insert({
-      user_id: user.id,
-      amount: parseFloat(amount),
-      currency: DEFAULT_CURRENCY,
-      description: description || "Service Payment",
-      payment_method: method,
-      status: "completed",
-    }).select().single();
-
-    if (error) {
-      toast({ title: "Payment Failed", description: error.message, variant: "destructive" });
-      return;
-    }
-
-    // Fetch the auto-generated invoice to get the invoice number
-    const { data: invoice } = await supabase
-      .from("invoices")
-      .select("invoice_number")
-      .eq("payment_id", payment.id)
-      .single();
-
-    // Send invoice email via Resend
-    const userEmail = user.email || "";
-    const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
-
-    await supabase.functions.invoke("send-notification", {
-      body: {
-        type: "invoice_ready",
-        userId: user.id,
-        recipientEmail: userEmail,
-        recipientPhone: user.phone || undefined,
-        recipientName: profile?.full_name || "Customer",
-        channel: "both",
-        data: {
-          invoiceNumber: invoice?.invoice_number || "N/A",
-          amount: parseFloat(amount).toFixed(2),
+    try {
+      // Initialize Paystack transaction via edge function
+      const { data, error } = await supabase.functions.invoke("paystack", {
+        body: {
+          action: "initialize",
+          email: user.email,
+          amount: parseFloat(amount),
           currency: DEFAULT_CURRENCY,
           description: description || "Service Payment",
-          paymentMethod: method,
-          date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+          user_id: user.id,
+          callback_url: window.location.origin + "/payments?verify=true",
         },
-      },
-    });
+      });
 
-    toast({ title: "Payment Successful ✓", description: `Invoice ${invoice?.invoice_number || ""} emailed to ${userEmail}` });
-    fetchTransactions();
-    setAmount("");
-    setDescription("");
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.authorization_url) {
+        // Redirect to Paystack checkout
+        window.location.href = data.authorization_url;
+      } else {
+        throw new Error("No authorization URL received");
+      }
+    } catch (e: any) {
+      console.error("Payment error:", e);
+      toast({ title: "Payment Failed", description: e.message || "Could not initiate payment.", variant: "destructive" });
+    } finally {
+      setPayLoading(false);
+    }
   };
+
+  // Verify payment on return from Paystack
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const reference = params.get("reference") || params.get("trxref");
+    const shouldVerify = params.get("verify");
+
+    if (reference && shouldVerify) {
+      const verify = async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke("paystack", {
+            body: { action: "verify", reference },
+          });
+
+          if (error) throw error;
+
+          if (data?.status === "completed") {
+            toast({ title: "Payment Successful ✓", description: `Payment of ${formatCurrency(data.amount, data.currency)} confirmed.` });
+
+            // Send invoice notification
+            if (user && data.payment_id) {
+              const { data: invoice } = await supabase
+                .from("invoices")
+                .select("invoice_number")
+                .eq("payment_id", data.payment_id)
+                .single();
+
+              if (invoice) {
+                const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
+                await supabase.functions.invoke("send-notification", {
+                  body: {
+                    type: "invoice_ready",
+                    userId: user.id,
+                    recipientEmail: user.email,
+                    recipientName: profile?.full_name || "Customer",
+                    channel: "both",
+                    data: {
+                      invoiceNumber: invoice.invoice_number,
+                      amount: data.amount.toFixed(2),
+                      currency: data.currency,
+                      description: description || "Paystack Payment",
+                      paymentMethod: data.channel || "Card",
+                      date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+                    },
+                  },
+                });
+              }
+            }
+          } else if (data?.status === "failed") {
+            toast({ title: "Payment Failed", description: "The payment could not be completed.", variant: "destructive" });
+          } else {
+            toast({ title: "Payment Pending", description: "Your payment is being processed." });
+          }
+        } catch (e: any) {
+          toast({ title: "Verification Error", description: e.message, variant: "destructive" });
+        }
+
+        // Clean URL
+        window.history.replaceState({}, "", "/payments");
+        fetchTransactions();
+      };
+
+      verify();
+    }
+  }, []);
 
   const handleRefundRequest = (txnId: string) => {
     toast({ title: "Refund Requested", description: `Refund request for ${txnId} has been submitted. You'll receive an email confirmation.` });
@@ -184,8 +276,8 @@ const Payments = () => {
               <h1 className="text-4xl md:text-6xl font-display font-bold text-primary-foreground leading-tight">
                 Secure <span className="text-gradient-accent">Payments</span>
               </h1>
-              <p className="text-lg text-primary-foreground/70 mt-6 max-w-xl">
-                Pay with Mastercard or Mobile Money. Track transactions, download receipts, and manage refunds — all in one place.
+              <p className="text-lg text-primary-foreground/70 mt-6 max-w-xl mx-auto">
+                Pay securely with Paystack — Card or Mobile Money. Track transactions, download receipts, and manage refunds.
               </p>
             </motion.div>
           </div>
@@ -203,60 +295,34 @@ const Payments = () => {
                   </div>
                   <div>
                     <h2 className="text-xl font-display font-bold text-card-foreground">Make a Payment</h2>
-                    <p className="text-sm text-muted-foreground">3D Secure authenticated</p>
+                    <p className="text-sm text-muted-foreground">Powered by Paystack · Card & Mobile Money</p>
                   </div>
                 </div>
 
-                <Tabs value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as "card" | "momo")} className="mb-6">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="card" className="gap-2"><CreditCard className="w-4 h-4" /> Mastercard</TabsTrigger>
-                    <TabsTrigger value="momo" className="gap-2"><Smartphone className="w-4 h-4" /> Mobile Money</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="card" className="space-y-4 mt-4">
-                    <div className="space-y-2">
-                      <Label>Card Number</Label>
-                      <Input placeholder="•••• •••• •••• ••••" className="h-12" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Expiry</Label>
-                        <Input placeholder="MM/YY" className="h-12" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>CVV</Label>
-                        <Input placeholder="•••" type="password" className="h-12" />
-                      </div>
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="momo" className="space-y-4 mt-4">
-                    <div className="space-y-2">
-                      <Label>Mobile Number</Label>
-                      <Input placeholder="+233 XX XXX XXXX" className="h-12" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Network</Label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {["MTN MoMo", "Vodafone Cash", "AirtelTigo"].map((n) => (
-                          <Button key={n} variant="outline" size="sm" className="text-xs h-10">{n}</Button>
-                        ))}
-                      </div>
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border">
+                    <CreditCard className="w-5 h-5 text-primary" />
+                    <span className="text-sm text-muted-foreground">Mastercard, Visa, Mobile Money (MTN, Vodafone, AirtelTigo)</span>
+                  </div>
 
-                <div className="space-y-2 mb-4">
-                  <Label>Description</Label>
-                  <Input placeholder="e.g. Visa application fee" value={description} onChange={(e) => setDescription(e.target.value)} className="h-12" />
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <Input placeholder="e.g. Visa application fee" value={description} onChange={(e) => setDescription(e.target.value)} className="h-12" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Amount ({DEFAULT_CURRENCY})</Label>
+                    <Input placeholder="0.00" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className="h-12 text-lg font-semibold" />
+                  </div>
+
+                  <Button variant="accent" className="w-full h-12 text-base" onClick={handlePayment} disabled={payLoading || !amount}>
+                    {payLoading ? (
+                      <><Loader2 className="w-4 h-4 animate-spin mr-2" />Processing...</>
+                    ) : (
+                      <>Pay {formatCurrency(amount || 0, DEFAULT_CURRENCY)} with Paystack</>
+                    )}
+                  </Button>
                 </div>
-
-                <div className="space-y-2 mb-6">
-                  <Label>Amount (GHS)</Label>
-                  <Input placeholder="0.00" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className="h-12 text-lg font-semibold" />
-                </div>
-
-                <Button variant="accent" className="w-full h-12 text-base" onClick={handlePayment}>
-                  Pay {formatCurrency(amount || 0, DEFAULT_CURRENCY)}
-                </Button>
               </motion.div>
 
               {/* Currency Converter */}
@@ -267,20 +333,30 @@ const Payments = () => {
                   </div>
                   <div>
                     <h2 className="text-xl font-display font-bold text-card-foreground">Currency Converter</h2>
-                    <p className="text-sm text-muted-foreground">Live rate: 1 USD = {EXCHANGE_RATE} GHS</p>
+                    <p className="text-sm text-muted-foreground">
+                      {ratesLoading ? "Loading rates..." : `Live rate: ${getDisplayRate()}`}
+                    </p>
                   </div>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-5">
                   <div className="space-y-2">
-                    <Label>From ({convertFrom})</Label>
-                    <Input
-                      type="number"
-                      placeholder="Enter amount"
-                      value={convertAmount}
-                      onChange={(e) => setConvertAmount(e.target.value)}
-                      className="h-12 text-lg"
-                    />
+                    <Label>From</Label>
+                    <div className="flex gap-2">
+                      <Select value={convertFrom} onValueChange={(v) => setConvertFrom(v)}>
+                        <SelectTrigger className="w-28 h-12"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        type="number"
+                        placeholder="Enter amount"
+                        value={convertAmount}
+                        onChange={(e) => setConvertAmount(e.target.value)}
+                        className="h-12 text-lg flex-1"
+                      />
+                    </div>
                   </div>
 
                   <div className="flex justify-center">
@@ -289,7 +365,8 @@ const Payments = () => {
                       size="icon"
                       className="rounded-full"
                       onClick={() => {
-                        setConvertFrom(convertFrom === "USD" ? "GHS" : "USD");
+                        setConvertFrom(convertTo);
+                        setConvertTo(convertFrom);
                         setConvertAmount("");
                       }}
                     >
@@ -297,12 +374,32 @@ const Payments = () => {
                     </Button>
                   </div>
 
-                  <div className="bg-muted rounded-xl p-6 text-center">
-                    <p className="text-sm text-muted-foreground mb-1">Converted Amount ({convertFrom === "USD" ? "GHS" : "USD"})</p>
-                    <p className="text-3xl font-display font-bold text-foreground">
-                      {convertFrom === "USD" ? "₵" : "$"}{convertedValue}
-                    </p>
+                  <div className="space-y-2">
+                    <Label>To</Label>
+                    <div className="flex gap-2">
+                      <Select value={convertTo} onValueChange={(v) => setConvertTo(v)}>
+                        <SelectTrigger className="w-28 h-12"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <div className="flex-1 h-12 bg-muted rounded-lg flex items-center px-4">
+                        <p className="text-lg font-display font-bold text-foreground">
+                          {computeConversion()}
+                        </p>
+                      </div>
+                    </div>
                   </div>
+
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => fetchRates(convertFrom)}
+                    disabled={ratesLoading}
+                  >
+                    {ratesLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+                    Refresh Rates
+                  </Button>
                 </div>
               </motion.div>
             </div>
@@ -351,7 +448,9 @@ const Payments = () => {
                 {filteredTransactions.length === 0 ? (
                   <div className="bg-card rounded-xl p-12 border text-center">
                     <AlertCircle className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground">No transactions found.</p>
+                    <p className="text-muted-foreground">
+                      {!isAuthenticated ? "Please log in to view your transactions." : "No transactions found."}
+                    </p>
                   </div>
                 ) : (
                   filteredTransactions.map((txn) => {
@@ -367,7 +466,7 @@ const Payments = () => {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div className="flex items-start gap-4 min-w-0">
                             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                              {txn.method === "Mastercard" ? <CreditCard className="w-5 h-5 text-primary" /> : <Smartphone className="w-5 h-5 text-primary" />}
+                              {txn.method === "Mobile Money" ? <Smartphone className="w-5 h-5 text-primary" /> : <CreditCard className="w-5 h-5 text-primary" />}
                             </div>
                             <div className="min-w-0">
                               <p className="font-semibold text-card-foreground text-sm truncate">{txn.description}</p>
@@ -398,6 +497,7 @@ const Payments = () => {
                                 customerName: user?.fullName || "Customer",
                                 customerEmail: user?.email || "",
                               })}>
+                                <Download className="w-4 h-4 text-muted-foreground" />
                               </Button>
                               {txn.status === "completed" && (
                                 <Button variant="ghost" size="icon" className="h-8 w-8" title="Request Refund" onClick={() => handleRefundRequest(txn.id)}>
