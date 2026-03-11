@@ -11,12 +11,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
+import { useWebAuthn } from "@/hooks/useWebAuthn";
 import {
   LayoutDashboard, FileText, CalendarDays, Package, FolderOpen, Settings,
   User, LogOut, Upload, Edit, CheckCircle, Clock, AlertCircle, XCircle,
   Plane, ArrowRight, MessageCircle, Bell, ChevronRight, Truck, Eye,
   BookOpen, CreditCard, DollarSign, Shield, Lock, Mail, Smartphone,
-  BellRing, Trash2, MapPin, Search, Plus, Download
+  BellRing, Trash2, MapPin, Search, Plus, Download, Fingerprint, Star
 } from "lucide-react";
 import logo from "@/assets/logo.jpeg";
 import { generateReceiptPDF } from "@/lib/generateReceipt";
