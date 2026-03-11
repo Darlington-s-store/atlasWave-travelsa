@@ -1391,18 +1391,50 @@ function SettingsTab({ user, form, setForm, editing, setEditing, handleSave, log
           )}
 
           {settingsTab === "security" && (
-            <div className="bg-background rounded-xl border p-6 space-y-6">
-              <h3 className="font-display font-semibold text-foreground">Account Security</h3>
-              <div className="flex items-center justify-between py-4 border-b">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center"><Lock className="w-5 h-5 text-muted-foreground" /></div>
-                  <div>
-                    <p className="font-medium text-foreground text-sm">Password</p>
-                    <p className="text-xs text-muted-foreground">Change your account password</p>
+            <div className="space-y-4">
+              <div className="bg-background rounded-xl border p-6 space-y-6">
+                <h3 className="font-display font-semibold text-foreground">Account Security</h3>
+                <div className="flex items-center justify-between py-4 border-b">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center"><Lock className="w-5 h-5 text-muted-foreground" /></div>
+                    <div>
+                      <p className="font-medium text-foreground text-sm">Password</p>
+                      <p className="text-xs text-muted-foreground">Change your account password</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" asChild><Link to="/forgot-password">Change</Link></Button>
+                </div>
+              </div>
+
+              {isSupported && (
+                <div className="bg-background rounded-xl border p-6 space-y-4">
+                  <h3 className="font-display font-semibold text-foreground">Biometric Authentication</h3>
+                  <p className="text-sm text-muted-foreground">Use fingerprint or face recognition for faster sign-in on this device.</p>
+                  <div className="flex items-center justify-between py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Fingerprint className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground text-sm">
+                          {biometricRegistered ? "Biometric login enabled" : "Enable biometric login"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {biometricRegistered ? "Tap to disable" : "Set up fingerprint or face recognition"}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant={biometricRegistered ? "outline" : "default"}
+                      size="sm"
+                      onClick={handleBiometricToggle}
+                      disabled={registering}
+                    >
+                      {registering ? "Setting up..." : biometricRegistered ? "Disable" : "Enable"}
+                    </Button>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" asChild><Link to="/forgot-password">Change</Link></Button>
-              </div>
+              )}
             </div>
           )}
 
