@@ -56,6 +56,7 @@ import AdminReports from "./pages/admin/AdminReports";
 import AdminRoles from "./pages/admin/AdminRoles";
 import AdminSecurity from "./pages/admin/AdminSecurity";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminDestinations from "./pages/admin/AdminDestinations";
 import Payments from "./pages/Payments";
 import ShipmentTracking from "./pages/ShipmentTracking";
 import VideoGallery from "./pages/VideoGallery";
