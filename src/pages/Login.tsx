@@ -2,10 +2,13 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { lovable } from "@/integrations/lovable/index";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
+import { useWebAuthn } from "@/hooks/useWebAuthn";
+import { Fingerprint } from "lucide-react";
 import logo from "@/assets/logo.jpeg";
 
 const Login = () => {
@@ -14,6 +17,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { isSupported, authenticating, authenticate, hasAnyCredential } = useWebAuthn();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,9 +33,29 @@ const Login = () => {
     }
   };
 
+  const handleBiometricLogin = async () => {
+    const userId = await authenticate();
+    if (!userId) {
+      toast({ title: "Biometric login failed", description: "No matching credential found. Please use email/password.", variant: "destructive" });
+      return;
+    }
+
+    // We have the user ID from WebAuthn - get their session token from stored refresh
+    const storedSession = localStorage.getItem(`biometric_session_${userId}`);
+    if (storedSession) {
+      const { refresh_token } = JSON.parse(storedSession);
+      const { error } = await supabase.auth.refreshSession({ refresh_token });
+      if (!error) {
+        toast({ title: "Welcome back!", description: "Signed in with biometrics." });
+        navigate("/dashboard");
+        return;
+      }
+    }
+    toast({ title: "Session expired", description: "Please sign in with email/password to re-enable biometric login.", variant: "destructive" });
+  };
+
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
-      {/* Left Panel - Hero */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-primary overflow-hidden">
         <div className="absolute inset-0 bg-[var(--hero-overlay)]" />
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
@@ -53,7 +77,6 @@ const Login = () => {
         </div>
       </div>
 
-      {/* Right Panel - Form */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12 bg-background">
         <div className="w-full max-w-md">
           <Link to="/" className="flex lg:hidden items-center gap-3 mb-10">
@@ -65,6 +88,24 @@ const Login = () => {
             <h1 className="font-display text-3xl font-bold text-foreground">Welcome back</h1>
             <p className="text-muted-foreground mt-2">Enter your credentials to access your account</p>
           </div>
+
+          {isSupported && hasAnyCredential() && (
+            <div className="mb-6">
+              <Button
+                variant="outline"
+                className="w-full h-14 text-base gap-3 border-2 border-primary/20 hover:border-primary/50"
+                onClick={handleBiometricLogin}
+                disabled={authenticating}
+              >
+                <Fingerprint className="w-6 h-6 text-primary" />
+                {authenticating ? "Verifying..." : "Sign in with Biometrics"}
+              </Button>
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+                <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-3 text-muted-foreground">or use email</span></div>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
