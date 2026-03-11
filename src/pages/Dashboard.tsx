@@ -31,6 +31,7 @@ const sidebarItems = [
   { id: "invoices", label: "Invoices", icon: FileText },
   { id: "shipments", label: "Logistics", icon: Package },
   { id: "bookings", label: "Travel", icon: Plane },
+  { id: "reviews", label: "Reviews", icon: MessageCircle },
   { id: "documents", label: "Documents", icon: FolderOpen },
   { id: "settings", label: "Settings", icon: Settings },
 ];
