@@ -1,8 +1,4 @@
-declare const Deno: { env: { get(key: string): string | undefined } };
-
-// @ts-ignore Deno URL imports
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-// @ts-ignore Deno URL imports
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -21,7 +17,11 @@ serve(async (req: Request) => {
     if (!PAYSTACK_SECRET) throw new Error("PAYSTACK_SECRET_KEY not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
 
     const { action, ...body } = await req.json();
 
@@ -36,7 +36,6 @@ serve(async (req: Request) => {
         });
       }
 
-      // Amount in kobo/pesewas (smallest unit)
       const amountInSmallest = Math.round(Number(amount) * 100);
 
       const res = await fetch("https://api.paystack.co/transaction/initialize", {
@@ -100,11 +99,6 @@ serve(async (req: Request) => {
       const status = txn.status === "success" ? "completed" : txn.status === "failed" ? "failed" : "pending";
       const amountMajor = txn.amount / 100;
 
-      // Save to database
-      const supabase = createClient(supabaseUrl, supabaseKey, {
-        auth: { persistSession: false, autoRefreshToken: false },
-      });
-
       const userId = txn.metadata?.user_id;
       if (userId) {
         const { data: payment, error } = await supabase.from("payments").insert({
@@ -119,6 +113,35 @@ serve(async (req: Request) => {
 
         if (error) {
           console.error("Failed to save payment:", error);
+        }
+
+        // Send notification after successful payment
+        if (status === "completed") {
+          try {
+            const notifUrl = `${supabaseUrl}/functions/v1/send-notification`;
+            await fetch(notifUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${serviceRoleKey}`,
+              },
+              body: JSON.stringify({
+                type: "invoice_ready",
+                userId,
+                channel: "both",
+                data: {
+                  invoiceNumber: payment?.id?.slice(0, 8) || reference,
+                  amount: amountMajor.toFixed(2),
+                  currency: txn.currency || "GHS",
+                  description: txn.metadata?.description || "Service Payment",
+                  paymentMethod: txn.channel === "mobile_money" ? "Mobile Money" : "Card",
+                  date: new Date().toLocaleDateString(),
+                },
+              }),
+            });
+          } catch (notifErr) {
+            console.error("Failed to send payment notification:", notifErr);
+          }
         }
 
         return new Response(JSON.stringify({
