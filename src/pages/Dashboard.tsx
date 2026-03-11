@@ -1279,6 +1279,28 @@ function DocumentsTab({ documents, onRefresh, userId }: { documents: any[]; onRe
 function SettingsTab({ user, form, setForm, editing, setEditing, handleSave, logout, navigate }: any) {
   const [settingsTab, setSettingsTab] = useState("personal");
   const [notifications, setNotifications] = useState({ email: true, desktop: true, sms: false });
+  const { isSupported, registering, register, hasRegisteredCredential, removeCredential } = useWebAuthn();
+  const biometricRegistered = user ? hasRegisteredCredential(user.id) : false;
+
+  const handleBiometricToggle = async () => {
+    if (biometricRegistered) {
+      removeCredential(user.id);
+      // Remove stored session
+      localStorage.removeItem(`biometric_session_${user.id}`);
+      toast({ title: "Biometric login disabled" });
+    } else {
+      const success = await register(user.id, user.fullName || user.email);
+      if (success) {
+        // Store refresh token for biometric re-auth
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.refresh_token) {
+          localStorage.setItem(`biometric_session_${user.id}`, JSON.stringify({
+            refresh_token: session.refresh_token,
+          }));
+        }
+      }
+    }
+  };
 
   const settingsTabs = [
     { id: "personal", label: "Personal Info", icon: User },
