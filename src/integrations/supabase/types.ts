@@ -224,6 +224,57 @@ export type Database = {
         }
         Relationships: []
       }
+      destinations: {
+        Row: {
+          active: boolean
+          category: string
+          country: string
+          created_at: string
+          currency: string
+          description: string | null
+          featured: boolean
+          highlights: string[]
+          id: string
+          image_url: string | null
+          name: string
+          price_from: number | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string
+          country: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          featured?: boolean
+          highlights?: string[]
+          id?: string
+          image_url?: string | null
+          name: string
+          price_from?: number | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          country?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          featured?: boolean
+          highlights?: string[]
+          id?: string
+          image_url?: string | null
+          name?: string
+          price_from?: number | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           category: string
