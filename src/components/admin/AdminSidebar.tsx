@@ -16,32 +16,33 @@ import { NavLink } from "@/components/NavLink";
 import {
   LayoutDashboard, Users, FileText, PenTool, LogOut, CreditCard, Bot, Package,
   RotateCcw, BarChart3, Plane, Hotel, Tag, Globe, Briefcase, GraduationCap,
-  Ship, Calendar, Star, Bell, Newspaper, Shield, Settings, Lock, MapPin, Video,
+  MapPin, Calendar, Star, Bell, Newspaper, Shield, Video, Map,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.jpeg";
 
 const navGroups = [
   {
-    label: "Overview",
+    label: "Main",
     items: [
       { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
       { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
     ],
   },
   {
-    label: "Users & Roles",
+    label: "People",
     items: [
       { title: "Users", url: "/admin/users", icon: Users },
-      { title: "Roles & Permissions", url: "/admin/roles", icon: Shield },
+      { title: "Roles & Access", url: "/admin/roles", icon: Shield },
     ],
   },
   {
-    label: "Travel & Bookings",
+    label: "Travel",
     items: [
-      { title: "Flight Bookings", url: "/admin/flights", icon: Plane },
-      { title: "Hotel Bookings", url: "/admin/hotels", icon: Hotel },
-      { title: "Deals & Packages", url: "/admin/deals", icon: Tag },
+      { title: "Destinations", url: "/admin/destinations", icon: Map },
+      { title: "Flights", url: "/admin/flights", icon: Plane },
+      { title: "Hotels", url: "/admin/hotels", icon: Hotel },
+      { title: "Deals", url: "/admin/deals", icon: Tag },
     ],
   },
   {
@@ -49,7 +50,7 @@ const navGroups = [
     items: [
       { title: "Visa Applications", url: "/admin/applications", icon: Globe },
       { title: "Work Permits", url: "/admin/work-permits", icon: Briefcase },
-      { title: "Credential Evals", url: "/admin/credentials", icon: GraduationCap },
+      { title: "Credentials", url: "/admin/credentials", icon: GraduationCap },
     ],
   },
   {
@@ -60,7 +61,7 @@ const navGroups = [
     ],
   },
   {
-    label: "Services",
+    label: "Bookings",
     items: [
       { title: "Consultations", url: "/admin/consultations", icon: Calendar },
       { title: "Documentation", url: "/admin/documentation", icon: FileText },
@@ -78,23 +79,16 @@ const navGroups = [
     items: [
       { title: "Reviews", url: "/admin/reviews", icon: Star },
       { title: "Notifications", url: "/admin/notifications", icon: Bell },
-      { title: "Chatbot / Support", url: "/admin/chatbot", icon: Bot },
+      { title: "Chatbot", url: "/admin/chatbot", icon: Bot },
     ],
   },
   {
-    label: "Content & Reports",
+    label: "Content",
     items: [
-      { title: "Content / CMS", url: "/admin/content", icon: PenTool },
+      { title: "CMS", url: "/admin/content", icon: PenTool },
       { title: "Videos", url: "/admin/videos", icon: Video },
-      { title: "Blog / News", url: "/admin/blog", icon: Newspaper },
+      { title: "Blog", url: "/admin/blog", icon: Newspaper },
       { title: "Reports", url: "/admin/reports", icon: BarChart3 },
-    ],
-  },
-  {
-    label: "System",
-    items: [
-      { title: "Security", url: "/admin/security", icon: Lock },
-      { title: "Settings", url: "/admin/settings", icon: Settings },
     ],
   },
 ];
@@ -106,15 +100,11 @@ export function AdminSidebar() {
   const navigate = useNavigate();
 
   const handleNavSelection = () => {
-    if (isMobile) {
-      setOpenMobile(false);
-    }
+    if (isMobile) setOpenMobile(false);
   };
 
   const handleLogout = () => {
-    if (isMobile) {
-      setOpenMobile(false);
-    }
+    if (isMobile) setOpenMobile(false);
     adminLogout();
     navigate("/admin/login");
   };
@@ -122,30 +112,19 @@ export function AdminSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarContent className="pt-2 overflow-y-auto">
-        {/* Brand */}
         <div className="mb-1 px-4 py-5 pr-12 md:pr-4">
           {!collapsed ? (
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-white shadow-sm border border-sidebar-border flex items-center justify-center shrink-0 overflow-hidden">
-                <img
-                  src={logo}
-                  alt="AtlastWave Travel and Tour"
-                  className="w-full h-full object-cover"
-                />
+                <img src={logo} alt="AtlastWave" className="w-full h-full object-cover" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-[15px] font-bold text-sidebar-foreground tracking-tight leading-none">AtlastWave Travel and Tour</h1>
-                <p className="text-[10px] text-sidebar-foreground/55 uppercase tracking-[0.18em] mt-1">
-                  Admin Portal
-                </p>
+                <h1 className="text-[15px] font-bold text-sidebar-foreground tracking-tight leading-none">AtlastWave</h1>
+                <p className="text-[10px] text-sidebar-foreground/55 uppercase tracking-[0.18em] mt-1">Admin Portal</p>
               </div>
             </div>
           ) : (
-            <img
-              src={logo}
-              alt="AtlastWave Travel and Tour"
-              className="w-8 h-8 rounded-lg object-cover mx-auto border border-sidebar-border bg-white"
-            />
+            <img src={logo} alt="AtlastWave" className="w-8 h-8 rounded-lg object-cover mx-auto border border-sidebar-border bg-white" />
           )}
         </div>
 
