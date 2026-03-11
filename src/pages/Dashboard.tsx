@@ -1053,7 +1053,125 @@ function ShipmentsTab({ shipments }: { shipments: any[] }) {
   );
 }
 
-// --- DOCUMENTS TAB ---
+// --- REVIEWS TAB ---
+function ReviewsTab({ userId, userName, userEmail }: { userId: string; userName: string; userEmail: string }) {
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState({ rating: 5, content: "" });
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const fetch = async () => {
+      setLoading(true);
+      const { data } = await supabase.from("reviews").select("*").eq("user_id", userId).order("created_at", { ascending: false });
+      setReviews(data || []);
+      setLoading(false);
+    };
+    fetch();
+  }, [userId]);
+
+  const handleSubmit = async () => {
+    if (!form.content.trim()) {
+      toast({ title: "Please write a review", variant: "destructive" });
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.from("reviews").insert({
+      user_id: userId,
+      name: userName,
+      email: userEmail,
+      rating: form.rating,
+      content: form.content,
+      status: "pending",
+    });
+    setSubmitting(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Review submitted!", description: "Your review will be visible after admin approval." });
+    setDialogOpen(false);
+    setForm({ rating: 5, content: "" });
+    const { data } = await supabase.from("reviews").select("*").eq("user_id", userId).order("created_at", { ascending: false });
+    setReviews(data || []);
+  };
+
+  const reviewStatusConfig: Record<string, { color: string; label: string }> = {
+    pending: { color: "bg-amber-100 text-amber-800 border-amber-200", label: "Pending Review" },
+    approved: { color: "bg-emerald-100 text-emerald-800 border-emerald-200", label: "Published" },
+    rejected: { color: "bg-red-100 text-red-800 border-red-200", label: "Not Approved" },
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-xl font-bold text-foreground">My Reviews</h2>
+        <Button size="sm" onClick={() => setDialogOpen(true)}>
+          <Plus className="w-4 h-4 mr-2" /> Write Review
+        </Button>
+      </div>
+
+      {loading ? (
+        <p className="text-muted-foreground">Loading...</p>
+      ) : reviews.length === 0 ? (
+        <div className="bg-background rounded-xl border p-12 text-center">
+          <Star className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+          <h3 className="font-display font-semibold text-foreground mb-1">No reviews yet</h3>
+          <p className="text-sm text-muted-foreground mb-4">Share your experience with AtlastWave services.</p>
+          <Button size="sm" onClick={() => setDialogOpen(true)}>Write a Review</Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {reviews.map((r: any) => {
+            const cfg = reviewStatusConfig[r.status] || reviewStatusConfig.pending;
+            return (
+              <div key={r.id} className="p-5 rounded-xl border bg-background hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} className={`w-4 h-4 ${i < r.rating ? "text-amber-400 fill-amber-400" : "text-muted-foreground/30"}`} />
+                    ))}
+                  </div>
+                  <Badge className={cfg.color + " border text-[10px]"}>{cfg.label}</Badge>
+                </div>
+                <p className="text-sm text-foreground">{r.content}</p>
+                <p className="text-xs text-muted-foreground mt-2">{new Date(r.created_at).toLocaleDateString()}</p>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader><DialogTitle>Write a Review</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Rating</Label>
+              <div className="flex gap-1">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <button key={i} type="button" onClick={() => setForm(f => ({ ...f, rating: i + 1 }))}>
+                    <Star className={`w-7 h-7 cursor-pointer transition-colors ${i < form.rating ? "text-amber-400 fill-amber-400" : "text-muted-foreground/30 hover:text-amber-300"}`} />
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Your Review</Label>
+              <Textarea value={form.content} onChange={e => setForm(f => ({ ...f, content: e.target.value }))} rows={4} placeholder="Share your experience..." />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+            <Button onClick={handleSubmit} disabled={submitting}>{submitting ? "Submitting..." : "Submit Review"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 function DocumentsTab({ documents, onRefresh, userId }: { documents: any[]; onRefresh: () => void; userId: string }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
