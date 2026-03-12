@@ -1,0 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Background: #FFFFFF */
+    --background: 0 0% 100%;
+    /* Text: #2C3E50 */
+    --foreground: 210 29% 24%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 210 29% 24%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 29% 24%;
+
+    /* Main Color: #0A3D62 */
+    --primary: 205 82% 21%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: #1ABC9C */
+    --secondary: 168 76% 42%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 210 13% 45%;
+
+    /* Accent: #F4B400 */
+    --accent: 44 100% 48%;
+    --accent-foreground: 205 82% 12%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 18% 90%;
+    --input: 210 18% 90%;
+    --ring: 205 82% 21%;
+
+    --radius: 0.75rem;
+
+    --hero-overlay: linear-gradient(135deg, hsla(205, 82%, 15%, 0.92) 0%, hsla(205, 60%, 25%, 0.7) 60%, hsla(44, 100%, 48%, 0.1) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(44, 100%, 48%), hsl(38, 100%, 50%));
+    --gradient-primary: linear-gradient(135deg, hsl(205, 82%, 21%), hsl(168, 76%, 42%));
+    --shadow-card: 0 10px 30px -5px hsla(205, 82%, 21%, 0.05), 0 4px 10px -2px hsla(205, 82%, 21%, 0.02);
+    --shadow-card-hover: 0 20px 40px -10px hsla(205, 82%, 21%, 0.12), 0 8px 16px -4px hsla(205, 82%, 21%, 0.05);
+    --shadow-accent: 0 12px 24px -6px hsla(44, 100%, 48%, 0.25);
+
+    /* Sidebar follows main color palette */
+    --sidebar-background: 205 82% 21%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 44 100% 48%;
+    --sidebar-primary-foreground: 205 82% 21%;
+    --sidebar-accent: 205 60% 28%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 205 60% 28%;
+    --sidebar-ring: 44 100% 48%;
+  }
+
+  .dark {
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 38 92% 50%;
+    --primary-foreground: 221 39% 11%;
+    --secondary: 222 20% 18%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 222 20% 14%;
+    --muted-foreground: 215 16% 65%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 221 39% 11%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 222 20% 18%;
+    --input: 222 20% 18%;
+    --ring: 38 92% 50%;
+    --sidebar-background: 222 47% 4%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 38 92% 50%;
+    --sidebar-primary-foreground: 221 39% 11%;
+    --sidebar-accent: 222 20% 12%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 222 20% 12%;
+    --sidebar-ring: 38 92% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    /* Professional human touch: prevent layout shift and set default selection */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display tracking-tight;
+  }
+
+  ::selection {
+    @apply bg-accent/30 text-foreground;
+  }
+}
+
+@layer components {
+
+  /* Premium Human-developed Scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full transition-colors;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/40;
+  }
+}
+
+@layer utilities {
+  .text-gradient-accent {
+    background: var(--gradient-accent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .premium-blur {
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+  }
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 30s linear infinite;
+}
+
+.animate-scroll:hover {
+  animation-play-state: paused;
+}
