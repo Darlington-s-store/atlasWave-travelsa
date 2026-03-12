@@ -193,9 +193,8 @@ const Payments = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const reference = params.get("reference") || params.get("trxref");
-    const shouldVerify = params.get("verify");
 
-    if (reference && shouldVerify) {
+    if (reference) {
       const verify = async () => {
         try {
           const { data, error } = await supabase.functions.invoke("paystack", {
