@@ -176,8 +176,14 @@ const Payments = () => {
       if (data?.error) throw new Error(data.error);
 
       if (data?.authorization_url) {
-        // Redirect to Paystack checkout
-        window.location.href = data.authorization_url;
+        // In preview (iframe), open checkout in a new tab because Paystack blocks embedded frames
+        const isEmbeddedPreview = window.self !== window.top;
+        if (isEmbeddedPreview) {
+          const checkoutTab = window.open(data.authorization_url, "_blank", "noopener,noreferrer");
+          if (!checkoutTab) window.location.assign(data.authorization_url);
+        } else {
+          window.location.assign(data.authorization_url);
+        }
       } else {
         throw new Error("No authorization URL received");
       }
@@ -193,9 +199,8 @@ const Payments = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const reference = params.get("reference") || params.get("trxref");
-    const shouldVerify = params.get("verify");
 
-    if (reference && shouldVerify) {
+    if (reference) {
       const verify = async () => {
         try {
           const { data, error } = await supabase.functions.invoke("paystack", {
