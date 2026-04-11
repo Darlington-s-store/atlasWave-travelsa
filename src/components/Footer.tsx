@@ -12,7 +12,7 @@ const Footer = () => {
             <div className="flex items-center gap-2 mb-4">
               <img src={logo} alt="AtlasWave" className="w-8 h-8 rounded-full object-cover" />
               <span className="font-display text-xl font-bold">
-                Atlas<span className="text-gradient-accent">Wave</span>
+                Atlas<span className="text-gradient-accent">Wave Travel and Tour</span>
               </span>
             </div>
             <p className="text-sm text-primary-foreground/60 leading-relaxed">

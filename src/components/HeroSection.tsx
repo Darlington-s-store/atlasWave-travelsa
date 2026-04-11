@@ -73,6 +73,18 @@ const HeroSection = () => {
   const safeCurrent = slides.length > 0 ? current % slides.length : 0;
   const slide = slides[safeCurrent];
 
+  // Fallback slide to show while loading
+  const displaySlide = slide || {
+    image: heroTravel,
+    badge: "",
+    title: "",
+    highlight: "",
+    titleEnd: "",
+    desc: "",
+    cta: { label: "Get Started", link: "/consultation" },
+    ctaSecondary: { label: "Learn More", link: "/about" },
+  };
+
   useEffect(() => {
     if (slides.length === 0) {
       return;
@@ -101,10 +113,6 @@ const HeroSection = () => {
     setCurrent((previous) => (previous + direction + slides.length) % slides.length);
   };
 
-  if (slides.length === 0 || !slide) {
-    return null;
-  }
-
   return (
     <section className="relative flex min-h-screen min-h-[100svh] items-center overflow-hidden">
       {heroVideoSrc ? (
@@ -132,7 +140,7 @@ const HeroSection = () => {
             transition={{ duration: 0.8 }}
             className="absolute inset-0"
           >
-            <img src={slide.image} alt="" className="h-full w-full object-cover" />
+            <img src={displaySlide.image} alt="" className="h-full w-full object-cover" />
             <div className="absolute inset-0" style={{ background: "var(--hero-overlay)" }} />
           </motion.div>
         </AnimatePresence>
@@ -171,32 +179,30 @@ const HeroSection = () => {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5 }}
             >
-              <span className="mb-5 inline-block rounded-full border border-accent/30 bg-accent/20 px-3 py-1.5 text-xs font-semibold text-accent backdrop-blur-sm sm:mb-6 sm:px-4 sm:text-sm">
-                {slide.badge}
-              </span>
-
               <h1
-                className="mb-5 font-display text-[2.25rem] font-bold leading-[1.05] sm:mb-6 sm:text-5xl md:text-6xl lg:text-7xl"
+                className="mb-6 font-display text-3xl font-bold leading-tight sm:mb-7 sm:text-5xl md:text-6xl lg:text-7xl"
                 style={{ color: "hsl(var(--primary-foreground))" }}
               >
-                {slide.title} <span className="text-gradient-accent">{slide.highlight}</span> {slide.titleEnd}
+                {displaySlide.title}{" "}
+                <span className="text-gradient-accent">{displaySlide.highlight}</span>{" "}
+                {displaySlide.titleEnd}
               </h1>
 
               <p
-                className="mx-auto mb-8 max-w-2xl text-base leading-relaxed sm:mb-10 sm:text-lg md:text-xl"
-                style={{ color: "hsl(var(--primary-foreground) / 0.75)" }}
+                className="mx-auto mb-8 max-w-2xl text-base leading-relaxed sm:mb-10 sm:text-lg"
+                style={{ color: "hsl(var(--primary-foreground) / 0.8)" }}
               >
-                {slide.desc}
+                {displaySlide.desc}
               </p>
 
               <div className="flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
                 <Button variant="hero" size="lg" className="w-full sm:w-auto" asChild>
-                  <Link to={slide.cta.link}>
-                    {slide.cta.label} <ArrowRight className="h-5 w-5" />
+                  <Link to={displaySlide.cta.link}>
+                    {displaySlide.cta.label} <ArrowRight className="h-5 w-5" />
                   </Link>
                 </Button>
                 <Button variant="hero-outline" size="lg" className="w-full sm:w-auto" asChild>
-                  <Link to={slide.ctaSecondary.link}>{slide.ctaSecondary.label}</Link>
+                  <Link to={displaySlide.ctaSecondary.link}>{displaySlide.ctaSecondary.label}</Link>
                 </Button>
               </div>
             </motion.div>
@@ -204,34 +210,7 @@ const HeroSection = () => {
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 z-10 hidden lg:block">
-        <div className="container">
-          <div className="-mb-20 grid grid-cols-3 gap-4">
-            {quickLinks.map((card, index) => (
-              <motion.div
-                key={card.title}
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
-              >
-                <Link
-                  to={card.link}
-                  className="group flex items-center gap-4 rounded-xl border bg-card p-6 shadow-card-hover transition-all duration-300 hover:shadow-accent/20"
-                >
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-accent/10 transition-colors group-hover:bg-accent/20">
-                    <card.icon className="h-7 w-7 text-accent" />
-                  </div>
-                  <div>
-                    <h3 className="font-display font-semibold text-card-foreground">{card.title}</h3>
-                    <p className="text-sm text-muted-foreground">{card.desc}</p>
-                  </div>
-                  <ArrowRight className="ml-auto h-5 w-5 text-muted-foreground transition-colors group-hover:text-accent" />
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </div>
+
     </section>
   );
 };

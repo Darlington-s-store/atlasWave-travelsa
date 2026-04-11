@@ -1,0 +1,21 @@
+-- This migration adds an admin role assignment
+-- NOTE: This assumes a user with ID exists in auth.users
+-- 
+-- To use this:
+-- 1. Create the admin user first at: https://supabase.com/dashboard/project/iictbacogzmubagkwdeb/auth/users
+--    Email: admin@atlastwave.com
+--    Password: Admin@atlaswave
+-- 2. Copy the user ID from the auth users list
+-- 3. Replace <ADMIN_USER_ID> below with the actual user ID
+-- 4. Then run this migration
+
+-- Uncomment and fill in the admin user ID from your auth.users table:
+-- 
+-- INSERT INTO public.user_roles (user_id, role)
+-- VALUES ('<ADMIN_USER_ID>'::uuid, 'admin'::app_role)
+-- ON CONFLICT (user_id, role) DO NOTHING;
+
+-- Also ensure the profile entry exists:
+-- INSERT INTO public.profiles (id, full_name, updated_at)
+-- VALUES ('<ADMIN_USER_ID>'::uuid, 'Admin', now())
+-- ON CONFLICT (id) DO UPDATE SET updated_at = now();

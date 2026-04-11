@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 const BRAND_NAME = "AtlastWave Travel and Tour";
-const DEFAULT_SMS_SENDER = "AtlastWave";
+const DEFAULT_SMS_SENDER = "AtlastWave Travel and Tour";
 
 type NotificationChannel = "email" | "sms" | "both";
 
