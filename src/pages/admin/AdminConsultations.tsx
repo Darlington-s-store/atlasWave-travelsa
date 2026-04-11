@@ -8,11 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import {
   Search, Calendar, MoreHorizontal, Eye, Pencil, Inbox, Clock,
-  CheckCircle, XCircle, Video, Users, Link2,
+  CheckCircle, XCircle, Video, Users, Trash2, ArrowLeft, Phone, Mail,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,11 +34,12 @@ const AdminConsultations = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
 
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [viewingConsultation, setViewingConsultation] = useState<any>(null);
+  const [selectedConsultation, setSelectedConsultation] = useState<any>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingConsultation, setEditingConsultation] = useState<any>(null);
-  const [editForm, setEditForm] = useState({ status: "", notes: "", meeting_link: "" });
+  const [editForm, setEditForm] = useState({ status: "", notes: "", meeting_link: "", date: "", time: "" });
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingConsultation, setDeletingConsultation] = useState<any>(null);
 
   useEffect(() => { fetchConsultations(); }, []);
 
@@ -55,36 +56,45 @@ const AdminConsultations = () => {
     const previousStatus = editingConsultation.status;
     const updates: any = { status: editForm.status };
     if (editForm.notes.trim()) updates.notes = editForm.notes;
+    if (editForm.date.trim()) updates.date = editForm.date;
+    if (editForm.time.trim()) updates.time = editForm.time;
     const { error } = await supabase.from("consultations").update(updates).eq("id", editingConsultation.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Consultation Updated" });
 
-    // Send email notification if status changed
     if (previousStatus !== editForm.status) {
       const recipientEmail = editingConsultation.email || undefined;
       const recipientPhone = editingConsultation.phone || undefined;
       const recipientName = `${editingConsultation.first_name || ""} ${editingConsultation.last_name || ""}`.trim() || "User";
-      
       const notificationType = editForm.status === "cancelled" ? "consultation_cancelled" : "consultation_confirmed";
       sendNotification({
         type: notificationType,
         userId: editingConsultation.user_id,
-        recipientEmail,
-        recipientPhone,
-        recipientName,
+        recipientEmail, recipientPhone, recipientName,
         channel: "both",
         data: {
-          type: editingConsultation.type,
-          date: editingConsultation.date,
-          time: editingConsultation.time,
-          duration: `${editingConsultation.duration} min`,
-          previousStatus,
-          newStatus: editForm.status,
+          type: editingConsultation.type, date: editForm.date || editingConsultation.date,
+          time: editForm.time || editingConsultation.time, duration: `${editingConsultation.duration} min`,
+          previousStatus, newStatus: editForm.status,
         },
       });
     }
 
     setEditDialogOpen(false);
+    if (selectedConsultation?.id === editingConsultation.id) {
+      setSelectedConsultation({ ...editingConsultation, ...updates });
+    }
+    fetchConsultations();
+  };
+
+  const handleDelete = async () => {
+    if (!deletingConsultation) return;
+    const { error } = await supabase.from("consultations").delete().eq("id", deletingConsultation.id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Consultation Deleted" });
+    setDeleteDialogOpen(false);
+    setDeletingConsultation(null);
+    if (selectedConsultation?.id === deletingConsultation.id) setSelectedConsultation(null);
     fetchConsultations();
   };
 
@@ -101,8 +111,126 @@ const AdminConsultations = () => {
 
   const upcomingCount = consultations.filter(c => c.status === "upcoming").length;
   const completedCount = consultations.filter(c => c.status === "completed").length;
+  const cancelledCount = consultations.filter(c => c.status === "cancelled").length;
   const totalRevenue = consultations.reduce((s, c) => s + Number(c.price || 0), 0);
 
+  // Detail view
+  if (selectedConsultation) {
+    const c = selectedConsultation;
+    return (
+      <AdminLayout>
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => setSelectedConsultation(null)}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
+              <h2 className="text-[22px] font-sans font-bold text-foreground tracking-tight">Consultation Details</h2>
+              <p className="text-muted-foreground text-[13px]">ID: {c.id.slice(0, 8)}...</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Client Info */}
+            <Card className="shadow-card rounded-xl border border-border/60">
+              <CardContent className="p-6 space-y-4">
+                <h3 className="font-bold text-foreground text-[15px]">Client Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">First Name</p><p className="text-[14px] font-semibold">{c.first_name || "—"}</p></div>
+                  <div><p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Last Name</p><p className="text-[14px] font-semibold">{c.last_name || "—"}</p></div>
+                  <div className="flex items-start gap-2"><Mail className="w-4 h-4 text-muted-foreground mt-0.5" /><div><p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Email</p><p className="text-[14px]">{c.email || "—"}</p></div></div>
+                  <div className="flex items-start gap-2"><Phone className="w-4 h-4 text-muted-foreground mt-0.5" /><div><p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Phone</p><p className="text-[14px]">{c.phone || "—"}</p></div></div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Consultation Info */}
+            <Card className="shadow-card rounded-xl border border-border/60">
+              <CardContent className="p-6 space-y-4">
+                <h3 className="font-bold text-foreground text-[15px]">Booking Details</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Type</p><Badge variant="outline" className="capitalize mt-1">{c.type}</Badge></div>
+                  <div><p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Status</p><span className={`inline-block mt-1 text-[11px] font-bold px-2.5 py-1 rounded-lg capitalize ${statusStyle[c.status] || "bg-muted"}`}>{c.status}</span></div>
+                  <div><p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Date</p><p className="text-[14px] font-semibold">{c.date}</p></div>
+                  <div><p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Time</p><p className="text-[14px] font-semibold">{c.time}</p></div>
+                  <div><p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Duration</p><p className="text-[14px] font-semibold">{c.duration} minutes</p></div>
+                  <div><p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Price</p><p className="text-[14px] font-bold">{formatCurrency(Number(c.price), DEFAULT_CURRENCY)}</p></div>
+                  <div><p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Timezone</p><p className="text-[14px]">{c.timezone}</p></div>
+                  <div><p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Created</p><p className="text-[14px]">{new Date(c.created_at).toLocaleString()}</p></div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Topic & Notes */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {c.topic && (
+              <Card className="shadow-card rounded-xl border border-border/60">
+                <CardContent className="p-6">
+                  <h3 className="font-bold text-foreground text-[15px] mb-2">Topic</h3>
+                  <p className="text-[13px] text-muted-foreground bg-muted/30 rounded-lg p-4">{c.topic}</p>
+                </CardContent>
+              </Card>
+            )}
+            {c.notes && (
+              <Card className="shadow-card rounded-xl border border-border/60">
+                <CardContent className="p-6">
+                  <h3 className="font-bold text-foreground text-[15px] mb-2">Notes</h3>
+                  <p className="text-[13px] text-muted-foreground bg-muted/30 rounded-lg p-4">{c.notes}</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <Button onClick={() => { setEditingConsultation(c); setEditForm({ status: c.status, notes: c.notes || "", meeting_link: "", date: c.date, time: c.time }); setEditDialogOpen(true); }}>
+              <Pencil className="w-4 h-4 mr-2" /> Edit Consultation
+            </Button>
+            <Button variant="destructive" onClick={() => { setDeletingConsultation(c); setDeleteDialogOpen(true); }}>
+              <Trash2 className="w-4 h-4 mr-2" /> Delete
+            </Button>
+          </div>
+        </div>
+
+        {/* Edit Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader><DialogTitle>Update Consultation</DialogTitle></DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2"><Label>Status</Label><Select value={editForm.status} onValueChange={v => setEditForm(f => ({ ...f, status: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{CONSULTATION_STATUSES.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-2"><Label>Date</Label><Input type="date" value={editForm.date} onChange={e => setEditForm(f => ({ ...f, date: e.target.value }))} /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2"><Label>Time</Label><Input type="time" value={editForm.time} onChange={e => setEditForm(f => ({ ...f, time: e.target.value }))} /></div>
+                <div className="space-y-2">
+                  <Label>Meeting Link</Label>
+                  <div className="flex gap-2">
+                    <Input value={editForm.meeting_link} onChange={e => setEditForm(f => ({ ...f, meeting_link: e.target.value }))} placeholder="https://meet..." className="flex-1" />
+                    <Button variant="outline" size="icon" onClick={() => setEditForm(f => ({ ...f, meeting_link: `https://meet.jit.si/aw-consultation-${editingConsultation?.id?.slice(0, 8)}` }))}><Video className="w-4 h-4" /></Button>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2"><Label>Notes</Label><Textarea value={editForm.notes} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} placeholder="Add consultation notes..." rows={3} /></div>
+            </div>
+            <DialogFooter><DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose><Button onClick={handleUpdate}>Save Changes</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader><DialogTitle>Delete Consultation</DialogTitle></DialogHeader>
+            <p className="text-[13px] text-muted-foreground py-2">Are you sure you want to delete this consultation? This action cannot be undone.</p>
+            <DialogFooter><DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose><Button variant="destructive" onClick={handleDelete}>Delete</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </AdminLayout>
+    );
+  }
+
+  // List view
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -111,10 +239,9 @@ const AdminConsultations = () => {
           <p className="text-[13px] text-muted-foreground mt-0.5">Manage specialist consultations, scheduling, and bookings.</p>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Total Consultations", value: consultations.length, icon: Calendar, bg: "bg-primary/10", color: "text-primary" },
+            { label: "Total", value: consultations.length, icon: Calendar, bg: "bg-primary/10", color: "text-primary" },
             { label: "Upcoming", value: upcomingCount, icon: Clock, bg: "bg-accent/15", color: "text-accent" },
             { label: "Completed", value: completedCount, icon: CheckCircle, bg: "bg-secondary/15", color: "text-secondary" },
             { label: "Revenue", value: formatCurrency(totalRevenue, DEFAULT_CURRENCY), icon: Users, bg: "bg-primary/10", color: "text-primary" },
@@ -129,7 +256,6 @@ const AdminConsultations = () => {
           ))}
         </div>
 
-        {/* Filters */}
         <Card className="shadow-card rounded-xl border border-border/60">
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row md:items-center gap-3">
@@ -140,18 +266,12 @@ const AdminConsultations = () => {
               <div className="flex gap-2 flex-wrap">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[140px] h-9 text-[13px]"><SelectValue placeholder="Status" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    {CONSULTATION_STATUSES.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
-                  </SelectContent>
+                  <SelectContent><SelectItem value="all">All Statuses</SelectItem>{CONSULTATION_STATUSES.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
                 </Select>
                 {consTypes.length > 0 && (
                   <Select value={typeFilter} onValueChange={setTypeFilter}>
                     <SelectTrigger className="w-[160px] h-9 text-[13px]"><SelectValue placeholder="Type" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      {consTypes.map(t => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}
-                    </SelectContent>
+                    <SelectContent><SelectItem value="all">All Types</SelectItem>{consTypes.map(t => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}</SelectContent>
                   </Select>
                 )}
               </div>
@@ -159,7 +279,6 @@ const AdminConsultations = () => {
           </CardContent>
         </Card>
 
-        {/* Table */}
         <Card className="shadow-card rounded-xl border border-border/60 overflow-hidden">
           <CardContent className="p-0">
             {loading ? (
@@ -186,7 +305,7 @@ const AdminConsultations = () => {
                   </TableHeader>
                   <TableBody>
                     {filtered.map(c => (
-                      <TableRow key={c.id} className="hover:bg-muted/20 transition-colors">
+                      <TableRow key={c.id} className="hover:bg-muted/20 transition-colors cursor-pointer" onClick={() => setSelectedConsultation(c)}>
                         <TableCell>
                           <div>
                             <span className="font-semibold text-[13px] text-foreground block">{c.first_name} {c.last_name}</span>
@@ -200,10 +319,12 @@ const AdminConsultations = () => {
                         <TableCell><span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg capitalize ${statusStyle[c.status] || "bg-muted"}`}>{c.status}</span></TableCell>
                         <TableCell>
                           <DropdownMenu>
-                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
+                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => e.stopPropagation()}><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => { setViewingConsultation(c); setViewDialogOpen(true); }}><Eye className="w-4 h-4 mr-2" /> View Details</DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => { setEditingConsultation(c); setEditForm({ status: c.status, notes: c.notes || "", meeting_link: "" }); setEditDialogOpen(true); }}><Pencil className="w-4 h-4 mr-2" /> Update</DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelectedConsultation(c); }}><Eye className="w-4 h-4 mr-2" /> View Details</DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setEditingConsultation(c); setEditForm({ status: c.status, notes: c.notes || "", meeting_link: "", date: c.date, time: c.time }); setEditDialogOpen(true); }}><Pencil className="w-4 h-4 mr-2" /> Update</DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeletingConsultation(c); setDeleteDialogOpen(true); }}><Trash2 className="w-4 h-4 mr-2" /> Delete</DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -220,66 +341,37 @@ const AdminConsultations = () => {
         </Card>
       </div>
 
-      {/* View Dialog */}
-      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader><DialogTitle>Consultation Details</DialogTitle></DialogHeader>
-          {viewingConsultation && (
-            <div className="space-y-3 py-2 text-[13px]">
-              <div className="grid grid-cols-2 gap-3">
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Client</span><span className="font-semibold">{viewingConsultation.first_name} {viewingConsultation.last_name}</span></div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Email</span>{viewingConsultation.email || "—"}</div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Phone</span>{viewingConsultation.phone || "—"}</div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Type</span><Badge variant="outline" className="capitalize">{viewingConsultation.type}</Badge></div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Date & Time</span>{viewingConsultation.date} · {viewingConsultation.time}</div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Duration</span>{viewingConsultation.duration} min</div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Price</span><span className="font-bold">{formatCurrency(Number(viewingConsultation.price), DEFAULT_CURRENCY)}</span></div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Status</span><span className={`text-[11px] font-bold px-2 py-0.5 rounded capitalize ${statusStyle[viewingConsultation.status]}`}>{viewingConsultation.status}</span></div>
-              </div>
-              {viewingConsultation.topic && (
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Topic</span>{viewingConsultation.topic}</div>
-              )}
-              {viewingConsultation.notes && (
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Notes</span><p className="bg-muted/30 rounded-lg p-3 text-[13px]">{viewingConsultation.notes}</p></div>
-              )}
+          <DialogHeader><DialogTitle>Update Consultation</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Status</Label><Select value={editForm.status} onValueChange={v => setEditForm(f => ({ ...f, status: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{CONSULTATION_STATUSES.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-2"><Label>Date</Label><Input type="date" value={editForm.date} onChange={e => setEditForm(f => ({ ...f, date: e.target.value }))} /></div>
             </div>
-          )}
-          <DialogFooter><DialogClose asChild><Button variant="outline">Close</Button></DialogClose></DialogFooter>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Time</Label><Input type="time" value={editForm.time} onChange={e => setEditForm(f => ({ ...f, time: e.target.value }))} /></div>
+              <div className="space-y-2">
+                <Label>Meeting Link</Label>
+                <div className="flex gap-2">
+                  <Input value={editForm.meeting_link} onChange={e => setEditForm(f => ({ ...f, meeting_link: e.target.value }))} placeholder="https://meet..." className="flex-1" />
+                  <Button variant="outline" size="icon" onClick={() => setEditForm(f => ({ ...f, meeting_link: `https://meet.jit.si/aw-consultation-${editingConsultation?.id?.slice(0, 8)}` }))}><Video className="w-4 h-4" /></Button>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2"><Label>Notes</Label><Textarea value={editForm.notes} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} placeholder="Add consultation notes..." rows={3} /></div>
+          </div>
+          <DialogFooter><DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose><Button onClick={handleUpdate}>Save Changes</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+      {/* Delete Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader><DialogTitle>Update Consultation</DialogTitle></DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={editForm.status} onValueChange={v => setEditForm(f => ({ ...f, status: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{CONSULTATION_STATUSES.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Meeting Link (optional)</Label>
-              <div className="flex gap-2">
-                <Input value={editForm.meeting_link} onChange={e => setEditForm(f => ({ ...f, meeting_link: e.target.value }))} placeholder="https://meet.google.com/..." className="flex-1" />
-                <Button variant="outline" size="icon" onClick={() => {
-                  const link = `https://meet.jit.si/aw-consultation-${editingConsultation?.id?.slice(0, 8)}`;
-                  setEditForm(f => ({ ...f, meeting_link: link }));
-                }}><Video className="w-4 h-4" /></Button>
-              </div>
-              <p className="text-[11px] text-muted-foreground">Click the video icon to auto-generate a Jitsi meeting link.</p>
-            </div>
-            <div className="space-y-2">
-              <Label>Notes</Label>
-              <Textarea value={editForm.notes} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} placeholder="Add consultation notes..." rows={3} />
-            </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-            <Button onClick={handleUpdate}>Save Changes</Button>
-          </DialogFooter>
+          <DialogHeader><DialogTitle>Delete Consultation</DialogTitle></DialogHeader>
+          <p className="text-[13px] text-muted-foreground py-2">Are you sure you want to delete this consultation? This action cannot be undone.</p>
+          <DialogFooter><DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose><Button variant="destructive" onClick={handleDelete}>Delete</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </AdminLayout>
