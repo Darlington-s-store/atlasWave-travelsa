@@ -179,6 +179,13 @@ const AdminUsers = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Email</p>
+                      <p className="text-[14px] font-semibold text-foreground">{selectedUser.email || "Not set"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-muted-foreground" />
                     <div>
                       <p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Phone</p>
@@ -189,7 +196,7 @@ const AdminUsers = () => {
                     <Clock className="w-4 h-4 text-muted-foreground" />
                     <div>
                       <p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Joined</p>
-                      <p className="text-[14px] font-semibold text-foreground">{new Date(selectedUser.created_at).toLocaleDateString()}</p>
+                      <p className="text-[14px] font-semibold text-foreground">{new Date(selectedUser.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -203,7 +210,7 @@ const AdminUsers = () => {
                     <Clock className="w-4 h-4 text-muted-foreground" />
                     <div>
                       <p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Last Updated</p>
-                      <p className="text-[14px] font-semibold text-foreground">{new Date(selectedUser.updated_at).toLocaleDateString()}</p>
+                      <p className="text-[14px] font-semibold text-foreground">{new Date(selectedUser.updated_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
                     </div>
                   </div>
                 </div>

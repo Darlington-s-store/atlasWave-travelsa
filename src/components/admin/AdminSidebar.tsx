@@ -9,55 +9,22 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
 import {
-  LayoutDashboard, Users, FileText, PenTool, LogOut, CreditCard, Bot, Package,
+  LayoutDashboard, Users, FileText, PenTool, CreditCard, Bot, Package,
   RotateCcw, BarChart3, Plane, Hotel, Tag, Globe, Briefcase, GraduationCap,
   MapPin, Calendar, Star, Bell, Newspaper, Shield, Video, Map,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.jpeg";
 
 const navGroups = [
   {
     label: "Main",
     items: [
-      { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
       { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
-    ],
-  },
-  {
-    label: "People",
-    items: [
-      { title: "Users", url: "/admin/users", icon: Users },
-      { title: "Roles & Access", url: "/admin/roles", icon: Shield },
-    ],
-  },
-  {
-    label: "Travel",
-    items: [
-      { title: "Destinations", url: "/admin/destinations", icon: Map },
-      { title: "Flights", url: "/admin/flights", icon: Plane },
-      { title: "Hotels", url: "/admin/hotels", icon: Hotel },
-      { title: "Deals", url: "/admin/deals", icon: Tag },
-    ],
-  },
-  {
-    label: "Immigration",
-    items: [
-      { title: "Visa Applications", url: "/admin/applications", icon: Globe },
-      { title: "Work Permits", url: "/admin/work-permits", icon: Briefcase },
-      { title: "Credentials", url: "/admin/credentials", icon: GraduationCap },
-    ],
-  },
-  {
-    label: "Logistics",
-    items: [
-      { title: "Shipments", url: "/admin/shipments", icon: Package },
-      { title: "Customs", url: "/admin/customs", icon: MapPin },
+      { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
     ],
   },
   {
@@ -68,6 +35,23 @@ const navGroups = [
     ],
   },
   {
+    label: "Content",
+    items: [
+      { title: "Blog", url: "/admin/blog", icon: Newspaper },
+      { title: "CMS", url: "/admin/content", icon: PenTool },
+      { title: "Reports", url: "/admin/reports", icon: BarChart3 },
+      { title: "Videos", url: "/admin/videos", icon: Video },
+    ],
+  },
+  {
+    label: "Engagement",
+    items: [
+      { title: "Chatbot", url: "/admin/chatbot", icon: Bot },
+      { title: "Notifications", url: "/admin/notifications", icon: Bell },
+      { title: "Reviews", url: "/admin/reviews", icon: Star },
+    ],
+  },
+  {
     label: "Finance",
     items: [
       { title: "Payments", url: "/admin/payments", icon: CreditCard },
@@ -75,20 +59,34 @@ const navGroups = [
     ],
   },
   {
-    label: "Engagement",
+    label: "Immigration",
     items: [
-      { title: "Reviews", url: "/admin/reviews", icon: Star },
-      { title: "Notifications", url: "/admin/notifications", icon: Bell },
-      { title: "Chatbot", url: "/admin/chatbot", icon: Bot },
+      { title: "Credentials", url: "/admin/credentials", icon: GraduationCap },
+      { title: "Visa Applications", url: "/admin/applications", icon: Globe },
+      { title: "Work Permits", url: "/admin/work-permits", icon: Briefcase },
     ],
   },
   {
-    label: "Content",
+    label: "Logistics",
     items: [
-      { title: "CMS", url: "/admin/content", icon: PenTool },
-      { title: "Videos", url: "/admin/videos", icon: Video },
-      { title: "Blog", url: "/admin/blog", icon: Newspaper },
-      { title: "Reports", url: "/admin/reports", icon: BarChart3 },
+      { title: "Customs", url: "/admin/customs", icon: MapPin },
+      { title: "Shipments", url: "/admin/shipments", icon: Package },
+    ],
+  },
+  {
+    label: "People",
+    items: [
+      { title: "Roles & Access", url: "/admin/roles", icon: Shield },
+      { title: "Users", url: "/admin/users", icon: Users },
+    ],
+  },
+  {
+    label: "Travel",
+    items: [
+      { title: "Deals", url: "/admin/deals", icon: Tag },
+      { title: "Destinations", url: "/admin/destinations", icon: Map },
+      { title: "Flights", url: "/admin/flights", icon: Plane },
+      { title: "Hotels", url: "/admin/hotels", icon: Hotel },
     ],
   },
 ];
@@ -96,17 +94,9 @@ const navGroups = [
 export function AdminSidebar() {
   const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
-  const { adminLogout } = useAdmin();
-  const navigate = useNavigate();
 
   const handleNavSelection = () => {
     if (isMobile) setOpenMobile(false);
-  };
-
-  const handleLogout = () => {
-    if (isMobile) setOpenMobile(false);
-    adminLogout();
-    navigate("/admin/login");
   };
 
   return (
@@ -158,18 +148,6 @@ export function AdminSidebar() {
           </SidebarGroup>
         ))}
       </SidebarContent>
-
-      <SidebarFooter className="p-3 border-t border-sidebar-border">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent gap-2"
-          onClick={handleLogout}
-        >
-          <LogOut className="h-4 w-4" />
-          {!collapsed && <span className="text-[13px]">Logout</span>}
-        </Button>
-      </SidebarFooter>
     </Sidebar>
   );
 }
