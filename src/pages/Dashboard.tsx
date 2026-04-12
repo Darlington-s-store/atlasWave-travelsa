@@ -121,9 +121,27 @@ const Dashboard = () => {
     return "Good Evening";
   };
 
+  const SidebarNav = ({ onSelect }: { onSelect?: () => void }) => (
+    <nav className="flex-1 p-4 space-y-1">
+      {sidebarNavItems.map((item) => {
+        const active = activeTab === item.id;
+        return (
+          <button
+            key={item.id}
+            onClick={() => { setActiveTab(item.id); onSelect?.(); }}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${active ? "bg-primary text-primary-foreground" : "text-white/60 hover:text-white hover:bg-white/5"}`}
+          >
+            <item.icon className="w-4 h-4" />
+            {item.label}
+          </button>
+        );
+      })}
+    </nav>
+  );
+
   return (
     <div className="min-h-screen flex bg-muted/30">
-      {/* Sidebar */}
+      {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-64 bg-[hsl(220,30%,15%)] text-primary-foreground fixed top-0 left-0 h-screen z-40">
         <div className="p-6 border-b border-white/10">
           <Link to="/" className="flex items-center gap-3">
@@ -131,42 +149,45 @@ const Dashboard = () => {
             <span className="font-display font-bold text-lg text-white">AtlasWave</span>
           </Link>
         </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {sidebarItems.map((item) => {
-            const active = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${active ? "bg-primary text-primary-foreground" : "text-white/60 hover:text-white hover:bg-white/5"}`}
-              >
-                <item.icon className="w-4 h-4" />
-                {item.label}
-              </button>
-            );
-          })}
-        </nav>
-        <div className="p-4 border-t border-white/10">
-          <Button variant="ghost" className="w-full justify-start text-white/60 hover:text-white hover:bg-white/5 text-sm" onClick={() => { logout(); navigate("/"); }}>
-            <LogOut className="w-4 h-4 mr-2" /> Sign Out
-          </Button>
-        </div>
+        <SidebarNav />
       </aside>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-h-screen lg:ml-64">
         <header className="bg-background border-b fixed top-0 right-0 left-0 lg:left-64 z-30">
-          <div className="flex items-center justify-between px-6 lg:px-8 h-16">
-            <Link to="/" className="flex lg:hidden items-center gap-2">
-              <img src={logo} alt="AtlasWave" className="h-8 w-8 rounded-lg object-cover" />
-            </Link>
-            <div className="hidden md:flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2 w-80">
-              <Search className="w-4 h-4 text-muted-foreground" />
-              <input placeholder="Search..." className="bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground w-full" />
-            </div>
+          <div className="flex items-center justify-between px-4 lg:px-8 h-16">
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+              {/* Mobile sidebar trigger */}
+              <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="lg:hidden">
+                    <Menu className="w-5 h-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-64 p-0 bg-[hsl(220,30%,15%)] border-none">
+                  <div className="p-6 border-b border-white/10">
+                    <Link to="/" className="flex items-center gap-3">
+                      <img src={logo} alt="AtlasWave" className="h-9 w-9 rounded-lg object-cover" />
+                      <span className="font-display font-bold text-lg text-white">AtlasWave</span>
+                    </Link>
+                  </div>
+                  <SidebarNav onSelect={() => setMobileOpen(false)} />
+                </SheetContent>
+              </Sheet>
+              <Link to="/" className="flex lg:hidden items-center gap-2">
+                <img src={logo} alt="AtlasWave" className="h-8 w-8 rounded-lg object-cover" />
+              </Link>
+              <div className="hidden md:flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2 w-80">
+                <Search className="w-4 h-4 text-muted-foreground" />
+                <input placeholder="Search..." className="bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground w-full" />
+              </div>
+            </div>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setActiveTab("settings")}>
+                <Settings className="w-4 h-4 text-muted-foreground" />
+              </Button>
+              <div className="flex items-center gap-2 border-l border-border pl-2">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                   <User className="w-4 h-4 text-primary" />
                 </div>
                 <div className="hidden sm:block">
@@ -174,26 +195,14 @@ const Dashboard = () => {
                   <p className="text-muted-foreground text-[11px]">{user?.email}</p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => { logout(); navigate("/"); }}>
-                <LogOut className="w-5 h-5" />
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => { logout(); navigate("/"); }}>
+                <LogOut className="w-4 h-4" />
               </Button>
             </div>
           </div>
-          <div className="lg:hidden flex overflow-x-auto border-t px-4 gap-1">
-            {sidebarItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium whitespace-nowrap border-b-2 transition-colors ${activeTab === item.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-              >
-                <item.icon className="w-3.5 h-3.5" />
-                {item.label}
-              </button>
-            ))}
-          </div>
         </header>
 
-        <main className="mt-[6.75rem] flex-1 p-4 sm:p-6 lg:mt-16 lg:p-8">
+        <main className="mt-16 flex-1 p-4 sm:p-6 lg:p-8">
           {activeTab === "overview" && <OverviewTab applications={applications} bookings={bookings} shipments={shipments} consultations={consultations} userName={user?.fullName || "User"} greeting={greeting()} dataLoading={dataLoading} />}
           {activeTab === "applications" && <ApplicationsTab applications={applications} onRefresh={fetchAllData} userId={user?.id || ""} />}
           {activeTab === "appointments" && <AppointmentsTab consultations={consultations} onRefresh={fetchAllData} userId={user?.id || ""} />}
