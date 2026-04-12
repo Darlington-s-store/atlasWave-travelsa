@@ -54,6 +54,7 @@ const Dashboard = () => {
   const { user, isAuthenticated, loading, logout, updateProfile } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ fullName: user?.fullName || "", phone: user?.phone || "", email: user?.email || "" });
 
