@@ -25,17 +25,16 @@ import { generateReceiptPDF } from "@/lib/generateReceipt";
 import { sendNotification } from "@/lib/notifications";
 import { DEFAULT_CURRENCY, formatCurrency } from "@/lib/currency";
 
-const sidebarItems = [
+const sidebarNavItems = [
   { id: "overview", label: "Dashboard", icon: LayoutDashboard },
   { id: "applications", label: "Applications", icon: FileText },
   { id: "appointments", label: "Appointments", icon: CalendarDays },
-  { id: "payments", label: "Payments", icon: CreditCard },
-  { id: "invoices", label: "Invoices", icon: FileText },
-  { id: "shipments", label: "Logistics", icon: Package },
   { id: "bookings", label: "Travel", icon: Plane },
-  { id: "reviews", label: "Reviews", icon: MessageCircle },
   { id: "documents", label: "Documents", icon: FolderOpen },
-  { id: "settings", label: "Settings", icon: Settings },
+  { id: "invoices", label: "Invoices", icon: FileText },
+  { id: "payments", label: "Payments", icon: CreditCard },
+  { id: "reviews", label: "Reviews", icon: MessageCircle },
+  { id: "shipments", label: "Logistics", icon: Package },
 ];
 
 const statusConfig: Record<string, { icon: any; color: string; label: string }> = {
