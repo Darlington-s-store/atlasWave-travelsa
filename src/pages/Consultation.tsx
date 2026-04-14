@@ -82,7 +82,7 @@ const Consultation = () => {
   const [modeFilter, setModeFilter] = useState<"all" | "online" | "in-person">("all");
   const [step, setStep] = useState(1);
   const [contactForm, setContactForm] = useState({ firstName: "", lastName: "", email: user?.email || "", phone: user?.phone || "", topic: "", notes: "" });
-  }, [isAuthenticated, showBookings]);
+  
 
   const selectedConsultation = consultationTypes.find((c) => c.title === selectedType);
   const price = selectedConsultation ? selectedConsultation.prices[duration] : 0;
