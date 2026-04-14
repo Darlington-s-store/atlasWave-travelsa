@@ -81,29 +81,7 @@ const Consultation = () => {
   const [timezone, setTimezone] = useState("GMT+0");
   const [modeFilter, setModeFilter] = useState<"all" | "online" | "in-person">("all");
   const [step, setStep] = useState(1);
-  const [showBookings, setShowBookings] = useState(false);
-  const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
   const [contactForm, setContactForm] = useState({ firstName: "", lastName: "", email: user?.email || "", phone: user?.phone || "", topic: "", notes: "" });
-
-  useEffect(() => {
-    if (isAuthenticated && showBookings) {
-      supabase
-        .from("consultations")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .then(({ data }) => {
-          if (data) setBookings(data.map((d: any) => ({
-            id: d.id.slice(0, 8).toUpperCase(),
-            type: d.type,
-            topic: d.topic,
-            date: d.date,
-            time: d.time,
-            duration: d.duration,
-            status: d.status,
-            price: Number(d.price),
-          })));
-        });
-    }
   }, [isAuthenticated, showBookings]);
 
   const selectedConsultation = consultationTypes.find((c) => c.title === selectedType);
