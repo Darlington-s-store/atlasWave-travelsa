@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { ArrowRight, CheckCircle2, Video, Users, Phone, Clock, CreditCard, Shield, Globe, CalendarX, RefreshCw, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { DEFAULT_CURRENCY, formatCurrency } from "@/lib/currency";
@@ -72,6 +73,7 @@ interface ConsultationBooking {
 
 const Consultation = () => {
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("");
@@ -79,30 +81,8 @@ const Consultation = () => {
   const [timezone, setTimezone] = useState("GMT+0");
   const [modeFilter, setModeFilter] = useState<"all" | "online" | "in-person">("all");
   const [step, setStep] = useState(1);
-  const [showBookings, setShowBookings] = useState(false);
-  const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
   const [contactForm, setContactForm] = useState({ firstName: "", lastName: "", email: user?.email || "", phone: user?.phone || "", topic: "", notes: "" });
-
-  useEffect(() => {
-    if (isAuthenticated && showBookings) {
-      supabase
-        .from("consultations")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .then(({ data }) => {
-          if (data) setBookings(data.map((d: any) => ({
-            id: d.id.slice(0, 8).toUpperCase(),
-            type: d.type,
-            topic: d.topic,
-            date: d.date,
-            time: d.time,
-            duration: d.duration,
-            status: d.status,
-            price: Number(d.price),
-          })));
-        });
-    }
-  }, [isAuthenticated, showBookings]);
+  
 
   const selectedConsultation = consultationTypes.find((c) => c.title === selectedType);
   const price = selectedConsultation ? selectedConsultation.prices[duration] : 0;
@@ -133,52 +113,23 @@ const Consultation = () => {
               <p className="mt-6 text-lg text-primary-foreground/70 leading-relaxed">
                 Get personalized advice from our travel, immigration, and logistics experts. Choose online or in-person consultations.
               </p>
-              <Button variant="hero-outline" size="sm" className="mt-6" onClick={() => setShowBookings(!showBookings)}>
-                <CalendarX className="w-4 h-4 mr-2" /> {showBookings ? "Book New" : "Manage My Bookings"}
-              </Button>
+              <div className="flex flex-wrap gap-3 mt-6 justify-center">
+                <Button variant="hero-outline" size="sm" onClick={() => {
+                  if (isAuthenticated) {
+                    navigate("/dashboard");
+                  } else {
+                    navigate("/login");
+                  }
+                }}>
+                  <CalendarX className="w-4 h-4 mr-2" /> Manage My Bookings
+                </Button>
+              </div>
             </motion.div>
           </div>
         </section>
 
-        {/* My Bookings */}
-        <AnimatePresence>
-          {showBookings && (
-            <motion.section initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-              <div className="container py-12">
-                <h2 className="text-2xl font-display font-bold text-foreground mb-6">My Consultations</h2>
-                <div className="space-y-3">
-                  {bookings.length === 0 ? (
-                    <p className="text-muted-foreground text-sm">No consultations booked yet.</p>
-                  ) : bookings.map((b) => (
-                    <div key={b.id} className="bg-card rounded-xl border p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-display font-bold text-foreground text-sm">CON-{b.id}</span>
-                          <Badge variant="outline" className={b.status === "upcoming" ? "bg-secondary/10 text-secondary border-secondary/20" : "bg-muted text-muted-foreground"}>{b.status}</Badge>
-                        </div>
-                        <p className="text-sm text-foreground">{b.type} — {b.topic || "General"}</p>
-                        <p className="text-xs text-muted-foreground">{b.date} at {b.time} · {b.duration} min · {formatCurrency(b.price, DEFAULT_CURRENCY)}</p>
-                      </div>
-                      {b.status === "upcoming" && (
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={() => toast({ title: "Rescheduled", description: "Please select a new date and time." })}>
-                            <RefreshCw className="w-3 h-3 mr-1" /> Reschedule
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-destructive" onClick={() => toast({ title: "Cancelled", description: `Consultation ${b.id} has been cancelled.` })}>
-                            <X className="w-3 h-3 mr-1" /> Cancel
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.section>
-          )}
-        </AnimatePresence>
-
         {/* Consultation Types */}
-        {!showBookings && (
+        
           <section className="py-24">
             <div className="container">
               <motion.div {...fadeUp} className="text-center mb-10">
@@ -448,7 +399,7 @@ const Consultation = () => {
                               } as any);
                             }
                             toast({ title: "Booking Confirmed!", description: `Your ${duration}-min ${selectedConsultation.title} has been booked for ${selectedTime}.` });
-                            setShowBookings(true);
+                            navigate("/dashboard");
                             setSelectedType("");
                             setStep(1);
                           }}>
@@ -462,7 +413,6 @@ const Consultation = () => {
               )}
             </div>
           </section>
-        )}
       </main>
       <Footer />
     </div>
