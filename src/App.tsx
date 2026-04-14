@@ -160,7 +160,7 @@ const AppContent = () => {
     const timer = window.setTimeout(() => {
       window.sessionStorage.setItem("atlaswave-preloader-seen", "true");
       setIsLoading(false);
-    }, 2800);
+    }, 2200);
 
     return () => window.clearTimeout(timer);
   }, [isAdminRoute, location.pathname]);
