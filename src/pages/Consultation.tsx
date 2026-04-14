@@ -399,7 +399,7 @@ const Consultation = () => {
                               } as any);
                             }
                             toast({ title: "Booking Confirmed!", description: `Your ${duration}-min ${selectedConsultation.title} has been booked for ${selectedTime}.` });
-                            setShowBookings(true);
+                            navigate("/dashboard");
                             setSelectedType("");
                             setStep(1);
                           }}>
