@@ -413,7 +413,6 @@ const Consultation = () => {
               )}
             </div>
           </section>
-        )}
       </main>
       <Footer />
     </div>
