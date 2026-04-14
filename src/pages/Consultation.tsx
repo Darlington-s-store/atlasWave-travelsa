@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { ArrowRight, CheckCircle2, Video, Users, Phone, Clock, CreditCard, Shield, Globe, CalendarX, RefreshCw, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { DEFAULT_CURRENCY, formatCurrency } from "@/lib/currency";
