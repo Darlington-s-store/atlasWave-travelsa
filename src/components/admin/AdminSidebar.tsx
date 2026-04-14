@@ -61,7 +61,7 @@ export function AdminSidebar() {
                 <img src={logo} alt="AtlastWave" className="w-full h-full object-cover" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-[15px] font-bold text-sidebar-foreground tracking-tight leading-none">AtlastWave</h1>
+                <h1 className="text-[15px] font-bold text-sidebar-foreground tracking-tight leading-none">AtlastWave Travels</h1>
                 <p className="text-[10px] text-sidebar-foreground/55 uppercase tracking-[0.18em] mt-1">Admin Portal</p>
               </div>
             </div>
