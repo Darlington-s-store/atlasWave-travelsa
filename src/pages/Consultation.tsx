@@ -72,6 +72,7 @@ interface ConsultationBooking {
 
 const Consultation = () => {
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("");
