@@ -133,9 +133,17 @@ const Consultation = () => {
               <p className="mt-6 text-lg text-primary-foreground/70 leading-relaxed">
                 Get personalized advice from our travel, immigration, and logistics experts. Choose online or in-person consultations.
               </p>
-              <Button variant="hero-outline" size="sm" className="mt-6" onClick={() => setShowBookings(!showBookings)}>
-                <CalendarX className="w-4 h-4 mr-2" /> {showBookings ? "Book New" : "Manage My Bookings"}
-              </Button>
+              <div className="flex flex-wrap gap-3 mt-6 justify-center">
+                <Button variant="hero-outline" size="sm" onClick={() => {
+                  if (isAuthenticated) {
+                    navigate("/dashboard");
+                  } else {
+                    navigate("/login");
+                  }
+                }}>
+                  <CalendarX className="w-4 h-4 mr-2" /> Manage My Bookings
+                </Button>
+              </div>
             </motion.div>
           </div>
         </section>
