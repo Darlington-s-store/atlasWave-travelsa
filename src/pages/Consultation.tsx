@@ -128,45 +128,8 @@ const Consultation = () => {
           </div>
         </section>
 
-        {/* My Bookings */}
-        <AnimatePresence>
-          {showBookings && (
-            <motion.section initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-              <div className="container py-12">
-                <h2 className="text-2xl font-display font-bold text-foreground mb-6">My Consultations</h2>
-                <div className="space-y-3">
-                  {bookings.length === 0 ? (
-                    <p className="text-muted-foreground text-sm">No consultations booked yet.</p>
-                  ) : bookings.map((b) => (
-                    <div key={b.id} className="bg-card rounded-xl border p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-display font-bold text-foreground text-sm">CON-{b.id}</span>
-                          <Badge variant="outline" className={b.status === "upcoming" ? "bg-secondary/10 text-secondary border-secondary/20" : "bg-muted text-muted-foreground"}>{b.status}</Badge>
-                        </div>
-                        <p className="text-sm text-foreground">{b.type} — {b.topic || "General"}</p>
-                        <p className="text-xs text-muted-foreground">{b.date} at {b.time} · {b.duration} min · {formatCurrency(b.price, DEFAULT_CURRENCY)}</p>
-                      </div>
-                      {b.status === "upcoming" && (
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={() => toast({ title: "Rescheduled", description: "Please select a new date and time." })}>
-                            <RefreshCw className="w-3 h-3 mr-1" /> Reschedule
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-destructive" onClick={() => toast({ title: "Cancelled", description: `Consultation ${b.id} has been cancelled.` })}>
-                            <X className="w-3 h-3 mr-1" /> Cancel
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.section>
-          )}
-        </AnimatePresence>
-
         {/* Consultation Types */}
-        {!showBookings && (
+        
           <section className="py-24">
             <div className="container">
               <motion.div {...fadeUp} className="text-center mb-10">
