@@ -190,7 +190,7 @@ const Dashboard = () => {
               <div className="flex items-center gap-2 border-l border-border pl-2">
                 <AvatarUpload size="sm" />
                 <div className="hidden sm:block">
-                  <p className="font-display font-bold text-foreground text-sm leading-tight">{user?.fullName}</p>
+                  <p className="font-display font-bold text-foreground text-sm leading-tight">Hi, {user?.fullName?.split(" ")[0]} 👋</p>
                   <p className="text-muted-foreground text-[11px]">{user?.email}</p>
                 </div>
               </div>
