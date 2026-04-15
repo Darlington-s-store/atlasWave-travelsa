@@ -75,12 +75,17 @@ const AppRoutes = () => {
         <Route path="/" element={<Index />} />
         <Route path="/about" element={<About />} />
         <Route path="/travel" element={<TravelServices />} />
+        <Route path="/travel-services" element={<TravelServices />} />
         <Route path="/travel/flights" element={<FlightBooking />} />
+        <Route path="/flight-booking" element={<FlightBooking />} />
         <Route path="/travel/hotels" element={<HotelAccommodation />} />
+        <Route path="/hotel-accommodation" element={<HotelAccommodation />} />
         <Route path="/travel/visa" element={<VisaAssistance />} />
+        <Route path="/visa-assistance" element={<VisaAssistance />} />
         <Route path="/logistics" element={<Logistics />} />
         <Route path="/logistics/tracking" element={<ShipmentTracking />} />
         <Route path="/tracking" element={<ShipmentTracking />} />
+        <Route path="/shipment-tracking" element={<ShipmentTracking />} />
         <Route path="/payments" element={<Payments />} />
         <Route path="/videos" element={<VideoGallery />} />
         <Route path="/work-permits" element={<WorkPermits />} />
@@ -89,6 +94,7 @@ const AppRoutes = () => {
         <Route path="/work-permits/germany-chancenkarte" element={<GermanyChancenkarte />} />
         <Route path="/work-permits/usa-nclex" element={<UsaNclex />} />
         <Route path="/work-permits/credential-evaluation" element={<CredentialEvaluation />} />
+        <Route path="/credential-evaluation" element={<CredentialEvaluation />} />
         <Route path="/documentation" element={<Documentation />} />
         <Route path="/consultation" element={<Consultation />} />
         <Route path="/contact" element={<Contact />} />
