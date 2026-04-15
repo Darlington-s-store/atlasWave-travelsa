@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import logo from "@/assets/logo.jpeg";
 import { generateReceiptPDF } from "@/lib/generateReceipt";
+import AvatarUpload from "@/components/AvatarUpload";
 import { sendNotification } from "@/lib/notifications";
 import { DEFAULT_CURRENCY, formatCurrency } from "@/lib/currency";
 
@@ -187,11 +188,9 @@ const Dashboard = () => {
                 <Settings className="w-4 h-4 text-muted-foreground" />
               </Button>
               <div className="flex items-center gap-2 border-l border-border pl-2">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="w-4 h-4 text-primary" />
-                </div>
+                <AvatarUpload size="sm" />
                 <div className="hidden sm:block">
-                  <p className="font-display font-bold text-foreground text-sm leading-tight">{user?.fullName}</p>
+                  <p className="font-display font-bold text-foreground text-sm leading-tight">Hi, {user?.fullName?.split(" ")[0]} 👋</p>
                   <p className="text-muted-foreground text-[11px]">{user?.email}</p>
                 </div>
               </div>
