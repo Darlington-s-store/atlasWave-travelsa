@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "@/hooks/use-toast";
 import { useWebAuthn } from "@/hooks/useWebAuthn";
@@ -184,19 +185,26 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setActiveTab("settings")}>
-                <Settings className="w-4 h-4 text-muted-foreground" />
-              </Button>
-              <div className="flex items-center gap-2 border-l border-border pl-2">
-                <AvatarUpload size="sm" />
-                <div className="hidden sm:block">
-                  <p className="font-display font-bold text-foreground text-sm leading-tight">Hi, {user?.fullName?.split(" ")[0]} 👋</p>
-                  <p className="text-muted-foreground text-[11px]">{user?.email}</p>
-                </div>
-              </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => { logout(); navigate("/"); }}>
-                <LogOut className="w-4 h-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-muted transition-colors">
+                    <AvatarUpload size="sm" />
+                    <div className="hidden sm:block text-left">
+                      <p className="font-display font-bold text-foreground text-sm leading-tight">Hi, {user?.fullName?.split(" ")[0]} 👋</p>
+                      <p className="text-muted-foreground text-[11px]">{user?.email}</p>
+                    </div>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => setActiveTab("settings")}>
+                    <Settings className="w-4 h-4 mr-2" /> Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => { logout(); navigate("/"); }}>
+                    <LogOut className="w-4 h-4 mr-2" /> Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </header>
