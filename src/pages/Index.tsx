@@ -9,6 +9,7 @@ import BackToTop from "@/components/BackToTop";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { WorkPermitsSection, LogisticsSection, CTASection } from "@/components/HomeSections";
 import { DealsSection, NewsletterSection } from "@/components/HomeExtras";
+import DestinationsSection from "@/components/DestinationsSection";
 import { useEffect, useState } from "react";
 import { useSiteContent } from "@/hooks/useSiteContent";
 
@@ -33,6 +34,7 @@ const Index = () => {
         <main>
           <section id="hero"><HeroSection /></section>
           <section id="services"><ServicesSection /></section>
+          <section id="destinations"><DestinationsSection /></section>
           <section id="deals"><DealsSection /></section>
           <section id="work-permits"><WorkPermitsSection /></section>
           <section id="logistics"><LogisticsSection /></section>

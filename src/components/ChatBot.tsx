@@ -35,7 +35,7 @@ const ChatBot = () => {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [greeting, setGreeting] = useState("Hello! 👋 Welcome to AtlastWave Travel and Tour. How can I help you today?");
+  const [greeting, setGreeting] = useState("Hi there! 👋 I'm **AtlasBot**, your personal travel assistant.\n\nI can help you with:\n- ✈️ Flight bookings & prices\n- 🏨 Hotel recommendations\n- 🛂 Visa & work permit info\n- 🌍 Destination guides\n\nHow can I help you today?");
   const [botName, setBotName] = useState("AtlasBot");
   const [botEnabled, setBotEnabled] = useState(true);
   const [fallbackMessage, setFallbackMessage] = useState("I'm sorry, I'm having trouble connecting right now. Please try again or use the Contact page.");
