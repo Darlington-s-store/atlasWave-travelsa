@@ -61,6 +61,8 @@ import Payments from "./pages/Payments";
 import ShipmentTracking from "./pages/ShipmentTracking";
 import VideoGallery from "./pages/VideoGallery";
 import AdminVideos from "./pages/admin/AdminVideos";
+import Destinations from "./pages/Destinations";
+import DestinationDetail from "./pages/DestinationDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -88,6 +90,8 @@ const AppRoutes = () => {
         <Route path="/shipment-tracking" element={<ShipmentTracking />} />
         <Route path="/payments" element={<Payments />} />
         <Route path="/videos" element={<VideoGallery />} />
+        <Route path="/destinations" element={<Destinations />} />
+        <Route path="/destinations/:id" element={<DestinationDetail />} />
         <Route path="/work-permits" element={<WorkPermits />} />
         <Route path="/work-permits/schengen" element={<SchengenWorkPermits />} />
         <Route path="/work-permits/canada-lmia" element={<CanadaLMIA />} />
