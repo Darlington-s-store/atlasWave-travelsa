@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 import { getAuthErrorMessage, normalizeEmail } from "@/lib/authErrors";
@@ -36,6 +36,7 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const initialized = useRef(false);
 
   const fetchProfile = async (authUser: User): Promise<UserProfile> => {
     const { data } = await supabase
@@ -54,35 +55,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Set up the auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+    // Get the initial session first, then set up the listener
+    // This avoids the "lock steal" race condition
+    const init = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           const profile = await fetchProfile(session.user);
           setUser(profile);
+        }
+      } catch (e) {
+        console.error("Error getting session:", e);
+      } finally {
+        setLoading(false);
+        initialized.current = true;
+      }
+    };
+
+    init();
+
+    // Set up the listener AFTER initial check
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        // Skip if we haven't finished the initial load yet
+        if (!initialized.current) return;
+
+        if (event === "SIGNED_OUT") {
+          setUser(null);
+          return;
+        }
+
+        if (session?.user) {
+          // Use setTimeout to avoid Supabase internal lock contention
+          setTimeout(async () => {
+            try {
+              const profile = await fetchProfile(session.user);
+              setUser(profile);
+            } catch (e) {
+              console.error("Error fetching profile:", e);
+            }
+          }, 0);
         } else {
           setUser(null);
         }
-        setLoading(false);
       }
     );
-
-    // Then check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const profile = await fetchProfile(session.user);
-        setUser(profile);
-      }
-      setLoading(false);
-    });
 
     return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
     const normalizedEmail = normalizeEmail(email);
-    const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
     if (error) return { success: false, error: getAuthErrorMessage(error, "login") || error.message };
+    // Immediately set user from the login response
+    if (data.user) {
+      const profile = await fetchProfile(data.user);
+      setUser(profile);
+    }
     return { success: true };
   };
 
@@ -101,8 +131,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
     setUser(null);
+    await supabase.auth.signOut();
   };
 
   const updateProfile = async (data: Partial<UserProfile>) => {
