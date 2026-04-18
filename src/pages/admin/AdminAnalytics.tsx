@@ -118,6 +118,13 @@ const AdminAnalytics = () => {
   const handleExportPDF = () => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
+    const escHtml = (v: unknown) =>
+      String(v ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
     printWindow.document.write(`
       <!DOCTYPE html><html><head><title>Analytics Report — AtlasWave</title>
       <style>
@@ -135,16 +142,16 @@ const AdminAnalytics = () => {
         @media print { body { padding: 20px; } }
       </style></head><body>
         <div class="report-header"><h1>📊 Analytics Report</h1>
-        <p style="font-size:13px;color:#6B7280">AtlastWave Travel and Tour — ${new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p></div>
+        <p style="font-size:13px;color:#6B7280">AtlastWave Travel and Tour — ${escHtml(new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }))}</p></div>
         <div class="stats-grid">
-          <div class="stat-card"><p class="stat-label">Total Revenue</p><p class="stat-value">${formatCurrency(totalRevenue, DEFAULT_CURRENCY)}</p></div>
-          <div class="stat-card"><p class="stat-label">Shipments</p><p class="stat-value">${totalShipments}</p></div>
-          <div class="stat-card"><p class="stat-label">Applications</p><p class="stat-value">${totalApps}</p></div>
-          <div class="stat-card"><p class="stat-label">Users</p><p class="stat-value">${totalUsers}</p></div>
+          <div class="stat-card"><p class="stat-label">Total Revenue</p><p class="stat-value">${escHtml(formatCurrency(totalRevenue, DEFAULT_CURRENCY))}</p></div>
+          <div class="stat-card"><p class="stat-label">Shipments</p><p class="stat-value">${escHtml(totalShipments)}</p></div>
+          <div class="stat-card"><p class="stat-label">Applications</p><p class="stat-value">${escHtml(totalApps)}</p></div>
+          <div class="stat-card"><p class="stat-label">Users</p><p class="stat-value">${escHtml(totalUsers)}</p></div>
         </div>
         <h2>Revenue by Service</h2>
         <table><thead><tr><th>Service</th><th class="text-right">Revenue</th></tr></thead><tbody>
-          ${revenueByService.map(s => `<tr><td>${s.name}</td><td class="text-right font-bold">${formatCurrency(s.value, DEFAULT_CURRENCY)}</td></tr>`).join("")}
+          ${revenueByService.map(s => `<tr><td>${escHtml(s.name)}</td><td class="text-right font-bold">${escHtml(formatCurrency(s.value, DEFAULT_CURRENCY))}</td></tr>`).join("")}
         </tbody></table>
       </body></html>
     `);
