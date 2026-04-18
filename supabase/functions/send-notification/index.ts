@@ -377,9 +377,76 @@ serve(async (req: Request) => {
   }
 
   try {
+    // ---------- Auth gate ----------
+    // Allow either: (a) an authenticated user JWT, or (b) a trusted internal
+    // call from another edge function presenting the service-role key.
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    const authHeader = req.headers.get("Authorization") || "";
+    const bearer = authHeader.replace(/^Bearer\s+/i, "").trim();
+
+    if (!bearer) {
+      return new Response(
+        JSON.stringify({ error: "Authentication required" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const isServiceRole = serviceRoleKey && bearer === serviceRoleKey;
+    let callerUserId: string | null = null;
+    let callerIsAdmin = false;
+
+    if (!isServiceRole) {
+      if (!supabaseUrl || !anonKey) {
+        return new Response(
+          JSON.stringify({ error: "Server not configured for authentication" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      const supabaseAuthClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: `Bearer ${bearer}` } },
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      const { data: userResult, error: userErr } = await supabaseAuthClient.auth.getUser();
+      if (userErr || !userResult?.user) {
+        return new Response(
+          JSON.stringify({ error: "Invalid or expired session" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      callerUserId = userResult.user.id;
+
+      // Determine admin status via has_role
+      if (serviceRoleKey) {
+        const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+          auth: { autoRefreshToken: false, persistSession: false },
+        });
+        const { data: roleData } = await adminClient.rpc("has_role", {
+          _user_id: callerUserId,
+          _role: "admin",
+        });
+        callerIsAdmin = roleData === true;
+      }
+    }
+
     const payload: NotificationPayload = await req.json();
     const { type, data } = payload;
     const channel = payload.channel || "email";
+
+    // Non-admin authenticated users may only send notifications to themselves.
+    if (!isServiceRole && !callerIsAdmin) {
+      if (!payload.userId || payload.userId !== callerUserId) {
+        return new Response(
+          JSON.stringify({ error: "Forbidden: you may only send notifications to yourself" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      // Disallow caller-supplied email/phone overrides for non-admins to
+      // prevent redirecting another user's notification to an attacker address.
+      payload.recipientEmail = undefined;
+      payload.recipientPhone = undefined;
+    }
 
     if (!type || !templates[type]) {
       return new Response(

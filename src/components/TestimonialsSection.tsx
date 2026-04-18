@@ -35,10 +35,9 @@ const TestimonialsSection = () => {
 
   useEffect(() => {
     const loadApprovedReviews = async () => {
-      const { data, error } = await supabase
-        .from("reviews")
+      const { data, error } = await (supabase as any)
+        .from("public_reviews")
         .select("*")
-        .eq("status", "approved")
         .order("approved_at", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(8);

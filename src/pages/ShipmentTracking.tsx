@@ -101,11 +101,10 @@ const ShipmentTracking = () => {
     setNotFound(false);
 
     const normalizedId = trackingId.trim().toUpperCase();
-    const { data: shipmentData } = await supabase
-      .from("shipments")
-      .select("*")
-      .eq("tracking_number", normalizedId)
-      .maybeSingle();
+    const { data: shipmentRows } = await (supabase as any).rpc("get_shipment_by_tracking", {
+      p_tracking: normalizedId,
+    });
+    const shipmentData = Array.isArray(shipmentRows) ? shipmentRows[0] : shipmentRows;
 
     if (!shipmentData) {
       setActiveTrackingNumber(null);
@@ -120,12 +119,9 @@ const ShipmentTracking = () => {
     setShipment(currentShipment);
     setActiveTrackingNumber(currentShipment.tracking_number);
 
-    const { data: eventData } = await (supabase as any)
-      .from("shipment_events")
-      .select("*")
-      .eq("shipment_id", currentShipment.id)
-      .order("sort_order", { ascending: true })
-      .order("occurred_at", { ascending: true });
+    const { data: eventData } = await (supabase as any).rpc("get_shipment_events_by_tracking", {
+      p_tracking: currentShipment.tracking_number,
+    });
 
     setEvents((eventData || []) as ShipmentEventRow[]);
     setLoading(false);
