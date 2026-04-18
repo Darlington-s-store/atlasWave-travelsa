@@ -22,6 +22,7 @@ import {
 
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import PageHero from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -168,25 +169,21 @@ const HotelAccommodation = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main>
-        <section className="relative bg-primary pb-20 pt-32">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute bottom-0 left-20 h-80 w-80 rounded-full bg-secondary blur-[140px]" />
-          </div>
-          <div className="container relative z-10 text-center">
-            <motion.div {...fadeUp} className="mx-auto max-w-2xl">
-              <span className="mb-6 inline-block rounded-full border border-accent/30 bg-accent/20 px-4 py-1.5 text-sm font-semibold text-accent">
-                <Hotel className="mr-2 inline h-4 w-4" />
-                Hotels & Accommodation
-              </span>
-              <h1 className="text-4xl font-display font-bold leading-tight text-primary-foreground md:text-6xl">
-                Premium <span className="text-gradient-accent">Stays</span> Worldwide
-              </h1>
-              <p className="mx-auto mt-6 max-w-xl text-lg text-primary-foreground/70">
-                Browse hotel offers stored in Supabase and continue directly into reservation flow.
-              </p>
-            </motion.div>
-          </div>
-        </section>
+        <PageHero
+          badge="Hotels & Accommodation"
+          badgeIcon={Hotel}
+          title="Premium"
+          highlight="Stays Worldwide"
+          description="Hand-picked hotels, resorts, and luxury escapes — from boutique city stays to beachfront retreats. Best-rate guarantee on every booking."
+          backgroundImage="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1920&q=70&auto=format&fit=crop"
+          breadcrumbs={[{ label: "Home", to: "/" }, { label: "Travel Services", to: "/travel" }, { label: "Hotels" }]}
+          stats={[
+            { value: "10k+", label: "Hotels worldwide", icon: Hotel },
+            { value: "4.8★", label: "Avg guest rating", icon: Star },
+            { value: "Free", label: "Cancellation*", icon: ShieldCheck },
+            { value: "24/7", label: "Concierge", icon: Phone },
+          ]}
+        />
 
         <section className="py-8">
           <div className="container max-w-5xl">

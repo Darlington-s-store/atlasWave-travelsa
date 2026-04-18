@@ -15,6 +15,7 @@ import {
 
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import PageHero from "@/components/PageHero";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -176,25 +177,21 @@ const FlightBooking = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main>
-        <section className="relative bg-primary pb-20 pt-32">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute right-20 top-10 h-80 w-80 rounded-full bg-accent blur-[120px]" />
-          </div>
-          <div className="container relative z-10 text-center">
-            <motion.div {...fadeUp} className="mx-auto max-w-2xl">
-              <span className="mb-6 inline-block rounded-full border border-accent/30 bg-accent/20 px-4 py-1.5 text-sm font-semibold text-accent">
-                <Plane className="mr-2 inline h-4 w-4" />
-                Flight Booking
-              </span>
-              <h1 className="font-display text-4xl font-bold leading-tight text-primary-foreground md:text-6xl">
-                Book Your <span className="text-gradient-accent">Perfect Flight</span>
-              </h1>
-              <p className="mx-auto mt-6 max-w-xl text-lg text-primary-foreground/70">
-                Browse live flight offers stored in Supabase and book with AtlastWave support.
-              </p>
-            </motion.div>
-          </div>
-        </section>
+        <PageHero
+          badge="Flight Booking"
+          badgeIcon={Plane}
+          title="Book Your"
+          highlight="Perfect Flight"
+          description="Compare global airlines, secure the best fares, and travel with confidence. Live offers updated daily by our travel desk."
+          backgroundImage="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1920&q=70&auto=format&fit=crop"
+          breadcrumbs={[{ label: "Home", to: "/" }, { label: "Travel Services", to: "/travel" }, { label: "Flights" }]}
+          stats={[
+            { value: "500+", label: "Airlines", icon: Plane },
+            { value: "24/7", label: "Travel support", icon: User },
+            { value: "0%", label: "Booking fee", icon: CreditCard },
+            { value: "Best", label: "Price guarantee", icon: SortAsc },
+          ]}
+        />
 
         <section className="py-8">
           <div className="container max-w-5xl">

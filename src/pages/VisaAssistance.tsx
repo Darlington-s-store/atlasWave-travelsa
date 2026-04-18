@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import PageHero from "@/components/PageHero";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -182,25 +183,23 @@ const VisaAssistance = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main>
-        {/* Hero */}
-        <section className="relative pt-32 pb-20 bg-primary">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-10 left-20 w-80 h-80 rounded-full bg-accent blur-[120px]" />
-          </div>
-          <div className="container relative z-10 text-center">
-            <motion.div {...fadeUp} className="mx-auto max-w-2xl">
-              <span className="inline-block px-4 py-1.5 bg-accent/20 text-accent text-sm font-semibold rounded-full mb-6 border border-accent/30">
-                <FileCheck className="w-4 h-4 inline mr-2" />Visa Assistance
-              </span>
-              <h1 className="text-4xl md:text-6xl font-display font-bold text-primary-foreground leading-tight">
-                Expert <span className="text-gradient-accent">Visa</span> Services
-              </h1>
-              <p className="mx-auto mt-6 max-w-xl text-lg text-primary-foreground/70">
-                95%+ approval rate across 50+ countries. We handle your visa from start to finish.
-              </p>
-            </motion.div>
-          </div>
-        </section>
+        <PageHero
+          badge="Visa Assistance"
+          badgeIcon={FileCheck}
+          title="Expert"
+          highlight="Visa Services"
+          description="95%+ approval rate across 50+ countries. We handle your visa from start to finish — from documentation to interview prep to lodgement."
+          backgroundImage="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920&q=70&auto=format&fit=crop"
+          breadcrumbs={[{ label: "Home", to: "/" }, { label: "Visa Assistance" }]}
+          stats={[
+            { value: "95%+", label: "Approval rate", icon: Shield },
+            { value: "50+", label: "Countries served", icon: Globe },
+            { value: "5–15d", label: "Avg processing", icon: Clock },
+            { value: "10k+", label: "Visas issued", icon: FileCheck },
+          ]}
+          primaryAction={{ label: "Apply Now", onClick: () => setActiveTab("apply") }}
+          secondaryAction={{ label: "Browse Programs", onClick: () => setActiveTab("programs") }}
+        />
 
         {/* Tab Navigation */}
         <section className="border-b sticky top-0 z-20 bg-background">
