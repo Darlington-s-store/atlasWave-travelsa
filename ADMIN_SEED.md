@@ -1,61 +1,38 @@
 # Seeding Admin User
 
-To seed the admin user with credentials `admin@atlastwave.com` / `Admin@atlaswave`, follow these steps:
+To seed an admin user, follow these steps. **Never commit credentials to source control.**
 
 ## Step 1: Get Your Supabase Service Role Key
 
-1. Go to your [Supabase Dashboard](https://supabase.com/dashboard)
-2. Select your project: `iictbacogzmubagkwdeb`
-3. Navigate to **Settings → API**
-4. Copy the **Service Role** key (⚠️ Keep this secret!)
+1. Go to your Supabase Dashboard
+2. Navigate to **Settings → API**
+3. Copy the **Service Role** key (⚠️ Keep this secret!)
 
-## Step 2: Set Environment Variable
+## Step 2: Set Environment Variables
 
-Create a `.env.local` file in the root of your project with:
+Create a `.env.local` file (already excluded by `.gitignore`) in the project root:
 
 ```env
-SUPABASE_URL=https://iictbacogzmubagkwdeb.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+SUPABASE_URL=<your_supabase_url>
+SUPABASE_SERVICE_ROLE_KEY=<your_service_role_key>
+ADMIN_EMAIL=<admin_email>
+ADMIN_PASSWORD=<choose_a_strong_unique_password>
 ```
 
-Replace `your_service_role_key_here` with the key you copied above.
+Use a strong password (16+ characters, mixed case, numbers, symbols).
 
 ## Step 3: Run the Seed Script
 
-Using Node.js (recommended):
 ```bash
-# Set environment variable (Windows PowerShell)
-$env:SUPABASE_SERVICE_ROLE_KEY = "your_service_role_key_here"
 node seed-admin.js
-
-# Or (Command Prompt)
-set SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
-node seed-admin.js
-```
-
-Or using npm/package.json (add this to scripts):
-```bash
-npm run seed-admin
-```
-
-Using Bun (if available):
-```bash
-bun run supabase/seed.ts
 ```
 
 ## Step 4: Verify
 
-Once the script completes successfully, you'll see:
-```
-✅ Admin user seeded successfully!
-Email: admin@atlastwave.com
-Password: Admin@atlaswave
-```
+Once the script completes, you can log in at the admin portal with the credentials you provided.
 
-You can now use these credentials to login at the admin portal.
+## Security Notes
 
-## Troubleshooting
-
-- **"User already exists"**: The admin user may already exist. The script will still assign the admin role if needed.
-- **"SUPABASE_SERVICE_ROLE_KEY not set"**: Ensure your `.env.local` file is in the project root and has the correct key.
-- **Still getting errors**: Check that your service role key is valid and hasn't expired.
+- **Never** commit `.env.local`, credentials, or service role keys.
+- Rotate any password that has been shared, logged, or exposed.
+- The service role key bypasses RLS — treat it like a master key.
