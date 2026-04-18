@@ -883,9 +883,60 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_reviews: {
+        Row: {
+          approved_at: string | null
+          content: string | null
+          created_at: string | null
+          id: string | null
+          name: string | null
+          rating: number | null
+          role: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+          rating?: number | null
+          role?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+          rating?: number | null
+          role?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      get_shipment_by_tracking: {
+        Args: { p_tracking: string }
+        Returns: {
+          destination: string
+          eta: string
+          origin: string
+          progress: number
+          status: string
+          tracking_number: string
+          updated_at: string
+        }[]
+      }
+      get_shipment_events_by_tracking: {
+        Args: { p_tracking: string }
+        Returns: {
+          description: string
+          location: string
+          occurred_at: string
+          sort_order: number
+          status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
