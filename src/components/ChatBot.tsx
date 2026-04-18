@@ -150,6 +150,7 @@ const ChatBot = () => {
     recognition.maxAlternatives = 1;
 
     let finalTranscript = "";
+    let manuallyStopped = false;
     recognition.onresult = (e: any) => {
       let interim = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -165,13 +166,23 @@ const ChatBot = () => {
 
     recognition.onerror = (e: any) => {
       console.warn("Speech recognition error:", e.error);
+      manuallyStopped = true;
       setIsRecording(false);
       setInterimTranscript("");
     };
     recognition.onend = () => {
       setIsRecording(false);
       setInterimTranscript("");
+      const toSend = finalTranscript.trim();
+      // Auto-submit voice input when recognition ends naturally
+      if (!manuallyStopped && toSend) {
+        setInput("");
+        // Small delay so the input state flush doesn't race with send
+        setTimeout(() => sendText(toSend), 50);
+      }
+      recognitionRef.current = null;
     };
+    (recognition as any).__manualStop = () => { manuallyStopped = true; };
     recognitionRef.current = recognition;
     recognition.start();
     setIsRecording(true);
