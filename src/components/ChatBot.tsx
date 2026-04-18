@@ -190,6 +190,7 @@ const ChatBot = () => {
 
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
+      (recognitionRef.current as any).__manualStop?.();
       recognitionRef.current.stop();
       recognitionRef.current = null;
     }
