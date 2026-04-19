@@ -500,46 +500,66 @@ const ChatBot = () => {
                   key={msg.id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} gap-2`}
+                  transition={{ type: "spring", damping: 30, stiffness: 200 }}
+                  className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} gap-3`}
                 >
                   {msg.sender === "bot" && (
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 ring-2 ring-accent/30" style={{ background: "var(--gradient-primary)" }}>
+                    <motion.div 
+                      whileHover={{ scale: 1.1 }}
+                      className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 ring-2 ring-accent/40 shadow-md" 
+                      style={{ background: "var(--gradient-primary)" }}
+                    >
                       <Sparkles className="w-4 h-4 text-accent" />
-                    </div>
+                    </motion.div>
                   )}
                   <div className="max-w-[82%] space-y-2">
                     {msg.attachments?.map((att, i) => (
-                      <div key={i} className="rounded-xl overflow-hidden border bg-muted/50">
+                      <motion.div 
+                        key={i} 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="rounded-2xl overflow-hidden border-2 border-accent/20 bg-gradient-to-br from-card to-muted/50 shadow-md hover:shadow-lg transition-shadow"
+                      >
                         {att.type === "image" && att.preview ? (
                           <img src={att.preview} alt={att.name} className="max-h-48 w-auto rounded-xl" />
                         ) : (
-                          <div className="flex items-center gap-2 px-3 py-2 text-xs">
-                            <FileText className="w-4 h-4 text-muted-foreground" />
-                            <span className="truncate">{att.name}</span>
+                          <div className="flex items-center gap-3 px-4 py-3 text-xs text-foreground">
+                            <FileText className="w-4 h-4 text-accent" />
+                            <span className="truncate font-medium">{att.name}</span>
                           </div>
                         )}
-                      </div>
+                      </motion.div>
                     ))}
                     {msg.text && (
-                      <div className={`rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
-                        msg.sender === "user"
-                          ? "text-primary-foreground rounded-br-md"
-                          : "bg-card border text-foreground rounded-bl-md"
-                      }`}
-                      style={msg.sender === "user" ? { background: "var(--gradient-primary)" } : undefined}
+                      <motion.div 
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-md transition-all ${
+                          msg.sender === "user"
+                            ? "text-primary-foreground rounded-br-lg font-medium"
+                            : "bg-card border-2 border-border text-foreground rounded-bl-lg shadow-card hover:shadow-card-hover"
+                        }`}
+                        style={msg.sender === "user" ? { background: "var(--gradient-primary)" } : undefined}
                       >
                         {msg.sender === "bot" ? (
-                          <div className="prose prose-sm max-w-none [&>p]:m-0 [&>ul]:my-1.5 [&>ol]:my-1.5 [&>p+p]:mt-2 [&_strong]:text-primary [&_a]:text-secondary [&_a]:underline [&_li]:my-0.5">
+                          <div className="prose prose-sm max-w-none dark:prose-invert [&>p]:m-0 [&>p]:leading-relaxed [&>ul]:my-2 [&>ol]:my-2 [&>p+p]:mt-3 [&_strong]:text-primary [&_strong]:font-semibold [&_code]:bg-accent/10 [&_code]:text-accent [&_code]:px-2 [&_code]:py-1 [&_code]:rounded [&_a]:text-secondary [&_a]:underline [&_li]:my-1 [&_li]:ml-2">
                             <ReactMarkdown>{msg.text || "…"}</ReactMarkdown>
                           </div>
                         ) : (
                           msg.text
                         )}
-                      </div>
+                      </motion.div>
                     )}
-                    <p className={`text-[10px] text-muted-foreground/60 px-1 ${msg.sender === "user" ? "text-right" : ""}`}>
-                      {msg.id === 0 ? "" : new Date(msg.id).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                    </p>
+                    {msg.id !== 0 && (
+                      <motion.p 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className={`text-[10px] text-muted-foreground/60 px-2 ${msg.sender === "user" ? "text-right" : ""}`}
+                      >
+                        {new Date(msg.id).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </motion.p>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -562,18 +582,35 @@ const ChatBot = () => {
 
               {/* Typing indicator */}
               {isLoading && messages[messages.length - 1]?.sender !== "bot" && (
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 ring-2 ring-accent/30" style={{ background: "var(--gradient-primary)" }}>
-                    <Sparkles className="w-4 h-4 text-accent" />
-                  </div>
-                  <div className="bg-card border rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+                <motion.div 
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-3"
+                >
+                  <motion.div 
+                    whileHover={{ scale: 1.1 }}
+                    className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 ring-2 ring-accent/40 shadow-md" 
+                    style={{ background: "var(--gradient-primary)" }}
+                  >
+                    <Sparkles className="w-4 h-4 text-accent animate-pulse" />
+                  </motion.div>
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="bg-card border-2 border-accent/30 rounded-2xl rounded-bl-lg px-4 py-3 shadow-card"
+                  >
                     <div className="flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary/50 animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary/50 animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary/50 animate-bounce" style={{ animationDelay: "300ms" }} />
+                      {[0, 150, 300].map((delay) => (
+                        <motion.span
+                          key={delay}
+                          animate={{ y: [-4, 4, -4] }}
+                          transition={{ duration: 0.6, delay: delay / 1000, repeat: Infinity }}
+                          className="w-2 h-2 rounded-full bg-gradient-to-r from-primary to-secondary"
+                        />
+                      ))}
                     </div>
-                  </div>
-                </div>
+                  </motion.div>
+                </motion.div>
               )}
 
               {/* Live transcription bubble */}

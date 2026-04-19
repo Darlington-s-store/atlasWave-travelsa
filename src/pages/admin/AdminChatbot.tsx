@@ -175,18 +175,21 @@ const AdminChatbot = () => {
 
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {[
-            { label: "Training Pairs", value: loadingPairs ? "..." : pairs.length, icon: Zap, color: "text-accent" },
-            { label: "Conversations", value: loadingLogs ? "..." : logs.length, icon: MessageCircle, color: "text-primary" },
-            { label: "Match Rate", value: loadingLogs ? "..." : `${matchRate}%`, icon: BarChart3, color: "text-secondary" },
-            { label: "Satisfaction", value: loadingLogs ? "..." : `${positiveRate}%`, icon: ThumbsUp, color: "text-secondary" },
+            { label: "Training Pairs", value: loadingPairs ? "..." : pairs.length, icon: Zap, color: "text-accent", bgGradient: "from-accent/10 to-accent/5" },
+            { label: "Conversations", value: loadingLogs ? "..." : logs.length, icon: MessageCircle, color: "text-primary", bgGradient: "from-primary/10 to-primary/5" },
+            { label: "Match Rate", value: loadingLogs ? "..." : `${matchRate}%`, icon: BarChart3, color: "text-secondary", bgGradient: "from-secondary/10 to-secondary/5" },
+            { label: "Satisfaction", value: loadingLogs ? "..." : `${positiveRate}%`, icon: ThumbsUp, color: "text-secondary", bgGradient: "from-secondary/10 to-secondary/5" },
           ].map((stat) => (
-            <Card key={stat.label} className="rounded-xl border border-border/60 shadow-card">
-              <CardContent className="p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{stat.label}</p>
-                  <stat.icon className={`h-4 w-4 ${stat.color}`} />
+            <Card key={stat.label} className={`rounded-xl border-2 border-border/40 shadow-card hover:shadow-card-hover transition-all duration-300 bg-gradient-to-br ${stat.bgGradient}`}>
+              <CardContent className="p-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
+                  <div className={`h-9 w-9 rounded-lg flex items-center justify-center bg-white/10 backdrop-blur-sm ${stat.color}`}>
+                    <stat.icon className="h-4 w-4" />
+                  </div>
                 </div>
-                <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">{stat.value}</p>
+                <p className="text-[11px] text-muted-foreground/60 mt-2">Last 30 days</p>
               </CardContent>
             </Card>
           ))}
