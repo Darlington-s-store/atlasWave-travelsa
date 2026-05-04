@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from "@/components/ui/dialog";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -456,7 +456,10 @@ const AdminUsers = () => {
         {/* Edit Profile Dialog */}
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent className="sm:max-w-[400px]">
-            <DialogHeader><DialogTitle>Edit User Profile</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>Edit User Profile</DialogTitle>
+              <DialogDescription className="sr-only">Update the full name and phone number for this user.</DialogDescription>
+            </DialogHeader>
             <div className="space-y-4 py-2">
               <div className="space-y-2"><Label>Full Name</Label><Input value={editForm.full_name} onChange={e => setEditForm(f => ({ ...f, full_name: e.target.value }))} /></div>
               <div className="space-y-2"><Label>Phone</Label><Input value={editForm.phone} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))} /></div>
@@ -468,7 +471,10 @@ const AdminUsers = () => {
         {/* Role Assignment Dialog */}
         <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
           <DialogContent className="sm:max-w-[400px]">
-            <DialogHeader><DialogTitle>Manage Roles</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>Manage Roles</DialogTitle>
+              <DialogDescription className="sr-only">View and modify the administrative roles assigned to this user.</DialogDescription>
+            </DialogHeader>
             <div className="space-y-4 py-2">
               <div>
                 <p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-2">Current Roles</p>
@@ -611,7 +617,10 @@ const AdminUsers = () => {
       {/* Edit Profile Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader><DialogTitle>Edit User Profile</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Edit User Profile</DialogTitle>
+            <DialogDescription className="sr-only">Update the full name and phone number for this user.</DialogDescription>
+          </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2"><Label>Full Name</Label><Input value={editForm.full_name} onChange={e => setEditForm(f => ({ ...f, full_name: e.target.value }))} /></div>
             <div className="space-y-2"><Label>Phone</Label><Input value={editForm.phone} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))} /></div>
@@ -623,7 +632,10 @@ const AdminUsers = () => {
       {/* Role Assignment Dialog */}
       <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader><DialogTitle>Assign Role</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Assign Role</DialogTitle>
+            <DialogDescription className="sr-only">Assign a new administrative role to this user.</DialogDescription>
+          </DialogHeader>
           <div className="space-y-4 py-2">
             <p className="text-[13px] text-muted-foreground">Assign a role to <strong>{managingUser?.full_name || "this user"}</strong>.</p>
             <div className="space-y-2">
@@ -641,9 +653,10 @@ const AdminUsers = () => {
       {/* Application Detail Dialog */}
       <Dialog open={appDetailsOpen} onOpenChange={setAppDetailsOpen}>
         <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Application Specifics</DialogTitle>
-          </DialogHeader>
+            <DialogHeader>
+              <DialogTitle>Application Specifics</DialogTitle>
+              <DialogDescription className="sr-only">Detailed form data for the selected application.</DialogDescription>
+            </DialogHeader>
           {viewingApp && (
             <div className="space-y-4 py-2">
               <div className="flex justify-between items-center border-b pb-2">

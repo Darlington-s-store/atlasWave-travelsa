@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -357,6 +357,7 @@ const AdminApplications = () => {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Application</DialogTitle>
+            <DialogDescription className="sr-only">Update the title, service type, and status of this application.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
@@ -399,6 +400,7 @@ const AdminApplications = () => {
               <FileText className="w-5 h-5 text-primary" />
               Application Details
             </DialogTitle>
+            <DialogDescription className="sr-only">Detailed information and form data for this application.</DialogDescription>
           </DialogHeader>
           {viewingApp && (
             <div className="space-y-6 py-4">
@@ -550,6 +552,7 @@ const AdminApplications = () => {
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle>Delete Application</DialogTitle>
+            <DialogDescription className="sr-only">Confirm deletion of the selected application.</DialogDescription>
           </DialogHeader>
           <p className="text-[13px] text-muted-foreground py-2">
             Are you sure you want to delete this application? This action cannot be undone.

@@ -31,12 +31,40 @@ const AdminDocumentation = () => {
 
   const fetchDocuments = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    // Fetch documents first
+    const { data: docs, error: docError } = await supabase
       .from("documents")
-      .select("*, profiles(full_name)")
+      .select("*")
       .order("created_at", { ascending: false });
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    setDocuments((data || []) as unknown as Document[]);
+
+    if (docError) {
+      toast({ title: "Error", description: docError.message, variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+
+    // Fetch profiles for the unique user IDs found in documents
+    const userIds = [...new Set((docs || []).map(d => d.user_id))];
+    if (userIds.length > 0) {
+      const { data: profiles, error: profError } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", userIds);
+
+      if (!profError && profiles) {
+        const profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
+        const docsWithProfiles = (docs || []).map(d => ({
+          ...d,
+          profiles: profileMap[d.user_id] || { full_name: "Unknown User" }
+        }));
+        setDocuments(docsWithProfiles as Document[]);
+      } else {
+        setDocuments((docs || []) as unknown as Document[]);
+      }
+    } else {
+      setDocuments((docs || []) as unknown as Document[]);
+    }
+    
     setLoading(false);
   }, [toast]);
 

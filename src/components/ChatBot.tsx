@@ -65,15 +65,15 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-const DEFAULT_GREETING = `✨ **Welcome to AtlasWave** — I'm **AtlasBot**, your personal travel concierge.
+const DEFAULT_GREETING = `✨ Welcome to AtlasWave — I'm AtlasBot, your personal travel concierge.
 
 I'm here to make global travel feel effortless. Ask me anything about:
 
-- ✈️ **Flights & airfares** — best routes, fares, baggage rules
-- 🏨 **Hotels & stays** — curated picks worldwide
-- 🛂 **Visas & work permits** — Schengen, Canada LMIA, USA, UK, Germany
-- 🌍 **Destinations** — what to see, when to go, what to pack
-- 📦 **Logistics tracking** — share your tracking number anytime
+- ✈️ Flights & airfares - best routes, fares, baggage rules
+- 🏨 Hotels & stays - curated picks worldwide
+- 🛂 Visas & work permits - Schengen, Canada LMIA, USA, UK, Germany
+- 🌍 Destinations - what to see, when to go, what to pack
+- 📦 Logistics tracking - share your tracking number anytime
 
 How may I assist you today?`;
 

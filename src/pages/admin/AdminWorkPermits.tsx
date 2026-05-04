@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -387,6 +387,7 @@ const AdminWorkPermits = () => {
               <FileText className="w-5 h-5 text-primary" />
               Application Details
             </DialogTitle>
+            <DialogDescription className="sr-only">Detailed case information for this work permit application.</DialogDescription>
           </DialogHeader>
           {viewingApp && (
             <div className="space-y-6 py-4">
@@ -475,7 +476,15 @@ const AdminWorkPermits = () => {
           <DialogFooter className="border-t pt-4">
             <DialogClose asChild><Button variant="outline" className="h-9 text-[13px]">Close</Button></DialogClose>
             {viewingApp && (
-              <Button variant="default" className="h-9 text-[13px]" onClick={() => { setViewDialogOpen(false); setEditingApp(viewingApp); setEditForm({ status: viewingApp.status, details: typeof viewingApp.details === 'string' ? viewingApp.details : JSON.stringify(viewingApp.details) }); setEditDialogOpen(true); }}>
+              <Button variant="default" className="h-9 text-[13px]" onClick={() => { 
+                setViewDialogOpen(false); 
+                setEditingApp(viewingApp); 
+                setEditForm({ 
+                  status: viewingApp.status, 
+                  details: typeof viewingApp.details === 'string' ? viewingApp.details : "" 
+                }); 
+                setEditDialogOpen(true); 
+              }}>
                 <Pencil className="w-4 h-4 mr-2" /> Update Stage
               </Button>
             )}
@@ -487,7 +496,10 @@ const AdminWorkPermits = () => {
       {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader><DialogTitle>Update Application Stage</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Update Application Stage</DialogTitle>
+            <DialogDescription className="sr-only">Move the application to a different processing stage or add case notes.</DialogDescription>
+          </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Stage</Label>
@@ -511,7 +523,10 @@ const AdminWorkPermits = () => {
       {/* Eligibility Scorer Dialog */}
       <Dialog open={scorerOpen} onOpenChange={setScorerOpen}>
         <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader><DialogTitle>Germany Opportunity Card — Eligibility Scorer</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Germany Opportunity Card — Eligibility Scorer</DialogTitle>
+            <DialogDescription className="sr-only">Calculate eligibility points based on qualifications, experience, language, and age.</DialogDescription>
+          </DialogHeader>
           <div className="space-y-4 py-2">
             <p className="text-[13px] text-muted-foreground">Minimum 6 points required for eligibility.</p>
             <div className="grid grid-cols-2 gap-4">
@@ -597,7 +612,10 @@ const AdminWorkPermits = () => {
       {/* Create Work Permit Application Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="sm:max-w-[450px]">
-          <DialogHeader><DialogTitle>Add Work Permit Application</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Add Work Permit Application</DialogTitle>
+            <DialogDescription className="sr-only">Manually create a new work permit application record.</DialogDescription>
+          </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Title *</Label>

@@ -33,7 +33,7 @@ export function useWebAuthn() {
       const credential = await navigator.credentials.create({
         publicKey: {
           challenge,
-          rp: { name: "AtlastWave Travel", id: window.location.hostname },
+          rp: { name: "AtlasWave Travel", id: window.location.hostname },
           user: {
             id: new TextEncoder().encode(userId),
             name: userName,
@@ -69,9 +69,10 @@ export function useWebAuthn() {
 
       toast({ title: "Biometric registered!", description: "You can now use fingerprint or face recognition to log in." });
       return true;
-    } catch (err: any) {
-      if (err.name !== "NotAllowedError") {
-        toast({ title: "Registration failed", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      const error = err as Error;
+      if (error.name !== "NotAllowedError") {
+        toast({ title: "Registration failed", description: error.message, variant: "destructive" });
       }
       return false;
     } finally {
@@ -112,9 +113,10 @@ export function useWebAuthn() {
       const matchedUserId = userIds.find(uid => stored[uid].credentialId === assertionId);
 
       return matchedUserId || null;
-    } catch (err: any) {
-      if (err.name !== "NotAllowedError") {
-        console.error("WebAuthn authentication error:", err);
+    } catch (err: unknown) {
+      const error = err as Error;
+      if (error.name !== "NotAllowedError") {
+        console.error("WebAuthn authentication error:", error);
       }
       return null;
     } finally {

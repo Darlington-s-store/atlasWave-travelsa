@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Search, Globe, MoreHorizontal, Eye, Pencil, Inbox, CheckCircle, Clock, XCircle, FileText, LayoutGrid, List, Plus, Trash2, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -334,6 +334,7 @@ const AdminVisaApplications = () => {
               <FileText className="w-5 h-5 text-primary" />
               Application Details
             </DialogTitle>
+            <DialogDescription className="sr-only">Comprehensive view of all information provided for this visa application.</DialogDescription>
           </DialogHeader>
           {viewingApp && (
             <div className="space-y-6 py-4">
@@ -423,7 +424,13 @@ const AdminVisaApplications = () => {
           <DialogFooter className="border-t pt-4">
             <DialogClose asChild><Button variant="outline" className="h-9 text-[13px]">Close</Button></DialogClose>
             {viewingApp && (
-              <Button variant="default" className="h-9 text-[13px]" onClick={() => { setViewDialogOpen(false); setEditingApp(viewingApp); setEditStatus(viewingApp.status); setEditNotes(typeof viewingApp.details === 'string' ? viewingApp.details : JSON.stringify(viewingApp.details)); setEditDialogOpen(true); }}>
+              <Button variant="default" className="h-9 text-[13px]" onClick={() => { 
+                setViewDialogOpen(false); 
+                setEditingApp(viewingApp); 
+                setEditStatus(viewingApp.status); 
+                setEditNotes(typeof viewingApp.details === 'string' ? viewingApp.details : ""); 
+                setEditDialogOpen(true); 
+              }}>
                 <Pencil className="w-4 h-4 mr-2" /> Update Status
               </Button>
             )}
@@ -434,7 +441,10 @@ const AdminVisaApplications = () => {
       {/* Edit Status Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader><DialogTitle>Update Application</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Update Application</DialogTitle>
+            <DialogDescription className="sr-only">Change the status or add administrative notes to this visa application.</DialogDescription>
+          </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Status</Label>
@@ -457,7 +467,10 @@ const AdminVisaApplications = () => {
       {/* Create Application Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="sm:max-w-[450px]">
-          <DialogHeader><DialogTitle>Add Visa Application</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Add Visa Application</DialogTitle>
+            <DialogDescription className="sr-only">Create a new visa application record in the system.</DialogDescription>
+          </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Title *</Label>

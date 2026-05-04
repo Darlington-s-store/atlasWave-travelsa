@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { Camera, Upload, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -98,8 +98,9 @@ const AvatarUpload = ({ onUploaded, currentUrl, size = "md" }: AvatarUploadProps
       toast({ title: "Photo updated!" });
       setOpen(false);
       setPreview(null);
-    } catch (e: any) {
-      toast({ title: "Upload failed", description: e.message, variant: "destructive" });
+    } catch (e: unknown) {
+      const error = e as Error;
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
     } finally {
       setUploading(false);
     }
@@ -131,6 +132,7 @@ const AvatarUpload = ({ onUploaded, currentUrl, size = "md" }: AvatarUploadProps
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Profile Photo</DialogTitle>
+            <DialogDescription className="sr-only">Upload a new profile photo or take one using your camera.</DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col items-center gap-4">
