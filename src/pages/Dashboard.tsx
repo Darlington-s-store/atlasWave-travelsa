@@ -40,7 +40,108 @@ const sidebarNavItems = [
   { id: "shipments", label: "Logistics", icon: Package },
 ];
 
-const statusConfig: Record<string, { icon: any; color: string; label: string }> = {
+interface Application {
+  id: string;
+  user_id: string;
+  title: string;
+  type: string;
+  status: string;
+  details: string | Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ApplicationFormData {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  nationality?: string;
+  destination?: string;
+  visaType?: string;
+  travelDate?: string;
+}
+
+interface Booking {
+  id: string;
+  user_id: string;
+  type: string;
+  route: string;
+  date: string;
+  provider: string | null;
+  status: string;
+  created_at: string;
+}
+
+interface Shipment {
+  id: string;
+  user_id: string;
+  tracking_number: string;
+  origin: string;
+  destination: string;
+  status: string;
+  progress: number;
+  created_at: string;
+}
+
+interface Consultation {
+  id: string;
+  user_id: string;
+  type: string;
+  date: string;
+  time: string;
+  duration: number;
+  price: number;
+  status: string;
+  topic: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+interface Document {
+  id: string;
+  user_id: string;
+  name: string;
+  category: string;
+  file_type: string;
+  created_at: string;
+}
+
+interface Payment {
+  id: string;
+  user_id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  payment_method: string;
+  description: string | null;
+  reference: string;
+  created_at: string;
+}
+
+interface Invoice {
+  id: string;
+  invoice_number: string;
+  amount: number;
+  currency: string;
+  status: string;
+  description: string | null;
+  payment_method: string | null;
+  issued_at: string;
+  created_at: string;
+}
+
+interface Review {
+  id: string;
+  user_id: string;
+  name: string;
+  email: string;
+  rating: number;
+  content: string;
+  status: string;
+  created_at: string;
+}
+
+const statusConfig: Record<string, { icon: React.ElementType; color: string; label: string }> = {
   pending: { icon: Clock, color: "bg-amber-100 text-amber-800 border-amber-200", label: "Pending" },
   "in-review": { icon: AlertCircle, color: "bg-blue-100 text-blue-800 border-blue-200", label: "In Progress" },
   approved: { icon: CheckCircle, color: "bg-emerald-100 text-emerald-800 border-emerald-200", label: "Approved" },
@@ -62,12 +163,12 @@ const Dashboard = () => {
   const [form, setForm] = useState({ fullName: user?.fullName || "", phone: user?.phone || "", email: user?.email || "" });
 
   // Data states
-  const [applications, setApplications] = useState<any[]>([]);
-  const [bookings, setBookings] = useState<any[]>([]);
-  const [shipments, setShipments] = useState<any[]>([]);
-  const [consultations, setConsultations] = useState<any[]>([]);
-  const [documents, setDocuments] = useState<any[]>([]);
-  const [payments, setPayments] = useState<any[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [shipments, setShipments] = useState<Shipment[]>([]);
+  const [consultations, setConsultations] = useState<Consultation[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
@@ -231,11 +332,27 @@ const Dashboard = () => {
 };
 
 // --- OVERVIEW TAB ---
-function OverviewTab({ applications, bookings, shipments, consultations, userName, greeting, dataLoading }: any) {
+function OverviewTab({ 
+  applications, 
+  bookings, 
+  shipments, 
+  consultations, 
+  userName, 
+  greeting, 
+  dataLoading 
+}: { 
+  applications: Application[]; 
+  bookings: Booking[]; 
+  shipments: Shipment[]; 
+  consultations: Consultation[]; 
+  userName: string; 
+  greeting: string; 
+  dataLoading: boolean; 
+}) {
   const firstName = userName.split(" ")[0];
-  const activeApps = applications.filter((a: any) => a.status === "pending" || a.status === "in-review").length;
-  const activeShipments = shipments.filter((s: any) => s.status === "in-transit").length;
-  const upcomingConsultations = consultations.filter((c: any) => c.status === "upcoming" || c.status === "confirmed").length;
+  const activeApps = applications.filter((a) => a.status === "pending" || a.status === "in-review").length;
+  const activeShipments = shipments.filter((s) => s.status === "in-transit").length;
+  const upcomingConsultations = consultations.filter((c) => c.status === "upcoming" || c.status === "confirmed").length;
 
   return (
     <div className="space-y-6">
@@ -250,7 +367,7 @@ function OverviewTab({ applications, bookings, shipments, consultations, userNam
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Applications", value: applications.length, active: activeApps, icon: FileText, color: "text-primary", bg: "bg-primary/10" },
-          { label: "Bookings", value: bookings.length, active: bookings.filter((b: any) => b.status === "pending").length, icon: Plane, color: "text-blue-600", bg: "bg-blue-50" },
+          { label: "Bookings", value: bookings.length, active: bookings.filter((b) => b.status === "pending").length, icon: Plane, color: "text-blue-600", bg: "bg-blue-50" },
           { label: "Shipments", value: shipments.length, active: activeShipments, icon: Package, color: "text-purple-600", bg: "bg-purple-50" },
           { label: "Appointments", value: consultations.length, active: upcomingConsultations, icon: CalendarDays, color: "text-amber-600", bg: "bg-amber-50" },
         ].map((s) => (
@@ -275,7 +392,7 @@ function OverviewTab({ applications, bookings, shipments, consultations, userNam
               <p className="text-sm text-muted-foreground">No applications yet</p>
             </div>
           ) : (
-            applications.slice(0, 3).map((app: any) => {
+            applications.slice(0, 3).map((app) => {
               const cfg = statusConfig[app.status] || statusConfig.pending;
               return (
                 <div key={app.id} className="bg-background rounded-xl border p-4 hover:shadow-md transition-shadow">
@@ -293,13 +410,8 @@ function OverviewTab({ applications, bookings, shipments, consultations, userNam
         </div>
         <div className="space-y-3">
           <h2 className="font-display text-lg font-bold text-foreground">Active Shipments</h2>
-          {shipments.filter((s: any) => s.status === "in-transit").length === 0 ? (
-            <div className="bg-background rounded-xl border p-8 text-center">
-              <Truck className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">No active shipments</p>
-            </div>
           ) : (
-            shipments.filter((s: any) => s.status === "in-transit").slice(0, 3).map((s: any) => (
+            shipments.filter((s) => s.status === "in-transit").slice(0, 3).map((s) => (
               <div key={s.id} className="bg-background rounded-xl border p-4">
                 <div className="flex items-center justify-between mb-2">
                   <p className="font-medium text-foreground text-sm">{s.tracking_number}</p>
@@ -319,7 +431,7 @@ function OverviewTab({ applications, bookings, shipments, consultations, userNam
 }
 
 // --- APPLICATIONS TAB ---
-function ApplicationsTab({ applications, onRefresh, userId }: { applications: any[]; onRefresh: () => void; userId: string }) {
+function ApplicationsTab({ applications, onRefresh, userId }: { applications: Application[]; onRefresh: () => void; userId: string }) {
   const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [appForm, setAppForm] = useState({ type: "visa", title: "", details: "" });
@@ -383,6 +495,24 @@ function ApplicationsTab({ applications, onRefresh, userId }: { applications: an
           {applications.map((app) => {
             const cfg = statusConfig[app.status] || statusConfig.pending;
             const StatusIcon = cfg.icon;
+
+            // Parse details if it's JSON
+            let detailsSummary = "";
+            try {
+              const rawDetails = app.details;
+              if (typeof rawDetails === "string" && (rawDetails.startsWith("{") || rawDetails.startsWith("["))) {
+                const parsed = JSON.parse(rawDetails) as ApplicationFormData;
+                detailsSummary = `${parsed.fullName || ""} · ${parsed.nationality || ""} → ${parsed.destination || ""}`;
+              } else if (typeof rawDetails === "object" && rawDetails !== null) {
+                const parsed = rawDetails as ApplicationFormData;
+                detailsSummary = `${parsed.fullName || ""} · ${parsed.nationality || ""} → ${parsed.destination || ""}`;
+              } else {
+                detailsSummary = String(app.details || "No details provided.");
+              }
+            } catch (e) {
+              detailsSummary = String(app.details || "No details provided.");
+            }
+
             return (
               <div key={app.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl border bg-background hover:shadow-md transition-shadow gap-3">
                 <div className="flex items-start gap-4">
@@ -394,7 +524,7 @@ function ApplicationsTab({ applications, onRefresh, userId }: { applications: an
                   </div>
                   <div>
                     <p className="font-medium text-foreground">{app.title}</p>
-                    <p className="text-sm text-muted-foreground">{app.details || "No details"}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-1">{detailsSummary}</p>
                     <p className="text-xs text-muted-foreground mt-1 capitalize">{app.type} · {new Date(app.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
@@ -406,6 +536,7 @@ function ApplicationsTab({ applications, onRefresh, userId }: { applications: an
           })}
         </div>
       )}
+
 
       {/* New Application Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -444,7 +575,7 @@ function ApplicationsTab({ applications, onRefresh, userId }: { applications: an
 }
 
 // --- APPOINTMENTS TAB ---
-function AppointmentsTab({ consultations, onRefresh, userId }: { consultations: any[]; onRefresh: () => void; userId: string }) {
+function AppointmentsTab({ consultations, onRefresh, userId }: { consultations: Consultation[]; onRefresh: () => void; userId: string }) {
   const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ type: "immigration", date: "", time: "", first_name: user?.fullName?.split(" ")[0] || "", last_name: user?.fullName?.split(" ").slice(1).join(" ") || "", email: user?.email || "", phone: user?.phone || "", topic: "", notes: "" });
@@ -485,8 +616,8 @@ function AppointmentsTab({ consultations, onRefresh, userId }: { consultations: 
         type: form.type,
         date: form.date,
         time: form.time,
-        duration: `${consultation?.duration || (form.type === "immigration" ? 60 : 45)} min`,
-        status: consultation?.status || "upcoming",
+        duration: `${(consultation as unknown as Consultation)?.duration || (form.type === "immigration" ? 60 : 45)} min`,
+        status: (consultation as unknown as Consultation)?.status || "upcoming",
       },
     });
     toast({ title: "Appointment booked successfully!" });
@@ -513,7 +644,7 @@ function AppointmentsTab({ consultations, onRefresh, userId }: { consultations: 
         </div>
       ) : (
         <div className="space-y-3">
-          {consultations.map((c: any) => {
+          {consultations.map((c) => {
             const cfg = statusConfig[c.status] || statusConfig.upcoming;
             const StatusIcon = cfg.icon;
             return (
@@ -605,7 +736,7 @@ function AppointmentsTab({ consultations, onRefresh, userId }: { consultations: 
 }
 
 // --- BOOKINGS TAB ---
-function BookingsTab({ bookings, onRefresh, userId }: { bookings: any[]; onRefresh: () => void; userId: string }) {
+function BookingsTab({ bookings, onRefresh, userId }: { bookings: Booking[]; onRefresh: () => void; userId: string }) {
   const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ type: "flight", route: "", date: "", provider: "" });
@@ -669,7 +800,7 @@ function BookingsTab({ bookings, onRefresh, userId }: { bookings: any[]; onRefre
         </div>
       ) : (
         <div className="space-y-3">
-          {bookings.map((b: any) => {
+          {bookings.map((b) => {
             const cfg = statusConfig[b.status] || statusConfig.pending;
             return (
               <div key={b.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl border bg-background hover:shadow-md transition-shadow gap-3">
@@ -729,7 +860,7 @@ function BookingsTab({ bookings, onRefresh, userId }: { bookings: any[]; onRefre
 }
 
 // --- PAYMENTS TAB ---
-function PaymentsTab({ payments, onRefresh, userId }: { payments: any[]; onRefresh: () => void; userId: string }) {
+function PaymentsTab({ payments, onRefresh, userId }: { payments: Payment[]; onRefresh: () => void; userId: string }) {
   const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ amount: "", description: "", payment_method: "card", currency: DEFAULT_CURRENCY });
@@ -833,7 +964,7 @@ function PaymentsTab({ payments, onRefresh, userId }: { payments: any[]; onRefre
         </div>
       ) : (
         <div className="space-y-3">
-          {payments.map((p: any) => {
+          {payments.map((p) => {
             const cfg = paymentStatusConfig[p.status] || paymentStatusConfig.pending;
             return (
               <div key={p.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl border bg-background hover:shadow-md transition-shadow gap-3">
@@ -929,7 +1060,7 @@ function PaymentsTab({ payments, onRefresh, userId }: { payments: any[]; onRefre
 // --- INVOICES TAB ---
 function InvoicesTab({ userId }: { userId: string }) {
   const { user } = useAuth();
-  const [invoices, setInvoices] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -970,7 +1101,7 @@ function InvoicesTab({ userId }: { userId: string }) {
         </div>
       ) : (
         <div className="space-y-3">
-          {invoices.map((inv: any) => {
+          {invoices.map((inv) => {
             const cfg = invoiceStatusConfig[inv.status] || invoiceStatusConfig.issued;
             return (
               <div key={inv.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl border bg-background hover:shadow-md transition-shadow gap-3">
@@ -1020,7 +1151,7 @@ function InvoicesTab({ userId }: { userId: string }) {
   );
 }
 
-function ShipmentsTab({ shipments }: { shipments: any[] }) {
+function ShipmentsTab({ shipments }: { shipments: Shipment[] }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -1039,7 +1170,7 @@ function ShipmentsTab({ shipments }: { shipments: any[] }) {
         </div>
       ) : (
         <div className="space-y-3">
-          {shipments.map((s: any) => {
+          {shipments.map((s) => {
             const cfg = statusConfig[s.status] || statusConfig["in-transit"];
             return (
               <div key={s.id} className="p-5 rounded-xl border bg-background hover:shadow-md transition-shadow">
@@ -1074,7 +1205,7 @@ function ShipmentsTab({ shipments }: { shipments: any[] }) {
 
 // --- REVIEWS TAB ---
 function ReviewsTab({ userId, userName, userEmail }: { userId: string; userName: string; userEmail: string }) {
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ rating: 5, content: "" });
@@ -1142,7 +1273,7 @@ function ReviewsTab({ userId, userName, userEmail }: { userId: string; userName:
         </div>
       ) : (
         <div className="space-y-3">
-          {reviews.map((r: any) => {
+          {reviews.map((r) => {
             const cfg = reviewStatusConfig[r.status] || reviewStatusConfig.pending;
             return (
               <div key={r.id} className="p-5 rounded-xl border bg-background hover:shadow-md transition-shadow">
@@ -1191,7 +1322,7 @@ function ReviewsTab({ userId, userName, userEmail }: { userId: string; userName:
   );
 }
 
-function DocumentsTab({ documents, onRefresh, userId }: { documents: any[]; onRefresh: () => void; userId: string }) {
+function DocumentsTab({ documents, onRefresh, userId }: { documents: Document[]; onRefresh: () => void; userId: string }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -1231,7 +1362,7 @@ function DocumentsTab({ documents, onRefresh, userId }: { documents: any[]; onRe
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleDelete = async (doc: any) => {
+  const handleDelete = async (doc: Document) => {
     if (doc.file_path) {
       await supabase.storage.from("user-documents").remove([doc.file_path]);
     }
@@ -1240,7 +1371,7 @@ function DocumentsTab({ documents, onRefresh, userId }: { documents: any[]; onRe
     onRefresh();
   };
 
-  const handleDownload = async (doc: any) => {
+  const handleDownload = async (doc: Document) => {
     if (!doc.file_path) return;
     const { data } = await supabase.storage.from("user-documents").createSignedUrl(doc.file_path, 60);
     if (data?.signedUrl) {
@@ -1271,7 +1402,7 @@ function DocumentsTab({ documents, onRefresh, userId }: { documents: any[]; onRe
         </div>
       ) : (
         <div className="space-y-3">
-          {documents.map((d: any) => (
+          {documents.map((d) => (
             <div key={d.id} className="flex items-center justify-between p-4 rounded-xl border bg-background hover:shadow-md transition-shadow">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center">
@@ -1295,7 +1426,16 @@ function DocumentsTab({ documents, onRefresh, userId }: { documents: any[]; onRe
 }
 
 // --- SETTINGS TAB ---
-function SettingsTab({ user, form, setForm, editing, setEditing, handleSave, logout, navigate }: any) {
+function SettingsTab({ user, form, setForm, editing, setEditing, handleSave, logout, navigate }: {
+  user: { fullName: string | null; email: string | null; id: string };
+  form: { fullName: string; phone: string; email: string };
+  setForm: React.Dispatch<React.SetStateAction<{ fullName: string; phone: string; email: string }>>;
+  editing: boolean;
+  setEditing: React.Dispatch<React.SetStateAction<boolean>>;
+  handleSave: () => Promise<void>;
+  logout: () => void;
+  navigate: (path: string) => void;
+}) {
   const [settingsTab, setSettingsTab] = useState("personal");
   const [notifications, setNotifications] = useState({ email: true, desktop: true, sms: false });
   const { isSupported, registering, register, hasRegisteredCredential, removeCredential } = useWebAuthn();
@@ -1377,11 +1517,11 @@ function SettingsTab({ user, form, setForm, editing, setEditing, handleSave, log
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
                         <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Full Name</Label>
-                        <Input value={form.fullName} onChange={(e: any) => setForm((p: any) => ({ ...p, fullName: e.target.value }))} />
+                        <Input value={form.fullName} onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))} />
                       </div>
                       <div className="space-y-1.5">
                         <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Phone</Label>
-                        <Input value={form.phone} onChange={(e: any) => setForm((p: any) => ({ ...p, phone: e.target.value }))} />
+                        <Input value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} />
                       </div>
                     </div>
                     <div className="flex gap-2">
