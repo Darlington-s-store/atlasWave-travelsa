@@ -103,8 +103,7 @@ const AdminApplications = () => {
   const openCreate = () => { resetForm(); setEditingApp(null); setDialogOpen(true); };
   const openEdit = (app: Application) => {
     setEditingApp(app);
-    const detailsString = typeof app.details === "object" ? JSON.stringify(app.details, null, 2) : (app.details || "");
-    setForm({ title: app.title, type: app.type, status: app.status, details: detailsString });
+    setForm({ title: app.title, type: app.type, status: app.status, details: "" });
     setDialogOpen(true);
   };
 

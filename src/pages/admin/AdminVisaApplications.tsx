@@ -304,8 +304,7 @@ const AdminVisaApplications = () => {
                                 <DropdownMenuItem onClick={() => { 
                                   setEditingApp(app); 
                                   setEditStatus(app.status); 
-                                  const detailsString = typeof app.details === "object" ? JSON.stringify(app.details, null, 2) : (app.details || "");
-                                  setEditNotes(detailsString); 
+                                  setEditNotes(""); 
                                   setEditDialogOpen(true); 
                                 }}><Pencil className="w-4 h-4 mr-2" /> Update Status</DropdownMenuItem>
                                 <DropdownMenuSeparator />

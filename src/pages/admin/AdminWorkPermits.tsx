@@ -354,12 +354,11 @@ const AdminWorkPermits = () => {
                                 <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => { setViewingApp(app); setViewDialogOpen(true); }}><Eye className="w-4 h-4 mr-2" /> View Details</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => { 
-                                    setEditingApp(app); 
-                                    const detailsString = typeof app.details === "object" ? JSON.stringify(app.details, null, 2) : (app.details || "");
-                                    setEditForm({ status: app.status, details: detailsString }); 
-                                    setEditDialogOpen(true); 
-                                  }}><Pencil className="w-4 h-4 mr-2" /> Update Stage</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => { 
+                                      setEditingApp(app); 
+                                      setEditForm({ status: app.status, details: "" }); 
+                                      setEditDialogOpen(true); 
+                                    }}><Pencil className="w-4 h-4 mr-2" /> Update Stage</DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem onClick={() => handleDelete(app.id)} className="text-destructive"><Trash2 className="w-4 h-4 mr-2" /> Delete</DropdownMenuItem>
                                 </DropdownMenuContent>

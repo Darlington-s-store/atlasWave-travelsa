@@ -30,6 +30,37 @@ interface PendingAttachment {
   preview?: string;
 }
 
+// Speech Recognition Types
+interface SpeechRecognitionEvent {
+  resultIndex: number;
+  results: {
+    length: number;
+    [index: number]: {
+      isFinal: boolean;
+      [index: number]: {
+        transcript: string;
+      };
+    };
+  };
+}
+
+interface SpeechRecognitionErrorEvent {
+  error: string;
+}
+
+interface ExtendedSpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  maxAlternatives: number;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  onend: () => void;
+  start: () => void;
+  stop: () => void;
+  __manualStop?: () => void;
+}
+
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -72,7 +103,7 @@ const ChatBot = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const sessionId = useRef(`session_${Date.now()}_${Math.random().toString(36).slice(2)}`);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<ExtendedSpeechRecognition | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const notifiedAdminThisSession = useRef(false);
 
@@ -154,65 +185,9 @@ const ChatBot = () => {
     utteranceRef.current = utter;
     window.speechSynthesis.speak(utter);
   }, [voiceEnabled]);
-
-  // Voice recognition
-  const startRecording = useCallback(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Voice input is not supported in this browser. Please try Chrome, Edge, or Safari.");
-      return;
-    }
-    // Stop any TTS playback so we don't hear ourselves
-    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.lang = "en-US";
-    recognition.maxAlternatives = 1;
-
-    let finalTranscript = "";
-    let manuallyStopped = false;
-    recognition.onresult = (e: any) => {
-      let interim = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        if (e.results[i].isFinal) {
-          finalTranscript += e.results[i][0].transcript;
-        } else {
-          interim += e.results[i][0].transcript;
-        }
-      }
-      setInterimTranscript(interim);
-      if (finalTranscript) setInput(prev => (prev ? `${prev} ${finalTranscript}` : finalTranscript).trim());
-    };
-
-    recognition.onerror = (e: any) => {
-      console.warn("Speech recognition error:", e.error);
-      manuallyStopped = true;
-      setIsRecording(false);
-      setInterimTranscript("");
-    };
-    recognition.onend = () => {
-      setIsRecording(false);
-      setInterimTranscript("");
-      const toSend = finalTranscript.trim();
-      // Auto-submit voice input when recognition ends naturally
-      if (!manuallyStopped && toSend) {
-        setInput("");
-        // Small delay so the input state flush doesn't race with send
-        setTimeout(() => sendText(toSend), 50);
-      }
-      recognitionRef.current = null;
-    };
-    (recognition as any).__manualStop = () => { manuallyStopped = true; };
-    recognitionRef.current = recognition;
-    recognition.start();
-    setIsRecording(true);
-  }, []);
-
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
-      (recognitionRef.current as any).__manualStop?.();
+      recognitionRef.current.__manualStop?.();
       recognitionRef.current.stop();
       recognitionRef.current = null;
     }
@@ -220,55 +195,25 @@ const ChatBot = () => {
     setInterimTranscript("");
   }, []);
 
-  const toggleVoiceOutput = useCallback(() => {
-    setVoiceEnabled(prev => {
-      const next = !prev;
-      if (!next && "speechSynthesis" in window) window.speechSynthesis.cancel();
-      return next;
+  const saveChatLog = useCallback(async (userMessage: string, botResponse: string, matched: boolean) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const authUser = session?.user;
+    let userName = "Guest";
+    if (authUser) {
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", authUser.id).maybeSingle();
+      userName = profile?.full_name || authUser.email || "Guest";
+    }
+    await supabase.from("chat_logs").insert({
+      session_id: sessionId.current,
+      user_id: authUser?.id ?? null,
+      user_name: userName,
+      user_message: userMessage,
+      bot_response: botResponse,
+      matched,
     });
   }, []);
 
-  // File handling
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: "image" | "file") => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const maxSize = type === "image" ? MAX_IMAGE_SIZE : MAX_FILE_SIZE;
-    if (file.size > maxSize) {
-      alert(`File too large. Max ${type === "image" ? "5MB" : "10MB"}.`);
-      return;
-    }
-    const att: PendingAttachment = { type, name: file.name, file };
-    if (type === "image") att.preview = URL.createObjectURL(file);
-    setAttachments(prev => [...prev, att]);
-    e.target.value = "";
-  };
-
-  const removeAttachment = (index: number) => {
-    setAttachments(prev => {
-      const next = [...prev];
-      if (next[index].preview) URL.revokeObjectURL(next[index].preview!);
-      next.splice(index, 1);
-      return next;
-    });
-  };
-
-  const fileToBase64 = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-
-  const readFileAsText = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsText(file);
-    });
-
-  const streamChat = useCallback(async (allMessages: { role: string; content: any }[]) => {
+  const streamChat = useCallback(async (allMessages: { role: string; content: string }[]) => {
     const resp = await fetch(CHAT_URL, {
       method: "POST",
       headers: {
@@ -285,7 +230,8 @@ const ChatBot = () => {
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({ error: "Failed to connect" }));
-      throw new Error(err.error || "Failed to get response");
+      const errorMsg = typeof err.error === 'string' ? err.error : (err.message || "Failed to get response");
+      throw new Error(errorMsg);
     }
     if (!resp.body) throw new Error("No response body");
 
@@ -347,7 +293,6 @@ const ChatBot = () => {
       }
     }
 
-    // Final sanitization pass — strip any leftover slash-route mentions
     const cleaned = sanitizeBotText(assistantText);
     if (cleaned !== assistantText) {
       setMessages(prev => prev.map(m => m.id === botId ? { ...m, text: cleaned } : m));
@@ -355,25 +300,7 @@ const ChatBot = () => {
     return cleaned;
   }, [sanitizeBotText]);
 
-  const saveChatLog = useCallback(async (userMessage: string, botResponse: string, matched: boolean) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    const authUser = session?.user;
-    let userName = "Guest";
-    if (authUser) {
-      const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", authUser.id).maybeSingle();
-      userName = profile?.full_name || authUser.email || "Guest";
-    }
-    await supabase.from("chat_logs").insert({
-      session_id: sessionId.current,
-      user_id: authUser?.id ?? null,
-      user_name: userName,
-      user_message: userMessage,
-      bot_response: botResponse,
-      matched,
-    });
-  }, []);
-
-  const sendText = async (textOverride?: string) => {
+  const sendText = useCallback(async (textOverride?: string) => {
     const trimmed = (textOverride ?? input).trim();
     if ((!trimmed && attachments.length === 0) || isLoading) return;
 
@@ -392,7 +319,7 @@ const ChatBot = () => {
     setInput("");
     setIsLoading(true);
 
-    let messageContent: any = trimmed;
+    let messageContent = trimmed;
     const currentAttachments = [...attachments];
     setAttachments([]);
 
@@ -424,7 +351,6 @@ const ChatBot = () => {
       const assistantText = await streamChat(history);
       await saveChatLog(trimmed || "[attachment]", assistantText, true);
       playNotify();
-      // Notify admins once per chat session that a visitor is chatting
       if (!notifiedAdminThisSession.current) {
         notifiedAdminThisSession.current = true;
         const who = user?.fullName || user?.email || "A visitor";
@@ -437,7 +363,6 @@ const ChatBot = () => {
           metadata: { session_id: sessionId.current, user_id: user?.id ?? null },
         });
       }
-      // Speak after the full response is ready
       if (voiceEnabled) speak(assistantText);
     } catch (e) {
       console.error("Chat error:", e);
@@ -448,7 +373,118 @@ const ChatBot = () => {
     } finally {
       setIsLoading(false);
     }
+  }, [input, attachments, isLoading, isRecording, stopRecording, messages, streamChat, saveChatLog, playNotify, user, voiceEnabled, speak, fallbackMessage]);
+
+  // Voice recognition
+  const startRecording = useCallback(() => {
+    const win = window as unknown as { 
+      SpeechRecognition?: new () => ExtendedSpeechRecognition; 
+      webkitSpeechRecognition?: new () => ExtendedSpeechRecognition; 
+    };
+    const SpeechRecognition = win.SpeechRecognition || win.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Voice input is not supported in this browser. Please try Chrome, Edge, or Safari.");
+      return;
+    }
+    // Stop any TTS playback so we don't hear ourselves
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+    recognition.maxAlternatives = 1;
+
+    let finalTranscript = "";
+    let manuallyStopped = false;
+    recognition.onresult = (e: SpeechRecognitionEvent) => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) {
+          finalTranscript += e.results[i][0].transcript;
+        } else {
+          interim += e.results[i][0].transcript;
+        }
+      }
+      setInterimTranscript(interim);
+      if (finalTranscript) setInput(prev => (prev ? `${prev} ${finalTranscript}` : finalTranscript).trim());
+    };
+
+    recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
+      console.warn("Speech recognition error:", e.error);
+      manuallyStopped = true;
+      setIsRecording(false);
+      setInterimTranscript("");
+    };
+    recognition.onend = () => {
+      setIsRecording(false);
+      setInterimTranscript("");
+      const toSend = finalTranscript.trim();
+      // Auto-submit voice input when recognition ends naturally
+      if (!manuallyStopped && toSend) {
+        setInput("");
+        // Small delay so the input state flush doesn't race with send
+        setTimeout(() => sendText(toSend), 50);
+      }
+      recognitionRef.current = null;
+    };
+    (recognition as ExtendedSpeechRecognition).__manualStop = () => { manuallyStopped = true; };
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsRecording(true);
+  }, [sendText]);
+
+
+
+  const toggleVoiceOutput = useCallback(() => {
+    setVoiceEnabled(prev => {
+      const next = !prev;
+      if (!next && "speechSynthesis" in window) window.speechSynthesis.cancel();
+      return next;
+    });
+  }, []);
+
+  // File handling
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: "image" | "file") => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const maxSize = type === "image" ? MAX_IMAGE_SIZE : MAX_FILE_SIZE;
+    if (file.size > maxSize) {
+      alert(`File too large. Max ${type === "image" ? "5MB" : "10MB"}.`);
+      return;
+    }
+    const att: PendingAttachment = { type, name: file.name, file };
+    if (type === "image") att.preview = URL.createObjectURL(file);
+    setAttachments(prev => [...prev, att]);
+    e.target.value = "";
   };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => {
+      const next = [...prev];
+      if (next[index].preview) URL.revokeObjectURL(next[index].preview!);
+      next.splice(index, 1);
+      return next;
+    });
+  };
+
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const readFileAsText = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsText(file);
+    });
+
+
 
   const clearChat = () => {
     sessionId.current = `session_${Date.now()}_${Math.random().toString(36).slice(2)}`;
