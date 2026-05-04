@@ -113,19 +113,19 @@ interface ApplicationFormData {
 }
 
 const normalizeTrackedApplication = (app: unknown): Application => {
-  const a = app as Record<string, any>;
+  const a = app as Partial<Application> & Record<string, unknown>;
   return {
     ...a,
-    id: a.id,
-    user_id: a.user_id,
-    title: a.title,
-    type: a.type || "Visa Application",
-    status: a.status,
-    details: a.details,
-    created_at: a.created_at,
-    updated_at: a.updated_at,
-    country: a.country || a.title || "Visa Application",
-    submitted: a.submitted || new Date(a.created_at).toLocaleDateString(),
+    id: String(a.id || ""),
+    user_id: String(a.user_id || ""),
+    title: String(a.title || ""),
+    type: String(a.type || "Visa Application"),
+    status: String(a.status || "pending"),
+    details: (a.details as string | Record<string, unknown> | null) || null,
+    created_at: String(a.created_at || new Date().toISOString()),
+    updated_at: String(a.updated_at || new Date().toISOString()),
+    country: String(a.country || a.title || "Visa Application"),
+    submitted: String(a.submitted || (a.created_at ? new Date(String(a.created_at)).toLocaleDateString() : new Date().toLocaleDateString())),
   } as Application;
 };
 
