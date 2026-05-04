@@ -49,6 +49,7 @@ interface Application {
   details: string | Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
+  admin_notes?: string;
 }
 
 interface ApplicationFormData {
@@ -443,6 +444,8 @@ function OverviewTab({
 function ApplicationsTab({ applications, onRefresh, userId }: { applications: Application[]; onRefresh: () => void; userId: string }) {
   const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [viewingApp, setViewingApp] = useState<Application | null>(null);
   const [appForm, setAppForm] = useState({ type: "visa", title: "", details: "" });
   const [submitting, setSubmitting] = useState(false);
 
@@ -523,28 +526,167 @@ function ApplicationsTab({ applications, onRefresh, userId }: { applications: Ap
             }
 
             return (
-              <div key={app.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl border bg-background hover:shadow-md transition-shadow gap-3">
+              <div 
+                key={app.id} 
+                onClick={() => { setViewingApp(app); setViewDialogOpen(true); }}
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl border bg-background hover:shadow-md transition-shadow cursor-pointer gap-3 group"
+              >
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
                     {app.type === "work-permit" ? <FileText className="w-5 h-5 text-primary" /> :
                      app.type === "logistics" ? <Package className="w-5 h-5 text-primary" /> :
                      app.type === "travel" ? <Plane className="w-5 h-5 text-primary" /> :
                      <Eye className="w-5 h-5 text-primary" />}
                   </div>
                   <div>
-                    <p className="font-medium text-foreground">{app.title}</p>
+                    <p className="font-medium text-foreground group-hover:text-primary transition-colors">{app.title}</p>
                     <p className="text-sm text-muted-foreground line-clamp-1">{detailsSummary}</p>
                     <p className="text-xs text-muted-foreground mt-1 capitalize">{app.type} · {new Date(app.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <Badge className={cfg.color + " border shrink-0"}>
-                  <StatusIcon className="w-3 h-3 mr-1" /> {cfg.label}
-                </Badge>
+                <div className="flex items-center gap-3">
+                  <Badge className={cfg.color + " border shrink-0"}>
+                    <StatusIcon className="w-3 h-3 mr-1" /> {cfg.label}
+                  </Badge>
+                  <Button variant="ghost" size="icon" className="hidden sm:flex opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             );
           })}
         </div>
       )}
+
+      {/* View Application Details Dialog */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="sm:max-w-[550px] max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-primary" />
+              Application Details
+            </DialogTitle>
+          </DialogHeader>
+          
+          {viewingApp && (
+            <div className="space-y-6 py-4">
+              <div className="flex flex-wrap items-center gap-3 border-b pb-4">
+                <div className="px-3 py-1 bg-primary/10 rounded-full text-[12px] font-bold text-primary">
+                  REF: {viewingApp.id.slice(0, 8).toUpperCase()}
+                </div>
+                <Badge className={statusConfig[viewingApp.status]?.color || "bg-accent/10"}>
+                  {viewingApp.status.toUpperCase()}
+                </Badge>
+                <span className="text-muted-foreground text-xs italic">
+                  Submitted on {new Date(viewingApp.created_at).toLocaleDateString()}
+                </span>
+              </div>
+
+              <div className="grid gap-6">
+                <div>
+                  <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Service Information</h4>
+                  <div className="bg-muted/30 p-4 rounded-xl border space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Type</span>
+                      <span className="font-medium capitalize">{viewingApp.type}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Title</span>
+                      <span className="font-medium">{viewingApp.title}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {(() => {
+                  let details: ApplicationFormData = {};
+                  try {
+                    const rawDetails = viewingApp.details;
+                    if (typeof rawDetails === "string" && (rawDetails.startsWith("{") || rawDetails.startsWith("["))) {
+                      details = JSON.parse(rawDetails) as ApplicationFormData;
+                    } else if (typeof rawDetails === "object" && rawDetails !== null) {
+                      details = rawDetails as ApplicationFormData;
+                    }
+                  } catch (e) {
+                    return (
+                      <div>
+                        <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Submission Details</h4>
+                        <div className="bg-muted/30 p-4 rounded-xl border text-sm text-foreground whitespace-pre-wrap">
+                          {String(viewingApp.details || "No details provided.")}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (Object.keys(details).length === 0) {
+                    return (
+                      <div>
+                        <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Submission Details</h4>
+                        <div className="bg-muted/30 p-4 rounded-xl border text-sm text-foreground">
+                          {String(viewingApp.details || "No details provided.")}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <>
+                      {(details.fullName || details.nationality || details.dob) && (
+                        <div>
+                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Personal Information</h4>
+                          <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-2 gap-4">
+                            {details.fullName && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Full Name</p><p className="text-sm font-medium">{details.fullName}</p></div>}
+                            {details.nationality && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Nationality</p><p className="text-sm font-medium">{details.nationality}</p></div>}
+                            {details.dob && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">DOB</p><p className="text-sm font-medium">{details.dob}</p></div>}
+                            {details.email && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Email</p><p className="text-sm font-medium">{details.email}</p></div>}
+                          </div>
+                        </div>
+                      )}
+
+                      {(details.destination || details.visaType || details.travelDate) && (
+                        <div>
+                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Travel Details</h4>
+                          <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-2 gap-4">
+                            {details.destination && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Destination</p><p className="text-sm font-medium">{details.destination}</p></div>}
+                            {details.visaType && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Visa Type</p><p className="text-sm font-medium">{details.visaType}</p></div>}
+                            {details.travelDate && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Travel Date</p><p className="text-sm font-medium">{details.travelDate}</p></div>}
+                            {details.returnDate && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Return Date</p><p className="text-sm font-medium">{details.returnDate}</p></div>}
+                          </div>
+                        </div>
+                      )}
+
+                      {details.documents && Array.isArray(details.documents) && details.documents.length > 0 && (
+                        <div>
+                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Submitted Documents</h4>
+                          <div className="bg-muted/30 p-4 rounded-xl border flex flex-wrap gap-2">
+                            {details.documents.map((doc, idx) => (
+                              <Badge key={idx} variant="outline" className="bg-background/50">
+                                <FileText className="w-3 h-3 mr-1 text-primary" /> {doc}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {viewingApp.admin_notes && (
+                        <div>
+                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-secondary mb-3">Admin Feedback</h4>
+                          <div className="bg-secondary/5 p-4 rounded-xl border border-secondary/20 italic text-sm text-foreground">
+                            {viewingApp.admin_notes}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
 
       {/* New Application Dialog */}

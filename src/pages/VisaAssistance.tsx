@@ -10,6 +10,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter, 
+  DialogClose 
+} from "@/components/ui/dialog";
 import {
   FileCheck,
   CheckCircle2,
@@ -74,19 +82,61 @@ const statusColors = {
   "rejected": "bg-destructive/10 text-destructive border-destructive/20",
 };
 
-const normalizeTrackedApplication = (app: any) => ({
-  ...app,
-  country: app.country || app.title || "Visa Application",
-  type: app.type || "Visa Application",
-  submitted: app.submitted || new Date(app.created_at).toLocaleDateString(),
-});
+interface Application {
+  id: string;
+  user_id: string;
+  title: string;
+  type: string;
+  status: string;
+  details: string | Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+  admin_notes?: string;
+  // Track specific fields used in normalization
+  country?: string;
+  submitted?: string;
+}
+
+interface ApplicationFormData {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  dob?: string;
+  nationality?: string;
+  destination?: string;
+  visaType?: string;
+  travelDate?: string;
+  returnDate?: string;
+  purpose?: string;
+  passportNumber?: string;
+  documents?: string[];
+}
+
+const normalizeTrackedApplication = (app: unknown): Application => {
+  const a = app as Record<string, any>;
+  return {
+    ...a,
+    id: a.id,
+    user_id: a.user_id,
+    title: a.title,
+    type: a.type || "Visa Application",
+    status: a.status,
+    details: a.details,
+    created_at: a.created_at,
+    updated_at: a.updated_at,
+    country: a.country || a.title || "Visa Application",
+    submitted: a.submitted || new Date(a.created_at).toLocaleDateString(),
+  } as Application;
+};
 
 const VisaAssistance = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<"programs" | "apply" | "track">("programs");
   const [currentStep, setCurrentStep] = useState(1);
-  const [applications, setApplications] = useState<any[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [loadingApplications, setLoadingApplications] = useState(false);
+  const [viewingApp, setViewingApp] = useState<Application | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "", email: "", phone: "", dob: "", nationality: "",
     destination: "", visaType: "", travelDate: "", returnDate: "", purpose: "",
@@ -564,21 +614,22 @@ const VisaAssistance = () => {
                 ) : (
                   <div className="space-y-4">
                     {applications.map((app) => (
-                      <div key={app.id} className="bg-card rounded-xl border shadow-card p-6">
+                      <div key={app.id} className="bg-card rounded-xl border shadow-card p-6 hover:shadow-md transition-shadow">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-display font-bold text-foreground">{app.id}</span>
+                              <span className="font-display font-bold text-foreground">REF: {app.id.slice(0, 8).toUpperCase()}</span>
                               <Badge variant="outline" className={statusColors[app.status] || statusColors.pending}>
                                 {String(app.status).replace("-", " ")}
                               </Badge>
                             </div>
-                            <p className="text-sm text-muted-foreground">{app.country} — {app.type}</p>
+                            <p className="text-sm font-medium text-foreground">{app.title}</p>
                             <p className="text-xs text-muted-foreground mt-1">Submitted: {new Date(app.created_at).toLocaleDateString()}</p>
                           </div>
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm">View Details</Button>
-                            <Button variant="ghost" size="sm">Re-upload Docs</Button>
+                            <Button variant="outline" size="sm" onClick={() => { setViewingApp(app); setViewDialogOpen(true); }}>
+                              <Eye className="w-4 h-4 mr-1" /> View Details
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -587,6 +638,135 @@ const VisaAssistance = () => {
                 )}
               </motion.div>
             </div>
+
+            {/* View Application Details Dialog */}
+            <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+              <DialogContent className="sm:max-w-[550px] max-h-[85vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-primary" />
+                    Application Details
+                  </DialogTitle>
+                </DialogHeader>
+                
+                {viewingApp && (
+                  <div className="space-y-6 py-4">
+                    <div className="flex flex-wrap items-center gap-3 border-b pb-4">
+                      <div className="px-3 py-1 bg-primary/10 rounded-full text-[12px] font-bold text-primary">
+                        REF: {viewingApp.id.slice(0, 8).toUpperCase()}
+                      </div>
+                      <Badge variant="outline" className={statusColors[viewingApp.status] || "bg-accent/10"}>
+                        {viewingApp.status.toUpperCase()}
+                      </Badge>
+                      <span className="text-muted-foreground text-xs italic">
+                        Submitted on {new Date(viewingApp.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    <div className="grid gap-6">
+                      <div>
+                        <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Service Information</h4>
+                        <div className="bg-muted/30 p-4 rounded-xl border space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Type</span>
+                            <span className="font-medium capitalize">{viewingApp.type}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Title</span>
+                            <span className="font-medium">{viewingApp.title}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {(() => {
+                        let details: ApplicationFormData = {};
+                        try {
+                          const rawDetails = viewingApp.details;
+                          if (typeof rawDetails === "string" && (rawDetails.startsWith("{") || rawDetails.startsWith("["))) {
+                            details = JSON.parse(rawDetails) as ApplicationFormData;
+                          } else if (typeof rawDetails === "object" && rawDetails !== null) {
+                            details = rawDetails as ApplicationFormData;
+                          }
+                        } catch (e) {
+                          return (
+                            <div>
+                              <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Submission Details</h4>
+                              <div className="bg-muted/30 p-4 rounded-xl border text-sm text-foreground whitespace-pre-wrap">
+                                {String(viewingApp.details || "No details provided.")}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        if (Object.keys(details).length === 0) {
+                          return (
+                            <div>
+                              <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Submission Details</h4>
+                              <div className="bg-muted/30 p-4 rounded-xl border text-sm text-foreground">
+                                {String(viewingApp.details || "No details provided.")}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <>
+                            {(details.fullName || details.nationality || details.dob) && (
+                              <div>
+                                <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Personal Information</h4>
+                                <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-2 gap-4">
+                                  {details.fullName && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Full Name</p><p className="text-sm font-medium">{details.fullName}</p></div>}
+                                  {details.nationality && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Nationality</p><p className="text-sm font-medium">{details.nationality}</p></div>}
+                                  {details.dob && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">DOB</p><p className="text-sm font-medium">{details.dob}</p></div>}
+                                  {details.email && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Email</p><p className="text-sm font-medium">{details.email}</p></div>}
+                                </div>
+                              </div>
+                            )}
+
+                            {(details.destination || details.visaType || details.travelDate) && (
+                              <div>
+                                <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Travel Details</h4>
+                                <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-2 gap-4">
+                                  {details.destination && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Destination</p><p className="text-sm font-medium">{details.destination}</p></div>}
+                                  {details.visaType && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Visa Type</p><p className="text-sm font-medium">{details.visaType}</p></div>}
+                                  {details.travelDate && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Travel Date</p><p className="text-sm font-medium">{details.travelDate}</p></div>}
+                                  {details.returnDate && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Return Date</p><p className="text-sm font-medium">{details.returnDate}</p></div>}
+                                </div>
+                              </div>
+                            )}
+
+                            {details.documents && Array.isArray(details.documents) && details.documents.length > 0 && (
+                              <div>
+                                <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Submitted Documents</h4>
+                                <div className="bg-muted/30 p-4 rounded-xl border flex flex-wrap gap-2">
+                                  {details.documents.map((doc, idx) => (
+                                    <Badge key={idx} variant="outline" className="bg-background/50">
+                                      <FileText className="w-3 h-3 mr-1 text-primary" /> {doc}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {viewingApp.admin_notes && (
+                              <div>
+                                <h4 className="text-[11px] uppercase tracking-wider font-bold text-secondary mb-3">Admin Feedback</h4>
+                                <div className="bg-secondary/5 p-4 rounded-xl border border-secondary/20 italic text-sm text-foreground">
+                                  {viewingApp.admin_notes}
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                )}
+                
+                <DialogFooter>
+                  <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </section>
         )}
       </main>
