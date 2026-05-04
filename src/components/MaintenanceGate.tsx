@@ -1,8 +1,9 @@
 import { ReactNode, useEffect, useState } from "react";
-import { Wrench } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/contexts/AdminContext";
+
+import logo from "@/assets/logo.jpeg";
 
 interface MaintenanceValue {
   enabled?: boolean;
@@ -62,8 +63,8 @@ export function MaintenanceGate({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary via-primary/90 to-secondary px-6 text-primary-foreground">
       <div className="max-w-md text-center">
-        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-white/15 backdrop-blur-sm">
-          <Wrench className="h-10 w-10 text-accent" />
+        <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-white/10 p-4 backdrop-blur-md ring-1 ring-white/20">
+          <img src={logo} alt="AtlasWave Logo" className="h-full w-full rounded-2xl object-cover shadow-2xl" />
         </div>
         <p className="mb-3 text-xs font-bold uppercase tracking-[0.3em] text-accent">
           AtlasWave Travel & Tours
