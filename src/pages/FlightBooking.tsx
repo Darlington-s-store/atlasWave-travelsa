@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   ArrowLeftRight,
   ArrowRight,
@@ -57,6 +58,7 @@ type FlightOffer = {
 };
 
 const FlightBooking = () => {
+  const navigate = useNavigate();
   const [tripType, setTripType] = useState("round-trip");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -76,14 +78,24 @@ const FlightBooking = () => {
 
   useEffect(() => {
     const loadOffers = async () => {
-      const { data } = await (supabase as any)
-        .from("flight_offers" as never)
+      const { data } = await supabase
+        .from("flight_offers")
         .select("*")
         .eq("active", true)
         .order("featured", { ascending: false })
         .order("sort_order", { ascending: true });
 
-      setOffers(((data || []) as FlightOffer[]).map((offer) => ({ ...offer, price: Number(offer.price) })));
+      if (data) {
+        setOffers(
+          (data as unknown[]).map((offer) => {
+            const o = offer as Record<string, unknown>;
+            return {
+              ...o,
+              price: Number(o.price),
+            } as FlightOffer;
+          }),
+        );
+      }
       setLoadingOffers(false);
     };
 
@@ -431,12 +443,31 @@ const FlightBooking = () => {
                     <Button
                       variant="accent"
                       className="mt-6 h-12 w-full"
-                      onClick={() => {
+                      onClick={async () => {
+                        const { user } = (await supabase.auth.getUser()).data;
+                        if (user && selected) {
+                          await supabase.from("bookings").insert({
+                            user_id: user.id,
+                            type: "Flight",
+                            route: `${selected.origin} to ${selected.destination}`,
+                            date: departDate || "TBD",
+                            status: "confirmed",
+                            price: selected.price * parseInt(passengers, 10),
+                            details: JSON.stringify({
+                              airline: selected.airline,
+                              passengers: passengers,
+                              cabin: cabin,
+                              returnDate: returnDate,
+                              tripType: tripType
+                            })
+                          } as never);
+                        }
                         setBookingStep("confirm");
                         toast({
                           title: "Booking Confirmed!",
                           description: `Your ${selected.airline} flight has been booked.`,
                         });
+                        navigate("/dashboard");
                       }}
                     >
                       Confirm & Pay{" "}

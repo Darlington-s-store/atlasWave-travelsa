@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   Car,
@@ -77,6 +78,7 @@ type HotelOffer = {
 };
 
 const HotelAccommodation = () => {
+  const navigate = useNavigate();
   const [destination, setDestination] = useState("");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
@@ -96,25 +98,43 @@ const HotelAccommodation = () => {
 
   useEffect(() => {
     const loadHotels = async () => {
-      const { data } = await (supabase as any)
-        .from("hotel_offers" as never)
+      const { data } = await supabase
+        .from("hotel_offers")
         .select("*")
         .eq("active", true)
         .order("featured", { ascending: false })
         .order("sort_order", { ascending: true });
 
-      setHotels(
-        ((data || []) as any[]).map((hotel) => ({
-          ...hotel,
-          price: Number(hotel.price),
-          original_price: hotel.original_price == null ? null : Number(hotel.original_price),
-          reviews: Number(hotel.reviews),
-          rating: Number(hotel.rating),
-          room_types: Array.isArray(hotel.room_types)
-            ? hotel.room_types.map((room: any) => ({ ...room, price: Number(room.price) }))
-            : [],
-        })),
-      );
+      if (data) {
+        setHotels(
+          (data as unknown[]).map((hotel) => {
+            const h = hotel as Record<string, unknown>;
+            return {
+              ...h,
+              id: String(h.id),
+              name: String(h.name),
+              location: String(h.location),
+              price: Number(h.price),
+              original_price: h.original_price == null ? null : Number(h.original_price),
+              reviews: Number(h.reviews),
+              rating: Number(h.rating),
+              amenities: Array.isArray(h.amenities) ? (h.amenities as string[]) : [],
+              featured: Boolean(h.featured),
+              room_types: Array.isArray(h.room_types)
+                ? (h.room_types as unknown[]).map((room) => {
+                    const r = room as Record<string, unknown>;
+                    return {
+                      type: String(r.type),
+                      beds: String(r.beds),
+                      size: String(r.size),
+                      price: Number(r.price),
+                    };
+                  })
+                : [],
+            };
+          }) as HotelOffer[],
+        );
+      }
       setLoadingHotels(false);
     };
 
@@ -341,7 +361,39 @@ const HotelAccommodation = () => {
                       <Button variant="outline" className="h-12 justify-center gap-2 sm:justify-start"><CreditCard className="h-4 w-4" /> Mastercard</Button>
                       <Button variant="outline" className="h-12 justify-center gap-2 sm:justify-start"><Phone className="h-4 w-4" /> Mobile Money</Button>
                     </div>
-                    <Button variant="accent" className="h-12 w-full" onClick={() => { setBookingStep("confirm"); toast({ title: "Reservation Confirmed!", description: `Your stay at ${hotel.name} has been booked.` }); }}>
+                    <Button
+                      variant="accent"
+                      className="mt-6 h-12 w-full"
+                      onClick={async () => {
+                        const { user } = (await supabase.auth.getUser()).data;
+                        if (user && hotel && room) {
+                          await supabase.from("bookings").insert({
+                            user_id: user.id,
+                            type: "Hotel",
+                            route: `${hotel.name}, ${hotel.location}`,
+                            date: checkIn || "TBD",
+                            status: "confirmed",
+                            price: room.price * nights * parseInt(rooms, 10),
+                            details: JSON.stringify({
+                              hotelName: hotel.name,
+                              location: hotel.location,
+                              roomType: room.type,
+                              nights: nights,
+                              rooms: rooms,
+                              checkIn: checkIn,
+                              checkOut: checkOut,
+                              guests: guests
+                            })
+                          } as never);
+                        }
+                        setBookingStep("confirm");
+                        toast({
+                          title: "Reservation Confirmed!",
+                          description: `Your stay at ${hotel.name} has been booked.`,
+                        });
+                        navigate("/dashboard");
+                      }}
+                    >
                       Confirm & Pay {formatCurrency(room.price * nights * parseInt(rooms, 10), DEFAULT_CURRENCY)}
                       <ShieldCheck className="ml-2 h-4 w-4" />
                     </Button>

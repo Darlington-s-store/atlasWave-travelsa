@@ -13,7 +13,65 @@ const fadeUp = {
   viewport: { once: true },
 };
 
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+
 const CanadaLMIA = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    hasEmployer: "",
+    notes: ""
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast({ title: "Authentication required", description: "Please sign in to submit an application.", variant: "destructive" });
+      return;
+    }
+
+    if (!form.firstName || !form.lastName || !form.email || !form.phone) {
+      toast({ title: "Validation Error", description: "Please fill in all required fields.", variant: "destructive" });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("applications").insert({
+        user_id: user.id,
+        title: "Canada LMIA Work Permit",
+        type: "Canada LMIA",
+        status: "pending",
+        details: JSON.stringify({
+          fullName: `${form.firstName} ${form.lastName}`,
+          email: form.email,
+          phone: form.phone,
+          hasEmployer: form.hasEmployer,
+          notes: form.notes,
+        })
+      });
+
+      if (error) throw error;
+
+      toast({ title: "Application Submitted", description: "Your LMIA application has been received. Track it in your dashboard." });
+      navigate("/dashboard");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
+      toast({ title: "Error", description: errorMessage, variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -114,16 +172,54 @@ const CanadaLMIA = () => {
               <motion.div {...fadeUp} transition={{ delay: 0.15 }}>
                 <div className="bg-card rounded-2xl p-8 border shadow-card">
                   <h3 className="font-display text-xl font-bold text-card-foreground mb-6">Apply Now</h3>
-                  <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                  <form className="space-y-4" onSubmit={handleSubmit}>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div><label className="text-sm font-medium text-foreground mb-1.5 block">First Name</label><Input placeholder="John" /></div>
-                      <div><label className="text-sm font-medium text-foreground mb-1.5 block">Last Name</label><Input placeholder="Doe" /></div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-1.5 block">First Name</label>
+                        <Input 
+                          placeholder="John" 
+                          required 
+                          value={form.firstName} 
+                          onChange={e => setForm(f => ({...f, firstName: e.target.value}))} 
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-1.5 block">Last Name</label>
+                        <Input 
+                          placeholder="Doe" 
+                          required 
+                          value={form.lastName} 
+                          onChange={e => setForm(f => ({...f, lastName: e.target.value}))} 
+                        />
+                      </div>
                     </div>
-                    <div><label className="text-sm font-medium text-foreground mb-1.5 block">Email</label><Input type="email" placeholder="john@example.com" /></div>
-                    <div><label className="text-sm font-medium text-foreground mb-1.5 block">Phone</label><Input type="tel" placeholder="+233 XX XXX XXXX" /></div>
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-1.5 block">Email</label>
+                      <Input 
+                        type="email" 
+                        placeholder="john@example.com" 
+                        required 
+                        value={form.email} 
+                        onChange={e => setForm(f => ({...f, email: e.target.value}))} 
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-1.5 block">Phone</label>
+                      <Input 
+                        type="tel" 
+                        placeholder="+233 XX XXX XXXX" 
+                        required 
+                        value={form.phone} 
+                        onChange={e => setForm(f => ({...f, phone: e.target.value}))} 
+                      />
+                    </div>
                     <div>
                       <label className="text-sm font-medium text-foreground mb-1.5 block">Do you have a Canadian employer?</label>
-                      <Select><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                      <Select 
+                        value={form.hasEmployer} 
+                        onValueChange={v => setForm(f => ({...f, hasEmployer: v}))}
+                      >
+                        <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="yes">Yes</SelectItem>
                           <SelectItem value="no">No, I need help finding one</SelectItem>
@@ -136,8 +232,18 @@ const CanadaLMIA = () => {
                         <p className="text-sm text-muted-foreground">Upload your CV (PDF, DOC)</p>
                       </div>
                     </div>
-                    <div><label className="text-sm font-medium text-foreground mb-1.5 block">Additional Notes</label><Textarea placeholder="Tell us about your experience..." rows={3} /></div>
-                    <Button variant="accent" size="lg" className="w-full">Submit Application <ArrowRight className="w-5 h-5" /></Button>
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-1.5 block">Additional Notes</label>
+                      <Textarea 
+                        placeholder="Tell us about your experience..." 
+                        rows={3} 
+                        value={form.notes} 
+                        onChange={e => setForm(f => ({...f, notes: e.target.value}))} 
+                      />
+                    </div>
+                    <Button variant="accent" size="lg" className="w-full" disabled={submitting}>
+                      {submitting ? "Submitting..." : "Submit Application"} <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
                   </form>
                 </div>
               </motion.div>

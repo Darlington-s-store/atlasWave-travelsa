@@ -81,7 +81,7 @@ const Consultation = () => {
   const [timezone, setTimezone] = useState("GMT+0");
   const [modeFilter, setModeFilter] = useState<"all" | "online" | "in-person">("all");
   const [step, setStep] = useState(1);
-  const [contactForm, setContactForm] = useState({ firstName: "", lastName: "", email: user?.email || "", phone: user?.phone || "", topic: "", notes: "" });
+  const [contactForm, setContactForm] = useState({ firstName: user?.fullName?.split(" ")[0] || "", lastName: user?.fullName?.split(" ").slice(1).join(" ") || "", email: user?.email || "", phone: user?.phone || "", topic: "", notes: "" });
   
 
   const selectedConsultation = consultationTypes.find((c) => c.title === selectedType);
@@ -289,14 +289,14 @@ const Consultation = () => {
                         <p className="text-sm text-muted-foreground mb-8">Fill in your contact information and consultation topic.</p>
                         <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
                           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <div><label className="text-sm font-medium text-foreground mb-1.5 block">First Name</label><Input placeholder="John" /></div>
-                            <div><label className="text-sm font-medium text-foreground mb-1.5 block">Last Name</label><Input placeholder="Doe" /></div>
+                            <div><label className="text-sm font-medium text-foreground mb-1.5 block">First Name</label><Input placeholder="John" value={contactForm.firstName} onChange={e => setContactForm(prev => ({ ...prev, firstName: e.target.value }))} /></div>
+                            <div><label className="text-sm font-medium text-foreground mb-1.5 block">Last Name</label><Input placeholder="Doe" value={contactForm.lastName} onChange={e => setContactForm(prev => ({ ...prev, lastName: e.target.value }))} /></div>
                           </div>
-                          <div><label className="text-sm font-medium text-foreground mb-1.5 block">Email</label><Input type="email" placeholder="john@example.com" /></div>
-                          <div><label className="text-sm font-medium text-foreground mb-1.5 block">Phone</label><Input type="tel" placeholder="+233 XX XXX XXXX" /></div>
+                          <div><label className="text-sm font-medium text-foreground mb-1.5 block">Email</label><Input type="email" placeholder="john@example.com" value={contactForm.email} onChange={e => setContactForm(prev => ({ ...prev, email: e.target.value }))} /></div>
+                          <div><label className="text-sm font-medium text-foreground mb-1.5 block">Phone</label><Input type="tel" placeholder="+233 XX XXX XXXX" value={contactForm.phone} onChange={e => setContactForm(prev => ({ ...prev, phone: e.target.value }))} /></div>
                           <div>
                             <label className="text-sm font-medium text-foreground mb-1.5 block">Consultation Topic</label>
-                            <Select>
+                            <Select value={contactForm.topic} onValueChange={v => setContactForm(prev => ({ ...prev, topic: v }))}>
                               <SelectTrigger><SelectValue placeholder="Select topic" /></SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="travel">Travel & Flight Booking</SelectItem>
@@ -309,7 +309,7 @@ const Consultation = () => {
                               </SelectContent>
                             </Select>
                           </div>
-                          <div><label className="text-sm font-medium text-foreground mb-1.5 block">Additional Notes</label><Textarea placeholder="Briefly describe what you'd like to discuss..." rows={3} /></div>
+                          <div><label className="text-sm font-medium text-foreground mb-1.5 block">Additional Notes</label><Textarea placeholder="Briefly describe what you'd like to discuss..." rows={3} value={contactForm.notes} onChange={e => setContactForm(prev => ({ ...prev, notes: e.target.value }))} /></div>
                           <div className="flex justify-between">
                             <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
                             <Button variant="accent" onClick={() => setStep(4)}>
@@ -396,7 +396,7 @@ const Consultation = () => {
                                 email: contactForm.email,
                                 phone: contactForm.phone,
                                 notes: contactForm.notes || null,
-                              } as any);
+                              } as never);
                             }
                             toast({ title: "Booking Confirmed!", description: `Your ${duration}-min ${selectedConsultation.title} has been booked for ${selectedTime}.` });
                             navigate("/dashboard");

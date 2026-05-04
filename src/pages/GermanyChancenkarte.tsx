@@ -20,10 +20,65 @@ const pointsCriteria = [
   { category: "Age", options: [{ label: "Under 35", points: 2 }, { label: "35–40", points: 1 }, { label: "Over 40", points: 0 }] },
 ];
 
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+
 const GermanyChancenkarte = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
   const [selections, setSelections] = useState<Record<string, number>>({});
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    germanLevel: ""
+  });
+
   const totalPoints = Object.values(selections).reduce((sum, p) => sum + p, 0);
   const eligible = totalPoints >= 6;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast({ title: "Authentication required", description: "Please sign in to submit an application.", variant: "destructive" });
+      return;
+    }
+
+    if (!form.firstName || !form.lastName || !form.email) {
+      toast({ title: "Validation Error", description: "Please fill in all required fields.", variant: "destructive" });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("applications").insert({
+        user_id: user.id,
+        title: "Germany Opportunity Card",
+        type: "Germany Opportunity Card",
+        status: "pending",
+        details: JSON.stringify({
+          fullName: `${form.firstName} ${form.lastName}`,
+          email: form.email,
+          germanLevel: form.germanLevel,
+          points: totalPoints,
+          selections: selections
+        })
+      });
+
+      if (error) throw error;
+
+      toast({ title: "Application Submitted", description: "Your Opportunity Card application has been received." });
+      navigate("/dashboard");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
+      toast({ title: "Error", description: errorMessage, variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -69,6 +124,7 @@ const GermanyChancenkarte = () => {
                         {criteria.options.map((opt) => (
                           <button
                             key={opt.label}
+                            type="button"
                             onClick={() => setSelections((prev) => ({ ...prev, [criteria.category]: opt.points }))}
                             className={`text-left px-4 py-3 rounded-lg border text-sm transition-all ${
                               selections[criteria.category] === opt.points
@@ -122,15 +178,44 @@ const GermanyChancenkarte = () => {
                   </div>
 
                   <h3 className="font-display text-lg font-bold text-card-foreground mb-4">Apply Now</h3>
-                  <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                  <form className="space-y-4" onSubmit={handleSubmit}>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div><label className="text-sm font-medium text-foreground mb-1.5 block">First Name</label><Input placeholder="John" /></div>
-                      <div><label className="text-sm font-medium text-foreground mb-1.5 block">Last Name</label><Input placeholder="Doe" /></div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-1.5 block">First Name</label>
+                        <Input 
+                          placeholder="John" 
+                          required
+                          value={form.firstName}
+                          onChange={e => setForm(f => ({...f, firstName: e.target.value}))}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-1.5 block">Last Name</label>
+                        <Input 
+                          placeholder="Doe" 
+                          required
+                          value={form.lastName}
+                          onChange={e => setForm(f => ({...f, lastName: e.target.value}))}
+                        />
+                      </div>
                     </div>
-                    <div><label className="text-sm font-medium text-foreground mb-1.5 block">Email</label><Input type="email" placeholder="john@example.com" /></div>
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-1.5 block">Email</label>
+                      <Input 
+                        type="email" 
+                        placeholder="john@example.com" 
+                        required
+                        value={form.email}
+                        onChange={e => setForm(f => ({...f, email: e.target.value}))}
+                      />
+                    </div>
                     <div>
                       <label className="text-sm font-medium text-foreground mb-1.5 block">German Level</label>
-                      <Select><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                      <Select 
+                        value={form.germanLevel}
+                        onValueChange={v => setForm(f => ({...f, germanLevel: v}))}
+                      >
+                        <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">None</SelectItem>
                           <SelectItem value="a1">A1</SelectItem>
@@ -147,7 +232,9 @@ const GermanyChancenkarte = () => {
                         <p className="text-sm text-muted-foreground">Upload CV & certificates</p>
                       </div>
                     </div>
-                    <Button variant="accent" size="lg" className="w-full">Submit Application <ArrowRight className="w-5 h-5" /></Button>
+                    <Button variant="accent" size="lg" className="w-full" disabled={submitting}>
+                      {submitting ? "Submitting..." : "Submit Application"} <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
                   </form>
                 </div>
               </motion.div>

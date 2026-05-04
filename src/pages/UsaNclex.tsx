@@ -13,7 +13,69 @@ const fadeUp = {
   viewport: { once: true },
 };
 
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+
 const UsaNclex = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    qualification: "",
+    experience: "",
+    previousAttempt: "",
+    notes: ""
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast({ title: "Authentication required", description: "Please sign in to submit an application.", variant: "destructive" });
+      return;
+    }
+
+    if (!form.firstName || !form.lastName || !form.email) {
+      toast({ title: "Validation Error", description: "Please fill in all required fields.", variant: "destructive" });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("applications").insert({
+        user_id: user.id,
+        title: "USA NCLEX Pathway",
+        type: "USA NCLEX",
+        status: "pending",
+        details: JSON.stringify({
+          fullName: `${form.firstName} ${form.lastName}`,
+          email: form.email,
+          phone: form.phone,
+          qualification: form.qualification,
+          experience: form.experience,
+          previousAttempt: form.previousAttempt,
+          notes: form.notes
+        })
+      });
+
+      if (error) throw error;
+
+      toast({ title: "Application Submitted", description: "Your NCLEX pathway application has been received." });
+      navigate("/dashboard");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
+      toast({ title: "Error", description: errorMessage, variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -114,16 +176,29 @@ const UsaNclex = () => {
                 <div className="bg-card rounded-2xl p-8 border shadow-card">
                   <h3 className="font-display text-xl font-bold text-card-foreground mb-2">Start Your NCLEX Journey</h3>
                   <p className="text-sm text-muted-foreground mb-6">Fill out the form and our nursing immigration specialist will contact you.</p>
-                  <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                  <form className="space-y-4" onSubmit={handleSubmit}>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div><label className="text-sm font-medium text-foreground mb-1.5 block">First Name</label><Input placeholder="Jane" /></div>
-                      <div><label className="text-sm font-medium text-foreground mb-1.5 block">Last Name</label><Input placeholder="Doe" /></div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-1.5 block">First Name</label>
+                        <Input placeholder="Jane" required value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-1.5 block">Last Name</label>
+                        <Input placeholder="Doe" required value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} />
+                      </div>
                     </div>
-                    <div><label className="text-sm font-medium text-foreground mb-1.5 block">Email</label><Input type="email" placeholder="jane@example.com" /></div>
-                    <div><label className="text-sm font-medium text-foreground mb-1.5 block">Phone</label><Input type="tel" placeholder="+233 XX XXX XXXX" /></div>
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-1.5 block">Email</label>
+                      <Input type="email" placeholder="jane@example.com" required value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-1.5 block">Phone</label>
+                      <Input type="tel" placeholder="+233 XX XXX XXXX" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+                    </div>
                     <div>
                       <label className="text-sm font-medium text-foreground mb-1.5 block">Nursing Qualification</label>
-                      <Select><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                      <Select value={form.qualification} onValueChange={v => setForm(f => ({ ...f, qualification: v }))}>
+                        <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="rn">Registered Nurse (RN)</SelectItem>
                           <SelectItem value="bsn">Bachelor of Science in Nursing (BSN)</SelectItem>
@@ -134,7 +209,8 @@ const UsaNclex = () => {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-foreground mb-1.5 block">Years of Nursing Experience</label>
-                      <Select><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                      <Select value={form.experience} onValueChange={v => setForm(f => ({ ...f, experience: v }))}>
+                        <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="1-2">1–2 years</SelectItem>
                           <SelectItem value="3-5">3–5 years</SelectItem>
@@ -145,7 +221,8 @@ const UsaNclex = () => {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-foreground mb-1.5 block">Have you taken NCLEX before?</label>
-                      <Select><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                      <Select value={form.previousAttempt} onValueChange={v => setForm(f => ({ ...f, previousAttempt: v }))}>
+                        <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="no">No, first attempt</SelectItem>
                           <SelectItem value="yes-pass">Yes, passed</SelectItem>
@@ -159,8 +236,18 @@ const UsaNclex = () => {
                         <p className="text-sm text-muted-foreground">Upload certificate (PDF, JPG)</p>
                       </div>
                     </div>
-                    <div><label className="text-sm font-medium text-foreground mb-1.5 block">Additional Notes</label><Textarea placeholder="Tell us about your nursing background..." rows={3} /></div>
-                    <Button variant="accent" size="lg" className="w-full">Submit Application <ArrowRight className="w-5 h-5" /></Button>
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-1.5 block">Additional Notes</label>
+                      <Textarea 
+                        placeholder="Tell us about your nursing background..." 
+                        rows={3} 
+                        value={form.notes}
+                        onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                      />
+                    </div>
+                    <Button variant="accent" size="lg" className="w-full" disabled={submitting}>
+                      {submitting ? "Submitting..." : "Submit Application"} <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
                   </form>
                 </div>
               </motion.div>
