@@ -255,17 +255,18 @@ const Dashboard = () => {
   };
 
   const SidebarNav = ({ onSelect }: { onSelect?: () => void }) => (
-    <nav className="flex-1 p-4 space-y-1">
+    <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto custom-scrollbar">
       {sidebarNavItems.map((item) => {
         const active = activeTab === item.id;
         return (
           <button
             key={item.id}
             onClick={() => { setActiveTab(item.id); onSelect?.(); }}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${active ? "bg-primary text-primary-foreground" : "text-white/60 hover:text-white hover:bg-white/5"}`}
+            className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group ${active ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "text-white/60 hover:text-white hover:bg-white/5"}`}
           >
-            <item.icon className="w-4 h-4" />
-            {item.label}
+            <item.icon className={`w-4.5 h-4.5 transition-transform duration-200 ${active ? "scale-110" : "group-hover:scale-110"}`} />
+            <span className="truncate">{item.label}</span>
+            {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
           </button>
         );
       })}
@@ -293,7 +294,7 @@ const Dashboard = () => {
               {/* Mobile sidebar trigger */}
               <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="lg:hidden">
+                  <Button variant="ghost" size="icon" className="lg:hidden h-9 w-9">
                     <Menu className="w-5 h-5" />
                   </Button>
                 </SheetTrigger>
@@ -307,23 +308,33 @@ const Dashboard = () => {
                   <SidebarNav onSelect={() => setMobileOpen(false)} />
                 </SheetContent>
               </Sheet>
-              <Link to="/" className="flex lg:hidden items-center gap-2">
-                <img src={logo} alt="AtlasWave" className="h-8 w-8 rounded-lg object-cover" />
+              
+              <Link to="/" className="flex lg:hidden items-center">
+                <img src={logo} alt="AtlasWave" className="h-7 w-7 rounded-lg object-cover" />
               </Link>
-              <div className="hidden md:flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2 w-80">
+
+              {/* Desktop Search */}
+              <div className="hidden md:flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-1.5 w-64 lg:w-80">
                 <Search className="w-4 h-4 text-muted-foreground" />
                 <input placeholder="Search..." className="bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground w-full" />
               </div>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2">
+
+            <div className="flex items-center gap-1.5 sm:gap-3">
+              {/* Mobile Search Button */}
+              <Button variant="ghost" size="icon" className="md:hidden h-9 w-9 text-muted-foreground">
+                <Search className="w-4 h-4" />
+              </Button>
+
               <NotificationBell audience="user" userId={user?.id} />
+              
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-muted transition-colors">
+                  <button className="flex items-center gap-2 rounded-lg pl-1 pr-2 py-1 hover:bg-muted transition-colors">
                     <AvatarUpload size="sm" />
                     <div className="hidden sm:block text-left">
-                      <p className="font-display font-bold text-foreground text-sm leading-tight">Hi, {user?.fullName?.split(" ")[0]} 👋</p>
-                      <p className="text-muted-foreground text-[11px]">{user?.email}</p>
+                      <p className="font-display font-bold text-foreground text-sm leading-tight">Hi, {user?.fullName?.split(" ")[0]}</p>
+                      <p className="text-muted-foreground text-[10px] truncate max-w-[100px]">{user?.email}</p>
                     </div>
                   </button>
                 </DropdownMenuTrigger>
@@ -393,14 +404,14 @@ function OverviewTab({
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Applications", value: applications.length, active: activeApps, icon: FileText, color: "text-primary", bg: "bg-primary/10" },
           { label: "Bookings", value: bookings.length, active: bookings.filter((b) => b.status === "pending").length, icon: Plane, color: "text-blue-600", bg: "bg-blue-50" },
           { label: "Shipments", value: shipments.length, active: activeShipments, icon: Package, color: "text-purple-600", bg: "bg-purple-50" },
           { label: "Appointments", value: consultations.length, active: upcomingConsultations, icon: CalendarDays, color: "text-amber-600", bg: "bg-amber-50" },
         ].map((s) => (
-          <div key={s.label} className="bg-background rounded-xl border p-5">
+          <div key={s.label} className="bg-background rounded-xl border p-4 sm:p-5 hover:shadow-sm transition-shadow">
             <div className={`w-10 h-10 rounded-lg ${s.bg} flex items-center justify-center mb-3`}>
               <s.icon className={`w-5 h-5 ${s.color}`} />
             </div>
@@ -421,20 +432,22 @@ function OverviewTab({
               <p className="text-sm text-muted-foreground">No applications yet</p>
             </div>
           ) : (
-            applications.slice(0, 3).map((app) => {
-              const cfg = statusConfig[app.status] || statusConfig.pending;
-              return (
-                <div key={app.id} className="bg-background rounded-xl border p-4 hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-foreground text-sm">{app.title}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{app.type} · {new Date(app.created_at).toLocaleDateString()}</p>
+            <div className="space-y-2">
+              {applications.slice(0, 3).map((app) => {
+                const cfg = statusConfig[app.status] || statusConfig.pending;
+                return (
+                  <div key={app.id} className="bg-background rounded-xl border p-4 hover:shadow-md transition-shadow group cursor-pointer" onClick={() => { setActiveTab("applications"); }}>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-foreground text-sm truncate group-hover:text-primary transition-colors">{app.title}</p>
+                        <p className="text-xs text-muted-foreground capitalize truncate">{app.type} · {new Date(app.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <Badge className={cfg.color + " border text-[10px] shrink-0"}>{cfg.label}</Badge>
                     </div>
-                    <Badge className={cfg.color + " border text-[10px]"}>{cfg.label}</Badge>
                   </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
         </div>
         <div className="space-y-3">
@@ -445,18 +458,23 @@ function OverviewTab({
               <p className="text-sm text-muted-foreground">No active shipments</p>
             </div>
           ) : (
-            shipments.filter((s) => s.status === "in-transit").slice(0, 3).map((s) => (
-              <div key={s.id} className="bg-background rounded-xl border p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="font-medium text-foreground text-sm">{s.tracking_number}</p>
-                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 border text-[10px]">In Transit</Badge>
+            <div className="space-y-2">
+              {shipments.filter((s) => s.status === "in-transit").slice(0, 3).map((s) => (
+                <div key={s.id} className="bg-background rounded-xl border p-4 hover:shadow-sm transition-shadow group cursor-pointer" onClick={() => setActiveTab("shipments")}>
+                  <div className="flex items-center justify-between mb-2 gap-3">
+                    <p className="font-medium text-foreground text-sm truncate group-hover:text-primary transition-colors">{s.tracking_number}</p>
+                    <Badge className="bg-blue-100 text-blue-800 border-blue-200 border text-[10px] shrink-0">In Transit</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">{s.origin} → {s.destination}</p>
+                  <div className="flex items-center gap-3 mt-2">
+                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${s.progress}%` }} />
+                    </div>
+                    <span className="text-[10px] font-medium text-muted-foreground shrink-0">{s.progress}%</span>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground">{s.origin} → {s.destination}</p>
-                <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mt-2">
-                  <div className="h-full bg-primary rounded-full" style={{ width: `${s.progress}%` }} />
-                </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       </div>
@@ -564,27 +582,30 @@ function ApplicationsTab({ applications, onRefresh, userId }: { applications: Ap
               <div 
                 key={app.id} 
                 onClick={() => { setViewingApp(app); setViewDialogOpen(true); }}
-                className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl border bg-background hover:shadow-md transition-shadow cursor-pointer gap-3 group"
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-xl border bg-background hover:shadow-md transition-shadow cursor-pointer gap-3 group"
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-4 min-w-0">
                   <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
                     {app.type === "work-permit" ? <FileText className="w-5 h-5 text-primary" /> :
                      app.type === "logistics" ? <Package className="w-5 h-5 text-primary" /> :
                      app.type === "travel" ? <Plane className="w-5 h-5 text-primary" /> :
                      <Eye className="w-5 h-5 text-primary" />}
                   </div>
-                  <div>
-                    <p className="font-medium text-foreground group-hover:text-primary transition-colors">{app.title}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-foreground group-hover:text-primary transition-colors truncate">{app.title}</p>
                     <p className="text-sm text-muted-foreground line-clamp-1">{detailsSummary}</p>
                     <p className="text-xs text-muted-foreground mt-1 capitalize">{app.type} · {new Date(app.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Badge className={cfg.color + " border shrink-0"}>
+                <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto mt-1 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-none border-border/50">
+                  <Badge className={cfg.color + " border shrink-0 text-[10px] sm:text-xs px-2 py-0.5"}>
                     <StatusIcon className="w-3 h-3 mr-1" /> {cfg.label}
                   </Badge>
-                  <Button variant="ghost" size="icon" className="hidden sm:flex opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 hidden sm:flex opacity-0 group-hover:opacity-100 transition-opacity">
                     <Eye className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:hidden text-muted-foreground">
+                    <ChevronRight className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
