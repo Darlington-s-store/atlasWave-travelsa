@@ -56,10 +56,14 @@ interface ApplicationFormData {
   fullName?: string;
   email?: string;
   phone?: string;
+  dob?: string;
   nationality?: string;
   destination?: string;
   visaType?: string;
   travelDate?: string;
+  returnDate?: string;
+  purpose?: string;
+  documents?: string[];
 }
 
 interface Booking {
