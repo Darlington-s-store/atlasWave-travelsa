@@ -48,22 +48,26 @@ const wrapEmail = (title: string, _accent: string, body: string) => `
   </div>
 `;
 
-const cleanValue = (val: any): string => {
+const cleanValue = (val: unknown): string => {
   if (val === null || val === undefined) return "";
   if (typeof val === "string") {
     const trimmed = val.trim();
     if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
       try {
         const parsed = JSON.parse(trimmed);
-        return parsed.message || parsed.text || parsed.details || parsed.title || val;
+        if (parsed && typeof parsed === "object") {
+          return parsed.message || parsed.text || parsed.details || parsed.title || val;
+        }
+        return val;
       } catch {
         return val;
       }
     }
     return val;
   }
-  if (typeof val === "object") {
-    return val.message || val.text || val.details || val.title || JSON.stringify(val);
+  if (typeof val === "object" && val !== null) {
+    const obj = val as Record<string, unknown>;
+    return (obj.message as string) || (obj.text as string) || (obj.details as string) || (obj.title as string) || JSON.stringify(val);
   }
   return String(val);
 };
