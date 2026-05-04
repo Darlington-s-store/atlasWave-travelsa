@@ -258,7 +258,7 @@ const TravelServices = () => {
                     ))}
                   </div>
                   <Button variant="accent" className="w-full mt-6" asChild>
-                    <Link to="/consultation">Apply Now</Link>
+                    <Link to="/visa-application">Apply Now</Link>
                   </Button>
                 </motion.div>
               ))}

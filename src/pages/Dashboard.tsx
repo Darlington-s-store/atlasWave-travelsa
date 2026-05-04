@@ -57,13 +57,29 @@ interface ApplicationFormData {
   email?: string;
   phone?: string;
   dob?: string;
+  gender?: string;
   nationality?: string;
-  destination?: string;
-  visaType?: string;
+  passportNumber?: string;
+  residentialAddress?: string;
+  jobTitle?: string;
+  employerName?: string;
+  monthlyIncome?: string;
+  purpose?: string;
   travelDate?: string;
   returnDate?: string;
-  purpose?: string;
+  durationOfStay?: string;
+  accommodationAddress?: string;
+  sponsor?: string;
+  bankBalance?: string;
+  incomeSource?: string;
+  previousCountries?: string;
+  previousRefusals?: string;
+  refusalDetails?: string;
+  criminalHistory?: string;
+  immigrationViolations?: string;
+  healthIssues?: string;
   documents?: string[];
+  destination?: string;
 }
 
 interface Booking {
@@ -447,6 +463,7 @@ function OverviewTab({
 // --- APPLICATIONS TAB ---
 function ApplicationsTab({ applications, onRefresh, userId }: { applications: Application[]; onRefresh: () => void; userId: string }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [viewingApp, setViewingApp] = useState<Application | null>(null);
@@ -494,7 +511,7 @@ function ApplicationsTab({ applications, onRefresh, userId }: { applications: Ap
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="font-display text-xl font-bold text-foreground">My Applications</h2>
-        <Button size="sm" onClick={() => setDialogOpen(true)}>
+        <Button size="sm" onClick={() => navigate("/visa-application")}>
           <Plus className="w-4 h-4 mr-2" /> New Application
         </Button>
       </div>
@@ -504,7 +521,7 @@ function ApplicationsTab({ applications, onRefresh, userId }: { applications: Ap
           <FileText className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
           <h3 className="font-display font-semibold text-foreground mb-1">No applications yet</h3>
           <p className="text-sm text-muted-foreground mb-4">Submit a new application for visa, work permit, or travel services.</p>
-          <Button size="sm" onClick={() => setDialogOpen(true)}>New Application</Button>
+          <Button size="sm" onClick={() => navigate("/visa-application")}>New Application</Button>
         </div>
       ) : (
         <div className="space-y-3">
@@ -633,27 +650,84 @@ function ApplicationsTab({ applications, onRefresh, userId }: { applications: Ap
                   }
 
                   return (
-                    <>
-                      {(details.fullName || details.nationality || details.dob) && (
+                    <div className="space-y-6">
+                      {(details.fullName || details.nationality || details.dob || details.gender || details.passportNumber) && (
                         <div>
                           <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Personal Information</h4>
                           <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-2 gap-4">
                             {details.fullName && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Full Name</p><p className="text-sm font-medium">{details.fullName}</p></div>}
                             {details.nationality && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Nationality</p><p className="text-sm font-medium">{details.nationality}</p></div>}
                             {details.dob && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">DOB</p><p className="text-sm font-medium">{details.dob}</p></div>}
-                            {details.email && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Email</p><p className="text-sm font-medium">{details.email}</p></div>}
+                            {details.gender && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Gender</p><p className="text-sm font-medium">{details.gender}</p></div>}
+                            {details.passportNumber && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Passport #</p><p className="text-sm font-medium">{details.passportNumber}</p></div>}
                           </div>
                         </div>
                       )}
 
-                      {(details.destination || details.visaType || details.travelDate) && (
+                      {(details.email || details.phone || details.residentialAddress) && (
+                        <div>
+                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Contact Details</h4>
+                          <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-2 gap-4">
+                            {details.email && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Email</p><p className="text-sm font-medium">{details.email}</p></div>}
+                            {details.phone && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Phone</p><p className="text-sm font-medium">{details.phone}</p></div>}
+                            {details.residentialAddress && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Address</p><p className="text-sm font-medium">{details.residentialAddress}</p></div>}
+                          </div>
+                        </div>
+                      )}
+
+                      {(details.jobTitle || details.employerName || details.monthlyIncome) && (
+                        <div>
+                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Occupation & Education</h4>
+                          <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-2 gap-4">
+                            {details.jobTitle && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Job Title</p><p className="text-sm font-medium">{details.jobTitle}</p></div>}
+                            {details.employerName && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Employer/School</p><p className="text-sm font-medium">{details.employerName}</p></div>}
+                            {details.monthlyIncome && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Income</p><p className="text-sm font-medium">{details.monthlyIncome}</p></div>}
+                          </div>
+                        </div>
+                      )}
+
+                      {(details.purpose || details.travelDate || details.returnDate || details.durationOfStay || details.accommodationAddress) && (
                         <div>
                           <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Travel Details</h4>
                           <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-2 gap-4">
-                            {details.destination && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Destination</p><p className="text-sm font-medium">{details.destination}</p></div>}
-                            {details.visaType && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Visa Type</p><p className="text-sm font-medium">{details.visaType}</p></div>}
+                            {details.purpose && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Purpose</p><p className="text-sm font-medium">{details.purpose}</p></div>}
                             {details.travelDate && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Travel Date</p><p className="text-sm font-medium">{details.travelDate}</p></div>}
                             {details.returnDate && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Return Date</p><p className="text-sm font-medium">{details.returnDate}</p></div>}
+                            {details.durationOfStay && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Duration</p><p className="text-sm font-medium">{details.durationOfStay}</p></div>}
+                            {details.accommodationAddress && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Accommodation</p><p className="text-sm font-medium">{details.accommodationAddress}</p></div>}
+                          </div>
+                        </div>
+                      )}
+
+                      {(details.sponsor || details.bankBalance || details.incomeSource) && (
+                        <div>
+                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Financial Information</h4>
+                          <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-2 gap-4">
+                            {details.sponsor && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Sponsor</p><p className="text-sm font-medium">{details.sponsor}</p></div>}
+                            {details.bankBalance && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Bank Balance</p><p className="text-sm font-medium">{details.bankBalance}</p></div>}
+                            {details.incomeSource && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Income Source</p><p className="text-sm font-medium">{details.incomeSource}</p></div>}
+                          </div>
+                        </div>
+                      )}
+
+                      {(details.previousCountries || details.previousRefusals) && (
+                        <div>
+                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Travel History</h4>
+                          <div className="bg-muted/30 p-4 rounded-xl border space-y-3">
+                            {details.previousCountries && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Countries Visited</p><p className="text-sm font-medium">{details.previousCountries}</p></div>}
+                            {details.previousRefusals && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Previous Refusals?</p><p className="text-sm font-medium">{details.previousRefusals}</p></div>}
+                            {details.refusalDetails && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Refusal Details</p><p className="text-sm font-medium">{details.refusalDetails}</p></div>}
+                          </div>
+                        </div>
+                      )}
+
+                      {(details.criminalHistory || details.immigrationViolations || details.healthIssues) && (
+                        <div>
+                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Security & Health</h4>
+                          <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-1 gap-3">
+                            {details.criminalHistory && <div className="flex justify-between items-center"><p className="text-[11px] text-muted-foreground font-semibold">Criminal History</p><Badge variant="outline">{details.criminalHistory}</Badge></div>}
+                            {details.immigrationViolations && <div className="flex justify-between items-center"><p className="text-[11px] text-muted-foreground font-semibold">Immigration Violations</p><Badge variant="outline">{details.immigrationViolations}</Badge></div>}
+                            {details.healthIssues && <div className="flex justify-between items-center"><p className="text-[11px] text-muted-foreground font-semibold">Serious Health Issues</p><Badge variant="outline">{details.healthIssues}</Badge></div>}
                           </div>
                         </div>
                       )}
@@ -679,7 +753,7 @@ function ApplicationsTab({ applications, onRefresh, userId }: { applications: Ap
                           </div>
                         </div>
                       )}
-                    </>
+                    </div>
                   );
                 })()}
               </div>

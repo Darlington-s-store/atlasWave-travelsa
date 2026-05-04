@@ -65,6 +65,7 @@ import AdminVideos from "./pages/admin/AdminVideos";
 import AdminMessages from "./pages/admin/AdminMessages";
 import Destinations from "./pages/Destinations";
 import DestinationDetail from "./pages/DestinationDetail";
+import VisaApplication from "./pages/VisaApplication";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -86,6 +87,7 @@ const AppRoutes = () => {
         <Route path="/hotel-accommodation" element={<HotelAccommodation />} />
         <Route path="/travel/visa" element={<VisaAssistance />} />
         <Route path="/visa-assistance" element={<VisaAssistance />} />
+        <Route path="/visa-application" element={<VisaApplication />} />
         <Route path="/logistics" element={<Logistics />} />
         <Route path="/logistics/tracking" element={<ShipmentTracking />} />
         <Route path="/tracking" element={<ShipmentTracking />} />

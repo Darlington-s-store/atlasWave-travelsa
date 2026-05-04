@@ -120,6 +120,15 @@ export type Database = {
           type: string
           updated_at: string
           user_id: string
+          sponsor: string | null
+          bank_balance: string | null
+          income_source: string | null
+          previous_refusals: string | null
+          criminal_history: string | null
+          immigration_violations: string | null
+          health_issues: string | null
+          duration_of_stay: string | null
+          accommodation_address: string | null
         }
         Insert: {
           address?: string | null
@@ -155,6 +164,15 @@ export type Database = {
           type: string
           updated_at?: string
           user_id: string
+          sponsor?: string | null
+          bank_balance?: string | null
+          income_source?: string | null
+          previous_refusals?: string | null
+          criminal_history?: string | null
+          immigration_violations?: string | null
+          health_issues?: string | null
+          duration_of_stay?: string | null
+          accommodation_address?: string | null
         }
         Update: {
           address?: string | null
@@ -190,6 +208,15 @@ export type Database = {
           type?: string
           updated_at?: string
           user_id?: string
+          sponsor?: string | null
+          bank_balance?: string | null
+          income_source?: string | null
+          previous_refusals?: string | null
+          criminal_history?: string | null
+          immigration_violations?: string | null
+          health_issues?: string | null
+          duration_of_stay?: string | null
+          accommodation_address?: string | null
         }
         Relationships: []
       }

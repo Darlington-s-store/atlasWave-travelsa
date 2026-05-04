@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   Dialog, 
   DialogContent, 
@@ -131,6 +131,7 @@ const normalizeTrackedApplication = (app: unknown): Application => {
 
 const VisaAssistance = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"programs" | "apply" | "track">("programs");
   const [currentStep, setCurrentStep] = useState(1);
   const [applications, setApplications] = useState<Application[]>([]);
@@ -248,7 +249,7 @@ const VisaAssistance = () => {
             { value: "5–15d", label: "Avg processing", icon: Clock },
             { value: "10k+", label: "Visas issued", icon: FileCheck },
           ]}
-          primaryAction={{ label: "Apply Now", onClick: () => setActiveTab("apply") }}
+          primaryAction={{ label: "Apply Now", onClick: () => navigate("/visa-application") }}
           secondaryAction={{ label: "Browse Programs", onClick: () => setActiveTab("programs") }}
         />
 
@@ -258,12 +259,12 @@ const VisaAssistance = () => {
             <div className="flex gap-1">
               {[
                 { key: "programs" as const, label: "Visa Programs", icon: Globe },
-                { key: "apply" as const, label: "Apply Now", icon: FileText },
+                { key: "apply" as const, label: "Apply Now", icon: FileText, onClick: () => navigate("/visa-application") },
                 { key: "track" as const, label: "Track Application", icon: Clock },
               ].map((tab) => (
                 <button
                   key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
+                  onClick={() => tab.onClick ? tab.onClick() : setActiveTab(tab.key)}
                   className={`flex items-center gap-2 px-5 py-4 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === tab.key
                       ? "border-primary text-primary"
@@ -305,7 +306,7 @@ const VisaAssistance = () => {
                           <span className="text-foreground font-bold">{v.price}</span>
                         </div>
                       </div>
-                      <Button variant="accent" size="sm" className="w-full mt-4" onClick={() => { setActiveTab("apply"); updateField("visaType", v.name); }}>
+                      <Button variant="accent" size="sm" className="w-full mt-4" onClick={() => navigate("/visa-application")}>
                         Apply Now <ArrowRight className="w-4 h-4 ml-1" />
                       </Button>
                     </motion.div>
@@ -337,7 +338,7 @@ const VisaAssistance = () => {
                   ))}
                 </div>
                 <div className="text-center mt-12">
-                  <Button variant="accent" size="lg" onClick={() => setActiveTab("apply")}>
+                  <Button variant="accent" size="lg" onClick={() => navigate("/visa-application")}>
                     Start Application <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </div>

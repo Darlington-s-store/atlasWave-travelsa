@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, Globe, MoreHorizontal, Eye, Pencil, Inbox, CheckCircle, Clock, XCircle, FileText, LayoutGrid, List, Plus, Trash2, Users } from "lucide-react";
+import { Search, Globe, MoreHorizontal, Eye, Pencil, Inbox, CheckCircle, Clock, XCircle, FileText, LayoutGrid, List, Plus, Trash2, Users, Briefcase, CreditCard, History, ShieldAlert } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyStatusChange } from "@/lib/notifyStatusChange";
@@ -45,6 +45,15 @@ interface Application {
   reference_number?: string;
   nationality?: string;
   destination_country?: string;
+  sponsor?: string;
+  bank_balance?: string;
+  income_source?: string;
+  previous_refusals?: string;
+  criminal_history?: string;
+  immigration_violations?: string;
+  health_issues?: string;
+  duration_of_stay?: string;
+  accommodation_address?: string;
 }
 
 interface ApplicationFormData {
@@ -52,14 +61,29 @@ interface ApplicationFormData {
   email?: string;
   phone?: string;
   dob?: string;
+  gender?: string;
   nationality?: string;
-  destination?: string;
-  visaType?: string;
+  passportNumber?: string;
+  residentialAddress?: string;
+  jobTitle?: string;
+  employerName?: string;
+  monthlyIncome?: string;
+  purpose?: string;
   travelDate?: string;
   returnDate?: string;
-  purpose?: string;
-  passportNumber?: string;
+  durationOfStay?: string;
+  accommodationAddress?: string;
+  sponsor?: string;
+  bankBalance?: string;
+  incomeSource?: string;
+  previousCountries?: string;
+  previousRefusals?: string;
+  refusalDetails?: string;
+  criminalHistory?: string;
+  immigrationViolations?: string;
+  healthIssues?: string;
   documents?: string[];
+  destination?: string;
 }
 
 const VISA_TYPES = ["Tourist Visa", "Business Visa", "Student Visa", "Work Visa", "Transit Visa"];
@@ -283,6 +307,8 @@ const AdminVisaApplications = () => {
                         <TableHead className="text-[11px] uppercase tracking-wider font-bold">Title</TableHead>
                         <TableHead className="text-[11px] uppercase tracking-wider font-bold">Type</TableHead>
                         <TableHead className="text-[11px] uppercase tracking-wider font-bold">Status</TableHead>
+                        <TableHead className="text-[11px] uppercase tracking-wider font-bold">Nationality</TableHead>
+                        <TableHead className="text-[11px] uppercase tracking-wider font-bold">Destination</TableHead>
                         <TableHead className="text-[11px] uppercase tracking-wider font-bold">Submitted</TableHead>
                         <TableHead className="text-[11px] uppercase tracking-wider font-bold">Updated</TableHead>
                         <TableHead className="w-10"></TableHead>
@@ -294,6 +320,8 @@ const AdminVisaApplications = () => {
                           <TableCell className="text-[13px] font-semibold text-foreground">{app.title}</TableCell>
                           <TableCell className="text-[13px] text-muted-foreground">{app.type}</TableCell>
                           <TableCell><span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg capitalize ${statusStyle[app.status] || "bg-muted"}`}>{app.status}</span></TableCell>
+                          <TableCell className="text-[13px] text-muted-foreground">{app.nationality || "—"}</TableCell>
+                          <TableCell className="text-[13px] text-muted-foreground">{app.destination_country || "—"}</TableCell>
                           <TableCell className="text-[13px] text-muted-foreground">{new Date(app.created_at).toLocaleDateString()}</TableCell>
                           <TableCell className="text-[13px] text-muted-foreground">{new Date(app.updated_at).toLocaleDateString()}</TableCell>
                           <TableCell>
@@ -374,24 +402,73 @@ const AdminVisaApplications = () => {
                           <Users className="w-3.5 h-3.5" /> Personal Information
                         </h4>
                         <div className="grid grid-cols-2 gap-4 bg-muted/30 p-4 rounded-xl border border-border/40">
-                          <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Full Name</p><p className="text-[13px] font-medium">{details.fullName || "—"}</p></div>
-                          <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Nationality</p><p className="text-[13px] font-medium">{details.nationality || "—"}</p></div>
-                          <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Email</p><p className="text-[13px] font-medium">{details.email || "—"}</p></div>
-                          <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Phone</p><p className="text-[13px] font-medium">{details.phone || "—"}</p></div>
-                          <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">DOB</p><p className="text-[13px] font-medium">{details.dob || "—"}</p></div>
+                          {details.fullName && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Full Name</p><p className="text-[13px] font-medium">{details.fullName}</p></div>}
+                          {details.nationality && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Nationality</p><p className="text-[13px] font-medium">{details.nationality}</p></div>}
+                          {details.dob && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">DOB</p><p className="text-[13px] font-medium">{details.dob}</p></div>}
+                          {details.gender && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Gender</p><p className="text-[13px] font-medium">{details.gender}</p></div>}
+                          {details.passportNumber && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Passport #</p><p className="text-[13px] font-medium">{details.passportNumber}</p></div>}
+                          {details.email && <div className="col-span-2 border-t pt-2 mt-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Email</p><p className="text-[13px] font-medium">{details.email}</p></div>}
+                          {details.phone && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Phone</p><p className="text-[13px] font-medium">{details.phone}</p></div>}
+                          {details.residentialAddress && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Address</p><p className="text-[13px] font-medium">{details.residentialAddress}</p></div>}
                         </div>
                       </section>
 
-                      {/* Travel Section */}
+                      {/* Occupation & Travel */}
+                      <section className="grid sm:grid-cols-2 gap-6">
+                        <div>
+                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3 flex items-center gap-2">
+                            <Briefcase className="w-3.5 h-3.5" /> Occupation
+                          </h4>
+                          <div className="bg-muted/30 p-4 rounded-xl border border-border/40 space-y-3">
+                            <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Job Title</p><p className="text-[13px] font-medium">{details.jobTitle || "—"}</p></div>
+                            <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Employer</p><p className="text-[13px] font-medium">{details.employerName || "—"}</p></div>
+                            <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Income</p><p className="text-[13px] font-medium">{details.monthlyIncome || "—"}</p></div>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3 flex items-center gap-2">
+                            <Globe className="w-3.5 h-3.5" /> Travel Details
+                          </h4>
+                          <div className="bg-muted/30 p-4 rounded-xl border border-border/40 space-y-3">
+                            <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Purpose</p><p className="text-[13px] font-medium">{details.purpose || "—"}</p></div>
+                            <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Travel Date</p><p className="text-[13px] font-medium">{details.travelDate || "—"}</p></div>
+                            <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Duration</p><p className="text-[13px] font-medium">{details.durationOfStay || "—"}</p></div>
+                          </div>
+                        </div>
+                      </section>
+
+                      {/* Financial & History */}
+                      <section className="grid sm:grid-cols-2 gap-6">
+                        <div>
+                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3 flex items-center gap-2">
+                            <CreditCard className="w-3.5 h-3.5" /> Financial Info
+                          </h4>
+                          <div className="bg-muted/30 p-4 rounded-xl border border-border/40 space-y-3">
+                            <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Sponsor</p><p className="text-[13px] font-medium">{details.sponsor || "—"}</p></div>
+                            <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Balance</p><p className="text-[13px] font-medium">{details.bankBalance || "—"}</p></div>
+                            <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Source</p><p className="text-[13px] font-medium">{details.incomeSource || "—"}</p></div>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3 flex items-center gap-2">
+                            <History className="w-3.5 h-3.5" /> Travel History
+                          </h4>
+                          <div className="bg-muted/30 p-4 rounded-xl border border-border/40 space-y-3">
+                            <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Visited</p><p className="text-[13px] font-medium line-clamp-2">{details.previousCountries || "None"}</p></div>
+                            <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Refusals</p><p className="text-[13px] font-medium">{details.previousRefusals || "No"}</p></div>
+                          </div>
+                        </div>
+                      </section>
+
+                      {/* Security */}
                       <section>
                         <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3 flex items-center gap-2">
-                          <Globe className="w-3.5 h-3.5" /> Travel & Visa Details
+                          <ShieldAlert className="w-3.5 h-3.5" /> Security & Background
                         </h4>
-                        <div className="grid grid-cols-2 gap-4 bg-muted/30 p-4 rounded-xl border border-border/40">
-                          <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Destination</p><p className="text-[13px] font-medium">{details.destination || "—"}</p></div>
-                          <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Visa Type</p><p className="text-[13px] font-medium">{details.visaType || viewingApp.type || "—"}</p></div>
-                          <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Travel Date</p><p className="text-[13px] font-medium">{details.travelDate || "—"}</p></div>
-                          <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Return Date</p><p className="text-[13px] font-medium">{details.returnDate || "—"}</p></div>
+                        <div className="grid grid-cols-3 gap-4 bg-muted/30 p-4 rounded-xl border border-border/40 text-center">
+                          <div><p className="text-[9px] text-muted-foreground uppercase font-bold">Criminal</p><p className={`text-[12px] font-bold ${details.criminalHistory === "Yes" ? "text-destructive" : "text-secondary"}`}>{details.criminalHistory || "No"}</p></div>
+                          <div><p className="text-[9px] text-muted-foreground uppercase font-bold">Immigration</p><p className={`text-[12px] font-bold ${details.immigrationViolations === "Yes" ? "text-destructive" : "text-secondary"}`}>{details.immigrationViolations || "No"}</p></div>
+                          <div><p className="text-[9px] text-muted-foreground uppercase font-bold">Health</p><p className={`text-[12px] font-bold ${details.healthIssues === "Yes" ? "text-destructive" : "text-secondary"}`}>{details.healthIssues || "No"}</p></div>
                         </div>
                       </section>
 
