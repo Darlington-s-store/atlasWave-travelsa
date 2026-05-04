@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,79 @@ interface UserRow {
   roles: string[];
 }
 
+interface Application {
+  id: string;
+  title: string;
+  type: string;
+  status: string;
+  created_at: string;
+  reference_number?: string;
+  details?: string | Record<string, unknown> | null;
+}
+
+interface ApplicationFormData {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  dob?: string;
+  nationality?: string;
+  destination?: string;
+  visaType?: string;
+  travelDate?: string;
+  returnDate?: string;
+  purpose?: string;
+  passportNumber?: string;
+  documents?: string[];
+}
+
+interface Payment {
+  id: string;
+  description: string;
+  amount: number;
+  currency: string;
+  status: string;
+  payment_method: string;
+  created_at: string;
+}
+
+interface Booking {
+  id: string;
+  type: string;
+  route: string;
+  date: string;
+  provider: string;
+  status: string;
+}
+
+interface Consultation {
+  id: string;
+  type: string;
+  date: string;
+  time: string;
+  duration: number;
+  price: number;
+  status: string;
+}
+
+interface Shipment {
+  id: string;
+  tracking_number: string;
+  origin: string;
+  destination: string;
+  status: string;
+  progress: number;
+  eta: string;
+}
+
+interface Document {
+  id: string;
+  name: string;
+  category: string;
+  file_type: string;
+  file_size: string;
+  created_at: string;
+}
+
 const ASSIGNABLE_ROLES = ["admin", "moderator", "user"] as const;
 
 const roleColor = (r: string) => {
@@ -46,12 +119,12 @@ const AdminUsers = () => {
 
   // Detail view
   const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
-  const [userApplications, setUserApplications] = useState<any[]>([]);
-  const [userPayments, setUserPayments] = useState<any[]>([]);
-  const [userBookings, setUserBookings] = useState<any[]>([]);
-  const [userConsultations, setUserConsultations] = useState<any[]>([]);
-  const [userDocuments, setUserDocuments] = useState<any[]>([]);
-  const [userShipments, setUserShipments] = useState<any[]>([]);
+  const [userApplications, setUserApplications] = useState<Application[]>([]);
+  const [userPayments, setUserPayments] = useState<Payment[]>([]);
+  const [userBookings, setUserBookings] = useState<Booking[]>([]);
+  const [userConsultations, setUserConsultations] = useState<Consultation[]>([]);
+  const [userDocuments, setUserDocuments] = useState<Document[]>([]);
+  const [userShipments, setUserShipments] = useState<Shipment[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
 
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
@@ -59,10 +132,13 @@ const AdminUsers = () => {
   const [managingUser, setManagingUser] = useState<UserRow | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>("user");
   const [editForm, setEditForm] = useState({ full_name: "", phone: "" });
+  
+  // Application details view
+  const [viewingApp, setViewingApp] = useState<Application | null>(null);
+  const [appDetailsOpen, setAppDetailsOpen] = useState(false);
 
-  useEffect(() => { fetchUsers(); }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const { data: profiles, error } = await supabase.from("profiles").select("*");
@@ -78,12 +154,15 @@ const AdminUsers = () => {
         avatar_url: p.avatar_url, created_at: p.created_at, updated_at: p.updated_at,
         roles: roleMap[p.id] || ["user"],
       })));
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally { setLoading(false); }
-  };
+  }, [toast]);
 
-  const openUserDetail = async (user: UserRow) => {
+  useEffect(() => { fetchUsers(); }, [fetchUsers]);
+
+  const openUserDetail = useCallback(async (user: UserRow) => {
     setSelectedUser(user);
     setDetailLoading(true);
     try {
@@ -95,31 +174,32 @@ const AdminUsers = () => {
         supabase.from("documents").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
         supabase.from("shipments").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
       ]);
-      setUserApplications(apps.data || []);
-      setUserPayments(payments.data || []);
-      setUserBookings(bookings.data || []);
-      setUserConsultations(consultations.data || []);
-      setUserDocuments(documents.data || []);
-      setUserShipments(shipments.data || []);
-    } catch (err: any) {
-      toast({ title: "Error loading user data", description: err.message, variant: "destructive" });
+      setUserApplications((apps.data || []) as Application[]);
+      setUserPayments((payments.data || []) as Payment[]);
+      setUserBookings((bookings.data || []) as Booking[]);
+      setUserConsultations((consultations.data || []) as Consultation[]);
+      setUserDocuments((documents.data || []) as Document[]);
+      setUserShipments((shipments.data || []) as Shipment[]);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast({ title: "Error loading user data", description: message, variant: "destructive" });
     } finally { setDetailLoading(false); }
-  };
+  }, [toast]);
 
   const handleAssignRole = async () => {
     if (!managingUser) return;
     const { data: existing } = await supabase.from("user_roles").select("id")
-      .eq("user_id", managingUser.id).eq("role", selectedRole as any);
+      .eq("user_id", managingUser.id).eq("role", selectedRole as "admin" | "moderator" | "user");
     if (existing && existing.length > 0) {
       toast({ title: "Role already assigned" }); setRoleDialogOpen(false); return;
     }
-    const { error } = await supabase.from("user_roles").insert({ user_id: managingUser.id, role: selectedRole as any });
+    const { error } = await supabase.from("user_roles").insert({ user_id: managingUser.id, role: selectedRole as "admin" | "moderator" | "user" });
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Role Assigned" }); setRoleDialogOpen(false); fetchUsers();
   };
 
   const handleRemoveRole = async (userId: string, role: string) => {
-    const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", role as any);
+    const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", role as "admin" | "moderator" | "user");
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Role Removed" }); fetchUsers();
   };
@@ -250,8 +330,24 @@ const AdminUsers = () => {
                         <TableHeader><TableRow className="bg-muted/30"><TableHead className="text-[11px] uppercase tracking-wider font-bold">Title</TableHead><TableHead className="text-[11px] uppercase tracking-wider font-bold">Type</TableHead><TableHead className="text-[11px] uppercase tracking-wider font-bold">Status</TableHead><TableHead className="text-[11px] uppercase tracking-wider font-bold">Date</TableHead></TableRow></TableHeader>
                         <TableBody>
                           {userApplications.map(a => (
-                            <TableRow key={a.id}><TableCell className="font-medium text-[13px]">{a.title}</TableCell><TableCell className="text-[13px] text-muted-foreground">{a.type}</TableCell><TableCell><Badge variant="outline" className="capitalize text-[10px]">{a.status}</Badge></TableCell><TableCell className="text-[13px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</TableCell></TableRow>
+                            <TableRow key={a.id}>
+                              <TableCell className="font-medium text-[13px]">{a.title}</TableCell>
+                              <TableCell className="text-[13px] text-muted-foreground">{a.type}</TableCell>
+                              <TableCell><Badge variant="outline" className="capitalize text-[10px]">{a.status}</Badge></TableCell>
+                              <TableCell className="text-[13px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</TableCell>
+                              <TableCell className="text-right">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-7 px-2 text-primary"
+                                  onClick={() => { setViewingApp(a); setAppDetailsOpen(true); }}
+                                >
+                                  <Eye className="w-3.5 h-3.5 mr-1" /> View
+                                </Button>
+                              </TableCell>
+                            </TableRow>
                           ))}
+
                         </TableBody>
                       </Table>
                     )}
@@ -542,7 +638,60 @@ const AdminUsers = () => {
           <DialogFooter><DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose><Button onClick={handleAssignRole}>Assign Role</Button></DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Application Detail Dialog */}
+      <Dialog open={appDetailsOpen} onOpenChange={setAppDetailsOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Application Specifics</DialogTitle>
+          </DialogHeader>
+          {viewingApp && (
+            <div className="space-y-4 py-2">
+              <div className="flex justify-between items-center border-b pb-2">
+                <span className="text-[12px] font-bold text-primary">{viewingApp.reference_number || viewingApp.id.slice(0, 8)}</span>
+                <Badge className="capitalize">{viewingApp.status}</Badge>
+              </div>
+              
+              {(() => {
+                let details: ApplicationFormData = {};
+                try {
+                  const rawDetails = viewingApp.details;
+                  if (typeof rawDetails === "string") {
+                    details = JSON.parse(rawDetails) as ApplicationFormData;
+                  } else if (typeof rawDetails === "object" && rawDetails !== null) {
+                    details = rawDetails as ApplicationFormData;
+                  }
+                } catch(e) {
+                  console.error("JSON parse error", e);
+                }
+                
+                if (Object.keys(details).length > 0) {
+                  return (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-2 text-[13px]">
+                        <div><p className="text-muted-foreground text-[11px] uppercase font-bold">Nationality</p><p>{details.nationality || "—"}</p></div>
+                        <div><p className="text-muted-foreground text-[11px] uppercase font-bold">Destination</p><p>{details.destination || "—"}</p></div>
+                        <div><p className="text-muted-foreground text-[11px] uppercase font-bold">Travel Date</p><p>{details.travelDate || "—"}</p></div>
+                        <div><p className="text-muted-foreground text-[11px] uppercase font-bold">Passport #</p><p>{details.passportNumber || "—"}</p></div>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-[11px] uppercase font-bold">Purpose</p>
+                        <p className="text-[13px]">{details.purpose || "—"}</p>
+                      </div>
+                    </div>
+                  );
+                }
+                return <p className="text-[13px]">No extra details available.</p>;
+              })()}
+
+            </div>
+          )}
+          <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
+
   );
 };
 

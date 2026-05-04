@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, FileText, Clock, AlertTriangle, CheckCircle, Plus, Filter, MoreVertical, Eye, Pencil, Trash2, Inbox, XCircle } from "lucide-react";
+import { Search, FileText, Clock, AlertTriangle, CheckCircle, Plus, Filter, MoreVertical, Eye, Pencil, Trash2, Inbox, XCircle, Users, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyStatusChange } from "@/lib/notifyStatusChange";
@@ -26,6 +26,38 @@ const STATUS_LABELS: Record<string, string> = {
   rejected: "Rejected",
 };
 
+interface Application {
+  id: string;
+  user_id: string;
+  title: string;
+  type: string;
+  status: string;
+  details: string | Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+  reference_number?: string;
+  nationality?: string;
+  destination_country?: string;
+  admin_notes?: string;
+  profiles?: {
+    full_name: string | null;
+  } | null;
+}
+
+interface ApplicationFormData {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  dob?: string;
+  nationality?: string;
+  destination?: string;
+  visaType?: string;
+  travelDate?: string;
+  returnDate?: string;
+  purpose?: string;
+  documents?: string[];
+}
+
 const statusStyle: Record<string, string> = {
   pending: "bg-accent/15 text-accent-foreground border border-accent/25",
   in_review: "bg-primary/10 text-primary border border-primary/20",
@@ -36,7 +68,7 @@ const statusStyle: Record<string, string> = {
 
 const AdminApplications = () => {
   const { toast } = useToast();
-  const [applications, setApplications] = useState<any[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -46,32 +78,33 @@ const AdminApplications = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [editingApp, setEditingApp] = useState<any | null>(null);
-  const [viewingApp, setViewingApp] = useState<any | null>(null);
-  const [deletingApp, setDeletingApp] = useState<any | null>(null);
+  const [editingApp, setEditingApp] = useState<Application | null>(null);
+  const [viewingApp, setViewingApp] = useState<Application | null>(null);
+  const [deletingApp, setDeletingApp] = useState<Application | null>(null);
 
   // Form state
   const [form, setForm] = useState({ title: "", type: SERVICE_TYPES[0], status: "pending", details: "" });
 
-  useEffect(() => { fetchApplications(); }, []);
-
-  const fetchApplications = async () => {
+  const fetchApplications = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("applications")
       .select("*, profiles:user_id(full_name)")
       .order("created_at", { ascending: false });
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    setApplications(data || []);
+    setApplications((data || []) as unknown as Application[]);
     setLoading(false);
-  };
+  }, [toast]);
+
+  useEffect(() => { fetchApplications(); }, [fetchApplications]);
 
   const resetForm = () => setForm({ title: "", type: SERVICE_TYPES[0], status: "pending", details: "" });
 
   const openCreate = () => { resetForm(); setEditingApp(null); setDialogOpen(true); };
-  const openEdit = (app: any) => {
+  const openEdit = (app: Application) => {
     setEditingApp(app);
-    setForm({ title: app.title, type: app.type, status: app.status, details: app.details || "" });
+    const detailsString = typeof app.details === "object" ? JSON.stringify(app.details, null, 2) : (app.details || "");
+    setForm({ title: app.title, type: app.type, status: app.status, details: detailsString });
     setDialogOpen(true);
   };
 
@@ -114,7 +147,7 @@ const AdminApplications = () => {
     fetchApplications();
   };
 
-  const updateStatus = async (app: any, newStatus: string) => {
+  const updateStatus = async (app: Application, newStatus: string) => {
     const previousStatus = app.status;
     const { error } = await supabase.from("applications").update({ status: newStatus }).eq("id", app.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
@@ -361,50 +394,154 @@ const AdminApplications = () => {
 
       {/* View Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="sm:max-w-[450px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Application Details</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-primary" />
+              Application Details
+            </DialogTitle>
           </DialogHeader>
           {viewingApp && (
-            <div className="space-y-3 py-2">
-              <div className="grid grid-cols-2 gap-3 text-[13px]">
-                <div>
-                  <span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Applicant</span>
-                  {viewingApp.profiles?.full_name || "Unknown"}
+            <div className="space-y-6 py-4">
+              {/* Header Info */}
+              <div className="flex flex-wrap items-center gap-3 border-b pb-4">
+                <div className="px-3 py-1 bg-primary/10 rounded-full text-[12px] font-bold text-primary">
+                  {viewingApp.reference_number || viewingApp.id.slice(0, 8)}
                 </div>
-                <div>
-                  <span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Title</span>
-                  {viewingApp.title}
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Service Type</span>
-                  {viewingApp.type}
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Status</span>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold ${statusStyle[viewingApp.status] || ""}`}>
-                    {STATUS_LABELS[viewingApp.status] || viewingApp.status}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Created</span>
-                  {new Date(viewingApp.created_at).toLocaleDateString()}
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Updated</span>
-                  {new Date(viewingApp.updated_at).toLocaleDateString()}
-                </div>
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold ${statusStyle[viewingApp.status] || ""}`}>
+                  {STATUS_LABELS[viewingApp.status] || viewingApp.status}
+                </span>
+                <span className="text-muted-foreground text-[12px]">
+                  Submitted on {new Date(viewingApp.created_at).toLocaleDateString()}
+                </span>
               </div>
-              {viewingApp.details && (
-                <div>
-                  <span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Details</span>
-                  <p className="text-[13px] text-foreground">{viewingApp.details}</p>
-                </div>
+
+              {/* Parsed Details */}
+              {(() => {
+                let details: ApplicationFormData = {};
+                try {
+                  const rawDetails = viewingApp.details;
+                  if (typeof rawDetails === "string" && (rawDetails.startsWith("{") || rawDetails.startsWith("["))) {
+                    details = JSON.parse(rawDetails) as ApplicationFormData;
+                  } else if (typeof rawDetails === "object" && rawDetails !== null) {
+                    details = rawDetails as ApplicationFormData;
+                  }
+                } catch (e) {
+                  console.error("Failed to parse details", e);
+                }
+
+                if (Object.keys(details).length > 0) {
+                  return (
+                    <div className="grid gap-6">
+                      {/* Personal Section */}
+                      <section>
+                        <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3 flex items-center gap-2">
+                          <Users className="w-3.5 h-3.5" /> Personal Information
+                        </h4>
+                        <div className="grid grid-cols-2 gap-4 bg-muted/30 p-4 rounded-xl border border-border/40">
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase font-semibold">Full Name</p>
+                            <p className="text-[13px] font-medium">{details.fullName || viewingApp.profiles?.full_name || "—"}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase font-semibold">Nationality</p>
+                            <p className="text-[13px] font-medium">{details.nationality || viewingApp.nationality || "—"}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase font-semibold">Email</p>
+                            <p className="text-[13px] font-medium">{details.email || "—"}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase font-semibold">Phone</p>
+                            <p className="text-[13px] font-medium">{details.phone || "—"}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase font-semibold">DOB</p>
+                            <p className="text-[13px] font-medium">{details.dob || "—"}</p>
+                          </div>
+                        </div>
+                      </section>
+
+                      {/* Travel Section */}
+                      <section>
+                        <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3 flex items-center gap-2">
+                          <Globe className="w-3.5 h-3.5" /> Travel & Visa Details
+                        </h4>
+                        <div className="grid grid-cols-2 gap-4 bg-muted/30 p-4 rounded-xl border border-border/40">
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase font-semibold">Destination</p>
+                            <p className="text-[13px] font-medium">{details.destination || viewingApp.destination_country || "—"}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase font-semibold">Visa Type</p>
+                            <p className="text-[13px] font-medium">{details.visaType || viewingApp.type || "—"}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase font-semibold">Travel Date</p>
+                            <p className="text-[13px] font-medium">{details.travelDate || "—"}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase font-semibold">Return Date</p>
+                            <p className="text-[13px] font-medium">{details.returnDate || "—"}</p>
+                          </div>
+                          <div className="col-span-2">
+                            <p className="text-[10px] text-muted-foreground uppercase font-semibold">Purpose</p>
+                            <p className="text-[13px] font-medium">{details.purpose || "—"}</p>
+                          </div>
+                        </div>
+                      </section>
+
+                      {/* Documents Section */}
+                      {details.documents && Array.isArray(details.documents) && details.documents.length > 0 && (
+                        <section>
+                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3 flex items-center gap-2">
+                            <CheckCircle className="w-3.5 h-3.5" /> Provided Documents
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {details.documents.map((doc, i) => (
+                              <span key={i} className="px-3 py-1 bg-secondary/10 text-secondary border border-secondary/20 rounded-lg text-[12px] font-medium">
+                                {doc}
+                              </span>
+                            ))}
+                          </div>
+                        </section>
+                      )}
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="bg-muted/30 p-4 rounded-xl border border-border/40">
+                    <p className="text-[13px] whitespace-pre-wrap">{String(viewingApp.details || "No additional details available.")}</p>
+                  </div>
+                );
+              })()}
+
+              {/* Admin Internal Notes */}
+              {viewingApp.admin_notes && (
+                <section className="pt-4 border-t">
+                  <h4 className="text-[11px] uppercase tracking-wider font-bold text-destructive mb-2">Internal Admin Notes</h4>
+                  <div className="bg-destructive/5 p-3 rounded-lg border border-destructive/10">
+                    <p className="text-[13px] text-foreground italic">{viewingApp.admin_notes}</p>
+                  </div>
+                </section>
               )}
             </div>
           )}
-          <DialogFooter>
-            <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
+          <DialogFooter className="border-t pt-4">
+            <DialogClose asChild>
+              <Button variant="outline" className="h-9 text-[13px]">Close Window</Button>
+            </DialogClose>
+            {viewingApp && (
+              <Button 
+                variant="default" 
+                className="h-9 text-[13px]"
+                onClick={() => { setViewDialogOpen(false); openEdit(viewingApp); }}
+              >
+                <Pencil className="w-4 h-4 mr-2" />
+                Edit / Update Status
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
