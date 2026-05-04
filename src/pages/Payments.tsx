@@ -34,6 +34,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { DEFAULT_CURRENCY, formatCurrency } from "@/lib/currency";
 
+import { Database } from "@/integrations/supabase/types";
+
+type PaymentRow = Database["public"]["Tables"]["payments"]["Row"];
+
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
   whileInView: { opacity: 1, y: 0 },
@@ -83,7 +87,7 @@ const Payments = () => {
       .select("*")
       .order("created_at", { ascending: false })
       .then(({ data }) => {
-        if (data) setTransactions(data.map((d: any) => ({
+        if (data) setTransactions((data as PaymentRow[]).map((d) => ({
           id: d.reference || `TXN-${d.id.slice(0, 8).toUpperCase()}`,
           date: new Date(d.created_at).toISOString().split("T")[0],
           description: d.description || "Payment",
@@ -187,9 +191,10 @@ const Payments = () => {
       } else {
         throw new Error("No authorization URL received");
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const error = e as Error;
       console.error("Payment error:", e);
-      toast({ title: "Payment Failed", description: e.message || "Could not initiate payment.", variant: "destructive" });
+      toast({ title: "Payment Failed", description: error.message || "Could not initiate payment.", variant: "destructive" });
     } finally {
       setPayLoading(false);
     }
@@ -246,8 +251,9 @@ const Payments = () => {
           } else {
             toast({ title: "Payment Pending", description: "Your payment is being processed." });
           }
-        } catch (e: any) {
-          toast({ title: "Verification Error", description: e.message, variant: "destructive" });
+        } catch (e: unknown) {
+          const error = e as Error;
+          toast({ title: "Verification Error", description: error.message, variant: "destructive" });
         }
 
         // Clean URL
@@ -257,7 +263,7 @@ const Payments = () => {
 
       verify();
     }
-  }, []);
+  }, [user, description, fetchTransactions]);
 
   const handleRefundRequest = (txnId: string) => {
     toast({ title: "Refund Requested", description: `Refund request for ${txnId} has been submitted. You'll receive an email confirmation.` });
