@@ -129,7 +129,7 @@ const WorkPermits = () => {
               <span className="inline-block px-4 py-1.5 bg-accent/20 text-accent text-sm font-semibold rounded-full mb-6 border border-accent/30">
                 Immigration Services
               </span>
-              <h1 className="text-4xl md:text-6xl font-display font-bold text-primary-foreground leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-display font-bold text-primary-foreground leading-tight break-words">
                 Work Permits & <span className="text-gradient-accent">Immigration</span>
               </h1>
               <p className="mt-6 text-lg text-primary-foreground/70 leading-relaxed">
@@ -139,10 +139,9 @@ const WorkPermits = () => {
           </div>
         </section>
 
-        {/* Tab Navigation */}
-        <section className="border-b sticky top-0 z-20 bg-background">
+        <section className="border-b sticky top-0 z-20 bg-background overflow-x-auto no-scrollbar">
           <div className="container">
-            <div className="flex gap-1">
+            <div className="flex gap-1 min-w-max">
               {[
                 { key: "programs" as const, label: "Programs", icon: Briefcase },
                 { key: "compare" as const, label: "Compare Programs", icon: Globe },
@@ -151,7 +150,7 @@ const WorkPermits = () => {
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`flex items-center gap-2 px-5 py-4 text-sm font-medium border-b-2 transition-colors ${
+                  className={`flex items-center gap-2 px-5 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                     activeTab === tab.key ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -292,9 +291,9 @@ const WorkPermits = () => {
                   </tbody>
                 </table>
               </motion.div>
-              <div className="flex justify-center gap-3 mt-8">
+              <div className="flex flex-wrap justify-center gap-3 mt-8">
                 {programs.map((p) => (
-                  <Button key={p.title} variant="outline" size="sm" asChild>
+                  <Button key={p.title} variant="outline" size="sm" asChild className="xs:flex-1 min-w-[140px]">
                     <Link to={p.link}>{p.flag} Apply <ArrowRight className="w-3 h-3 ml-1" /></Link>
                   </Button>
                 ))}
@@ -388,9 +387,9 @@ const WorkPermits = () => {
                         { name: "Canada LMIA", min: 4, flag: "🇨🇦" },
                         { name: "USA NCLEX", min: 7, flag: "🇺🇸" },
                       ].map((p) => (
-                        <div key={p.name} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                          <span className="text-sm text-foreground">{p.flag} {p.name}</span>
-                          <Badge variant="outline" className={totalPoints >= p.min ? "bg-secondary/10 text-secondary border-secondary/20" : "text-muted-foreground"}>
+                        <div key={p.name} className="flex flex-col xs:flex-row items-start xs:items-center justify-between p-3 rounded-lg bg-muted/50 gap-2">
+                          <span className="text-sm text-foreground font-medium">{p.flag} {p.name}</span>
+                          <Badge variant="outline" className={totalPoints >= p.min ? "bg-secondary/10 text-secondary border-secondary/20 whitespace-nowrap" : "text-muted-foreground whitespace-nowrap"}>
                             {totalPoints >= p.min ? "Eligible" : `Need ${p.min - totalPoints} more pts`}
                           </Badge>
                         </div>

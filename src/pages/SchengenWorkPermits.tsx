@@ -191,7 +191,7 @@ const SchengenWorkPermits = () => {
                 <h2 className="text-2xl font-display font-bold text-card-foreground mb-2">Eligibility Check & Application</h2>
                 <p className="text-muted-foreground mb-8">Fill in your details and we'll assess your eligibility.</p>
                 <form className="space-y-5" onSubmit={handleSubmit}>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium text-foreground mb-1.5 block">First Name</label>
                       <Input placeholder="John" required value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} />
