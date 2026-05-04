@@ -1610,16 +1610,16 @@ function SettingsTab({ user, form, setForm, editing, setEditing, handleSave, log
             <div className="bg-background rounded-xl border p-6 space-y-6">
               <h3 className="font-display font-semibold text-foreground">Notification Preferences</h3>
               {[
-                { key: "email", label: "Email Notifications", desc: "Weekly reports and progress updates" },
-                { key: "desktop", label: "Desktop Alerts", desc: "Real-time push notifications" },
-                { key: "sms", label: "SMS Alerts", desc: "Urgent mobile notifications" },
+                { key: "email" as const, label: "Email Notifications", desc: "Weekly reports and progress updates" },
+                { key: "desktop" as const, label: "Desktop Alerts", desc: "Real-time push notifications" },
+                { key: "sms" as const, label: "SMS Alerts", desc: "Urgent mobile notifications" },
               ].map((n) => (
                 <div key={n.key} className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-foreground text-sm">{n.label}</p>
                     <p className="text-xs text-muted-foreground">{n.desc}</p>
                   </div>
-                  <Switch checked={(notifications as any)[n.key]} onCheckedChange={(v) => setNotifications((p) => ({ ...p, [n.key]: v }))} />
+                  <Switch checked={notifications[n.key as keyof typeof notifications]} onCheckedChange={(v) => setNotifications((p) => ({ ...p, [n.key]: v }))} />
                 </div>
               ))}
             </div>
