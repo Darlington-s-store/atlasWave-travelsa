@@ -6,8 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const BRAND_NAME = "AtlastWave Travel and Tour";
-const DEFAULT_SMS_SENDER = "AtlastWave Travel and Tour";
+const BRAND_NAME = "AtlasWave Travel and Tour";
+const DEFAULT_SMS_SENDER = "AtlasWave Travel and Tour";
 
 type NotificationChannel = "email" | "sms" | "both";
 
@@ -48,21 +48,41 @@ const wrapEmail = (title: string, _accent: string, body: string) => `
   </div>
 `;
 
+const cleanValue = (val: any): string => {
+  if (val === null || val === undefined) return "";
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return parsed.message || parsed.text || parsed.details || parsed.title || val;
+      } catch {
+        return val;
+      }
+    }
+    return val;
+  }
+  if (typeof val === "object") {
+    return val.message || val.text || val.details || val.title || JSON.stringify(val);
+  }
+  return String(val);
+};
+
 const templates: Record<string, (data: Record<string, string>, name: string) => NotificationTemplate> = {
   invoice_ready: (data, name) => ({
-    subject: `Invoice ${data.invoiceNumber} - Payment Confirmed`,
+    subject: `Invoice ${cleanValue(data.invoiceNumber)} - Payment Confirmed`,
     html: wrapEmail(
       "Invoice and Payment Receipt",
       "linear-gradient(135deg, #0A3D62, #1ABC9C)",
       `
-        <p style="color: #2C3E50; font-size: 15px;">Hi ${name},</p>
+        <p style="color: #2C3E50; font-size: 15px;">Hi ${cleanValue(name)},</p>
         <p style="color: #6B7280; font-size: 14px; line-height: 1.6;">Your payment has been confirmed and an invoice has been generated.</p>
         <div style="background: #F9FAFB; border-radius: 8px; padding: 20px; margin: 20px 0;">
-          <p style="margin: 6px 0; font-size: 13px; color: #6B7280;">Invoice Number: <strong style="color: #2C3E50;">${data.invoiceNumber}</strong></p>
-          <p style="margin: 6px 0; font-size: 13px; color: #6B7280;">Amount: <strong style="color: #1ABC9C;">${data.currency} ${data.amount}</strong></p>
-          <p style="margin: 6px 0; font-size: 13px; color: #6B7280;">Description: <strong style="color: #2C3E50;">${data.description || "Service Payment"}</strong></p>
-          <p style="margin: 6px 0; font-size: 13px; color: #6B7280;">Payment Method: <strong style="color: #2C3E50;">${data.paymentMethod || "N/A"}</strong></p>
-          <p style="margin: 6px 0; font-size: 13px; color: #6B7280;">Date: <strong style="color: #2C3E50;">${data.date}</strong></p>
+          <p style="margin: 6px 0; font-size: 13px; color: #6B7280;">Invoice Number: <strong style="color: #2C3E50;">${cleanValue(data.invoiceNumber)}</strong></p>
+          <p style="margin: 6px 0; font-size: 13px; color: #6B7280;">Amount: <strong style="color: #1ABC9C;">${cleanValue(data.currency)} ${cleanValue(data.amount)}</strong></p>
+          <p style="margin: 6px 0; font-size: 13px; color: #6B7280;">Description: <strong style="color: #2C3E50;">${cleanValue(data.description || "Service Payment")}</strong></p>
+          <p style="margin: 6px 0; font-size: 13px; color: #6B7280;">Payment Method: <strong style="color: #2C3E50;">${cleanValue(data.paymentMethod || "N/A")}</strong></p>
+          <p style="margin: 6px 0; font-size: 13px; color: #6B7280;">Date: <strong style="color: #2C3E50;">${cleanValue(data.date)}</strong></p>
         </div>
         <p style="color: #6B7280; font-size: 13px;">You can download your full receipt from your dashboard at any time.</p>
         <div style="margin-top: 24px; text-align: center;">
@@ -70,167 +90,167 @@ const templates: Record<string, (data: Record<string, string>, name: string) => 
         </div>
       `,
     ),
-    sms: `${BRAND_NAME}: Payment confirmed. Invoice ${data.invoiceNumber} for ${data.currency} ${data.amount}.`,
+    sms: `${BRAND_NAME}: Payment confirmed. Invoice ${cleanValue(data.invoiceNumber)} for ${cleanValue(data.currency)} ${cleanValue(data.amount)}.`,
   }),
   application_received: (data, name) => ({
-    subject: `Application Received - ${data.title}`,
+    subject: `Application Received - ${cleanValue(data.title)}`,
     html: wrapEmail(
       "Application Received",
       "linear-gradient(135deg, #0A3D62, #1ABC9C)",
       `
-        <p style="color: #2C3E50; font-size: 15px;">Hi ${name},</p>
+        <p style="color: #2C3E50; font-size: 15px;">Hi ${cleanValue(name)},</p>
         <p style="color: #6B7280; font-size: 14px; line-height: 1.6;">We have received your application and our team will review it shortly.</p>
         <div style="background: #F9FAFB; border-radius: 8px; padding: 16px; margin: 20px 0;">
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Application: <strong style="color: #2C3E50;">${data.title}</strong></p>
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Type: <strong style="color: #2C3E50;">${data.type}</strong></p>
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Status: <strong style="color: #1ABC9C;">${data.status}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Application: <strong style="color: #2C3E50;">${cleanValue(data.title)}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Type: <strong style="color: #2C3E50;">${cleanValue(data.type)}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Status: <strong style="color: #1ABC9C;">${cleanValue(data.status)}</strong></p>
         </div>
         <p style="color: #6B7280; font-size: 13px;">You will receive another update as soon as the status changes.</p>
       `,
     ),
-    sms: `${BRAND_NAME}: We received your ${data.type} application "${data.title}". Status: ${data.status}.`,
+    sms: `${BRAND_NAME}: We received your ${cleanValue(data.type)} application "${cleanValue(data.title)}". Status: ${cleanValue(data.status)}.`,
   }),
   application_status_update: (data, name) => ({
-    subject: `Application Update - ${data.title}`,
+    subject: `Application Update - ${cleanValue(data.title)}`,
     html: wrapEmail(
       "Application Status Update",
       "linear-gradient(135deg, #0A3D62, #1ABC9C)",
       `
-        <p style="color: #2C3E50; font-size: 15px;">Hi ${name},</p>
-        <p style="color: #6B7280; font-size: 14px; line-height: 1.6;">Your application <strong style="color: #2C3E50;">"${data.title}"</strong> has been updated.</p>
+        <p style="color: #2C3E50; font-size: 15px;">Hi ${cleanValue(name)},</p>
+        <p style="color: #6B7280; font-size: 14px; line-height: 1.6;">Your application <strong style="color: #2C3E50;">"${cleanValue(data.title)}"</strong> has been updated.</p>
         <div style="background: #F9FAFB; border-radius: 8px; padding: 16px; margin: 20px 0;">
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Type: <strong style="color: #2C3E50;">${data.type}</strong></p>
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Previous Status: <strong style="color: #6B7280;">${data.previousStatus}</strong></p>
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">New Status: <strong style="color: #1ABC9C;">${data.newStatus}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Type: <strong style="color: #2C3E50;">${cleanValue(data.type)}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Previous Status: <strong style="color: #6B7280;">${cleanValue(data.previousStatus)}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">New Status: <strong style="color: #1ABC9C;">${cleanValue(data.newStatus)}</strong></p>
         </div>
-        ${data.notes ? `<p style="color: #6B7280; font-size: 13px;">Admin notes: ${data.notes}</p>` : ""}
+        ${data.notes ? `<p style="color: #6B7280; font-size: 13px;">Admin notes: ${cleanValue(data.notes)}</p>` : ""}
         <p style="color: #6B7280; font-size: 13px; margin-top: 16px;">Log in to your dashboard to view full details.</p>
       `,
     ),
-    sms: `${BRAND_NAME}: ${data.title} is now ${data.newStatus}. Previous status: ${data.previousStatus}.`,
+    sms: `${BRAND_NAME}: ${cleanValue(data.title)} is now ${cleanValue(data.newStatus)}. Previous status: ${cleanValue(data.previousStatus)}.`,
   }),
   booking_received: (data, name) => ({
-    subject: `Booking Received - ${data.route}`,
+    subject: `Booking Received - ${cleanValue(data.route)}`,
     html: wrapEmail(
       "Booking Received",
       "linear-gradient(135deg, #0A3D62, #F4B400)",
       `
-        <p style="color: #2C3E50; font-size: 15px;">Hi ${name},</p>
-        <p style="color: #6B7280; font-size: 14px; line-height: 1.6;">Your ${data.bookingType} booking request has been received.</p>
+        <p style="color: #2C3E50; font-size: 15px;">Hi ${cleanValue(name)},</p>
+        <p style="color: #6B7280; font-size: 14px; line-height: 1.6;">Your ${cleanValue(data.bookingType)} booking request has been received.</p>
         <div style="background: #F9FAFB; border-radius: 8px; padding: 16px; margin: 20px 0;">
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Route: <strong style="color: #2C3E50;">${data.route}</strong></p>
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Date: <strong style="color: #2C3E50;">${data.date}</strong></p>
-          ${data.provider ? `<p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Provider: <strong style="color: #2C3E50;">${data.provider}</strong></p>` : ""}
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Status: <strong style="color: #1ABC9C;">${data.status}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Route: <strong style="color: #2C3E50;">${cleanValue(data.route)}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Date: <strong style="color: #2C3E50;">${cleanValue(data.date)}</strong></p>
+          ${data.provider ? `<p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Provider: <strong style="color: #2C3E50;">${cleanValue(data.provider)}</strong></p>` : ""}
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Status: <strong style="color: #1ABC9C;">${cleanValue(data.status)}</strong></p>
         </div>
       `,
     ),
-    sms: `${BRAND_NAME}: Your ${data.bookingType} booking for ${data.route} on ${data.date} has been received.`,
+    sms: `${BRAND_NAME}: Your ${cleanValue(data.bookingType)} booking for ${cleanValue(data.route)} on ${cleanValue(data.date)} has been received.`,
   }),
   booking_status_update: (data, name) => ({
-    subject: `Booking Update - ${data.route}`,
+    subject: `Booking Update - ${cleanValue(data.route)}`,
     html: wrapEmail(
       "Booking Status Update",
       "linear-gradient(135deg, #0A3D62, #F4B400)",
       `
-        <p style="color: #2C3E50; font-size: 15px;">Hi ${name},</p>
-        <p style="color: #6B7280; font-size: 14px; line-height: 1.6;">Your ${data.bookingType} booking has been updated.</p>
+        <p style="color: #2C3E50; font-size: 15px;">Hi ${cleanValue(name)},</p>
+        <p style="color: #6B7280; font-size: 14px; line-height: 1.6;">Your ${cleanValue(data.bookingType)} booking has been updated.</p>
         <div style="background: #F9FAFB; border-radius: 8px; padding: 16px; margin: 20px 0;">
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Route: <strong style="color: #2C3E50;">${data.route}</strong></p>
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Date: <strong style="color: #2C3E50;">${data.date}</strong></p>
-          ${data.provider ? `<p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Provider: <strong style="color: #2C3E50;">${data.provider}</strong></p>` : ""}
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">New Status: <strong style="color: #1ABC9C;">${data.newStatus}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Route: <strong style="color: #2C3E50;">${cleanValue(data.route)}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Date: <strong style="color: #2C3E50;">${cleanValue(data.date)}</strong></p>
+          ${data.provider ? `<p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Provider: <strong style="color: #2C3E50;">${cleanValue(data.provider)}</strong></p>` : ""}
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">New Status: <strong style="color: #1ABC9C;">${cleanValue(data.newStatus)}</strong></p>
         </div>
         <p style="color: #6B7280; font-size: 13px;">Log in to your dashboard to view full details.</p>
       `,
     ),
-    sms: `${BRAND_NAME}: Your ${data.bookingType} booking for ${data.route} is now ${data.newStatus}.`,
+    sms: `${BRAND_NAME}: Your ${cleanValue(data.bookingType)} booking for ${cleanValue(data.route)} is now ${cleanValue(data.newStatus)}.`,
   }),
   consultation_booked: (data, name) => ({
-    subject: `Consultation Booked - ${data.date}`,
+    subject: `Consultation Booked - ${cleanValue(data.date)}`,
     html: wrapEmail(
       "Consultation Booked",
       "linear-gradient(135deg, #0A3D62, #F4B400)",
       `
-        <p style="color: #2C3E50; font-size: 15px;">Hi ${name},</p>
-        <p style="color: #6B7280; font-size: 14px;">Your ${data.type} consultation has been booked successfully.</p>
+        <p style="color: #2C3E50; font-size: 15px;">Hi ${cleanValue(name)},</p>
+        <p style="color: #6B7280; font-size: 14px;">Your ${cleanValue(data.type)} consultation has been booked successfully.</p>
         <div style="background: #F9FAFB; border-radius: 8px; padding: 16px; margin: 20px 0;">
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Date: <strong style="color: #2C3E50;">${data.date}</strong></p>
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Time: <strong style="color: #2C3E50;">${data.time}</strong></p>
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Duration: <strong style="color: #2C3E50;">${data.duration}</strong></p>
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Status: <strong style="color: #1ABC9C;">${data.status}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Date: <strong style="color: #2C3E50;">${cleanValue(data.date)}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Time: <strong style="color: #2C3E50;">${cleanValue(data.time)}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Duration: <strong style="color: #2C3E50;">${cleanValue(data.duration)}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Status: <strong style="color: #1ABC9C;">${cleanValue(data.status)}</strong></p>
         </div>
       `,
     ),
-    sms: `${BRAND_NAME}: Your ${data.type} consultation is booked for ${data.date} at ${data.time}.`,
+    sms: `${BRAND_NAME}: Your ${cleanValue(data.type)} consultation is booked for ${cleanValue(data.date)} at ${cleanValue(data.time)}.`,
   }),
   refund_approved: (data, name) => ({
-    subject: `Refund Approved - ${data.refundId}`,
+    subject: `Refund Approved - ${cleanValue(data.refundId)}`,
     html: wrapEmail(
       "Refund Approved",
       "linear-gradient(135deg, #0A3D62, #1ABC9C)",
       `
-        <p style="color: #2C3E50; font-size: 15px;">Hi ${name},</p>
-        <p style="color: #6B7280; font-size: 14px; line-height: 1.6;">Your refund request <strong>${data.refundId}</strong> for <strong>${data.amount}</strong> has been approved.</p>
+        <p style="color: #2C3E50; font-size: 15px;">Hi ${cleanValue(name)},</p>
+        <p style="color: #6B7280; font-size: 14px; line-height: 1.6;">Your refund request <strong>${cleanValue(data.refundId)}</strong> for <strong>${cleanValue(data.amount)}</strong> has been approved.</p>
         <div style="background: #F9FAFB; border-radius: 8px; padding: 16px; margin: 20px 0;">
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Service: <strong style="color: #2C3E50;">${data.service}</strong></p>
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Method: <strong style="color: #2C3E50;">${data.method}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Service: <strong style="color: #2C3E50;">${cleanValue(data.service)}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Method: <strong style="color: #2C3E50;">${cleanValue(data.method)}</strong></p>
           <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Expected: <strong style="color: #1ABC9C;">3-5 business days</strong></p>
         </div>
       `,
     ),
-    sms: `${BRAND_NAME}: Refund ${data.refundId} approved for ${data.amount}.`,
+    sms: `${BRAND_NAME}: Refund ${cleanValue(data.refundId)} approved for ${cleanValue(data.amount)}.`,
   }),
   refund_rejected: (data, name) => ({
-    subject: `Refund Update - ${data.refundId}`,
+    subject: `Refund Update - ${cleanValue(data.refundId)}`,
     html: wrapEmail(
       "Refund Update",
       "#0A3D62",
       `
-        <p style="color: #2C3E50; font-size: 15px;">Hi ${name},</p>
-        <p style="color: #6B7280; font-size: 14px;">Your refund request <strong>${data.refundId}</strong> could not be approved. Reason: ${data.reason || "Does not meet refund policy criteria."}</p>
+        <p style="color: #2C3E50; font-size: 15px;">Hi ${cleanValue(name)},</p>
+        <p style="color: #6B7280; font-size: 14px;">Your refund request <strong>${cleanValue(data.refundId)}</strong> could not be approved. Reason: ${cleanValue(data.reason || "Does not meet refund policy criteria.")}</p>
       `,
     ),
-    sms: `${BRAND_NAME}: Refund ${data.refundId} was rejected. ${data.reason || "Please contact support for details."}`,
+    sms: `${BRAND_NAME}: Refund ${cleanValue(data.refundId)} was rejected. ${cleanValue(data.reason || "Please contact support for details.")}`,
   }),
   refund_processed: (data, name) => ({
-    subject: `Refund Processed - ${data.amount} sent`,
+    subject: `Refund Processed - ${cleanValue(data.amount)} sent`,
     html: wrapEmail(
       "Refund Sent",
       "linear-gradient(135deg, #1ABC9C, #0A3D62)",
       `
-        <p style="color: #2C3E50; font-size: 15px;">Hi ${name},</p>
-        <p style="color: #6B7280; font-size: 14px;">Your refund of <strong style="color: #1ABC9C;">${data.amount}</strong> has been processed via ${data.method}.</p>
+        <p style="color: #2C3E50; font-size: 15px;">Hi ${cleanValue(name)},</p>
+        <p style="color: #6B7280; font-size: 14px;">Your refund of <strong style="color: #1ABC9C;">${cleanValue(data.amount)}</strong> has been processed via ${cleanValue(data.method)}.</p>
       `,
     ),
-    sms: `${BRAND_NAME}: Your refund of ${data.amount} has been processed via ${data.method}.`,
+    sms: `${BRAND_NAME}: Your refund of ${cleanValue(data.amount)} has been processed via ${cleanValue(data.method)}.`,
   }),
   shipment_update: (data, name) => ({
-    subject: `Shipment Update - ${data.trackingId}`,
+    subject: `Shipment Update - ${cleanValue(data.trackingId)}`,
     html: wrapEmail(
       "Shipment Update",
       "#0A3D62",
       `
-        <p style="color: #2C3E50; font-size: 15px;">Hi ${name},</p>
-        <p style="color: #6B7280; font-size: 14px;">Your shipment <strong>${data.trackingId}</strong> status: <strong style="color: #1ABC9C;">${data.status}</strong></p>
+        <p style="color: #2C3E50; font-size: 15px;">Hi ${cleanValue(name)},</p>
+        <p style="color: #6B7280; font-size: 14px;">Your shipment <strong>${cleanValue(data.trackingId)}</strong> status: <strong style="color: #1ABC9C;">${cleanValue(data.status)}</strong></p>
         <div style="background: #F9FAFB; border-radius: 8px; padding: 16px; margin: 20px 0;">
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Route: ${data.origin} to ${data.destination}</p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Route: ${cleanValue(data.origin)} to ${cleanValue(data.destination)}</p>
         </div>
       `,
     ),
-    sms: `${BRAND_NAME}: Shipment ${data.trackingId} is now ${data.status}. Route: ${data.origin} to ${data.destination}.`,
+    sms: `${BRAND_NAME}: Shipment ${cleanValue(data.trackingId)} is now ${cleanValue(data.status)}. Route: ${cleanValue(data.origin)} to ${cleanValue(data.destination)}.`,
   }),
   consultation_confirmed: (data, name) => ({
-    subject: `Consultation Confirmed - ${data.date}`,
+    subject: `Consultation Confirmed - ${cleanValue(data.date)}`,
     html: wrapEmail(
       "Consultation Confirmed",
       "linear-gradient(135deg, #0A3D62, #F4B400)",
       `
-        <p style="color: #2C3E50; font-size: 15px;">Hi ${name},</p>
-        <p style="color: #6B7280; font-size: 14px;">Your ${data.type} consultation on ${data.date} at ${data.time} (${data.duration}) is confirmed.</p>
+        <p style="color: #2C3E50; font-size: 15px;">Hi ${cleanValue(name)},</p>
+        <p style="color: #6B7280; font-size: 14px;">Your ${cleanValue(data.type)} consultation on ${cleanValue(data.date)} at ${cleanValue(data.time)} (${cleanValue(data.duration)}) is confirmed.</p>
       `,
     ),
-    sms: `${BRAND_NAME}: Consultation confirmed for ${data.date} at ${data.time}.`,
+    sms: `${BRAND_NAME}: Consultation confirmed for ${cleanValue(data.date)} at ${cleanValue(data.time)}.`,
   }),
   consultation_cancelled: (data, name) => ({
     subject: "Consultation Cancelled",
@@ -238,62 +258,62 @@ const templates: Record<string, (data: Record<string, string>, name: string) => 
       "Consultation Cancelled",
       "#0A3D62",
       `
-        <p style="color: #2C3E50; font-size: 15px;">Hi ${name},</p>
-        <p style="color: #6B7280; font-size: 14px;">Your consultation on ${data.date} at ${data.time} has been cancelled.</p>
+        <p style="color: #2C3E50; font-size: 15px;">Hi ${cleanValue(name)},</p>
+        <p style="color: #6B7280; font-size: 14px;">Your consultation on ${cleanValue(data.date)} at ${cleanValue(data.time)} has been cancelled.</p>
       `,
     ),
-    sms: `${BRAND_NAME}: Consultation on ${data.date} at ${data.time} has been cancelled.`,
+    sms: `${BRAND_NAME}: Consultation on ${cleanValue(data.date)} at ${cleanValue(data.time)} has been cancelled.`,
   }),
   payment_submitted: (data, name) => ({
-    subject: `Payment Submitted - ${data.reference}`,
+    subject: `Payment Submitted - ${cleanValue(data.reference)}`,
     html: wrapEmail(
       "Payment Submitted",
       "linear-gradient(135deg, #0A3D62, #1ABC9C)",
       `
-        <p style="color: #2C3E50; font-size: 15px;">Hi ${name},</p>
+        <p style="color: #2C3E50; font-size: 15px;">Hi ${cleanValue(name)},</p>
         <p style="color: #6B7280; font-size: 14px;">We have received your payment submission and it is awaiting confirmation.</p>
         <div style="background: #F9FAFB; border-radius: 8px; padding: 16px; margin: 20px 0;">
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Reference: <strong style="color: #2C3E50;">${data.reference}</strong></p>
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Amount: <strong style="color: #1ABC9C;">${data.currency} ${data.amount}</strong></p>
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Service: <strong style="color: #2C3E50;">${data.description || "Payment"}</strong></p>
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Status: <strong style="color: #2C3E50;">${data.status}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Reference: <strong style="color: #2C3E50;">${cleanValue(data.reference)}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Amount: <strong style="color: #1ABC9C;">${cleanValue(data.currency)} ${cleanValue(data.amount)}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Service: <strong style="color: #2C3E50;">${cleanValue(data.description || "Payment")}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Status: <strong style="color: #2C3E50;">${cleanValue(data.status)}</strong></p>
         </div>
       `,
     ),
-    sms: `${BRAND_NAME}: Payment ${data.reference} for ${data.currency} ${data.amount} has been submitted and is ${data.status}.`,
+    sms: `${BRAND_NAME}: Payment ${cleanValue(data.reference)} for ${cleanValue(data.currency)} ${cleanValue(data.amount)} has been submitted and is ${cleanValue(data.status)}.`,
   }),
   payment_status_update: (data, name) => ({
-    subject: `Payment Update - ${data.reference}`,
+    subject: `Payment Update - ${cleanValue(data.reference)}`,
     html: wrapEmail(
       "Payment Status Update",
       "linear-gradient(135deg, #0A3D62, #1ABC9C)",
       `
-        <p style="color: #2C3E50; font-size: 15px;">Hi ${name},</p>
+        <p style="color: #2C3E50; font-size: 15px;">Hi ${cleanValue(name)},</p>
         <p style="color: #6B7280; font-size: 14px;">Your payment status has changed.</p>
         <div style="background: #F9FAFB; border-radius: 8px; padding: 16px; margin: 20px 0;">
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Reference: <strong style="color: #2C3E50;">${data.reference}</strong></p>
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Amount: <strong style="color: #1ABC9C;">${data.currency} ${data.amount}</strong></p>
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Previous Status: <strong style="color: #2C3E50;">${data.previousStatus}</strong></p>
-          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">New Status: <strong style="color: #1ABC9C;">${data.newStatus}</strong></p>
-          ${data.description ? `<p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Service: <strong style="color: #2C3E50;">${data.description}</strong></p>` : ""}
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Reference: <strong style="color: #2C3E50;">${cleanValue(data.reference)}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Amount: <strong style="color: #1ABC9C;">${cleanValue(data.currency)} ${cleanValue(data.amount)}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Previous Status: <strong style="color: #2C3E50;">${cleanValue(data.previousStatus)}</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #6B7280;">New Status: <strong style="color: #1ABC9C;">${cleanValue(data.newStatus)}</strong></p>
+          ${data.description ? `<p style="margin: 4px 0; font-size: 13px; color: #6B7280;">Service: <strong style="color: #2C3E50;">${cleanValue(data.description)}</strong></p>` : ""}
         </div>
       `,
     ),
-    sms: `${BRAND_NAME}: Payment ${data.reference} is now ${data.newStatus}. Previous status: ${data.previousStatus}.`,
+    sms: `${BRAND_NAME}: Payment ${cleanValue(data.reference)} is now ${cleanValue(data.newStatus)}. Previous status: ${cleanValue(data.previousStatus)}.`,
   }),
   contact_reply: (data, name) => ({
-    subject: `Re: ${data.subject || "Your inquiry"}`,
+    subject: `Re: ${cleanValue(data.subject || "Your inquiry")}`,
     html: wrapEmail(
-      `Re: ${escapeHtml(data.subject || "Your inquiry")}`,
+      `Re: ${escapeHtml(cleanValue(data.subject || "Your inquiry"))}`,
       "linear-gradient(135deg, #0A3D62, #1ABC9C)",
       `
-        <p>Hi ${escapeHtml(name)},</p>
-        <p>${textToHtml(data.reply || "")}</p>
-        ${data.originalMessage ? `<p style="margin-top: 24px; color: #6B7280; font-size: 13px;"><strong>Your message:</strong><br>${textToHtml(data.originalMessage)}</p>` : ""}
+        <p>Hi ${escapeHtml(cleanValue(name))},</p>
+        <p>${textToHtml(cleanValue(data.reply || ""))}</p>
+        ${data.originalMessage ? `<p style="margin-top: 24px; color: #6B7280; font-size: 13px;"><strong>Your message:</strong><br>${textToHtml(cleanValue(data.originalMessage))}</p>` : ""}
         <p style="margin-top: 20px;">If you have any follow-up questions, you can reply to this email.</p>
       `,
     ),
-    sms: `${BRAND_NAME}: Reply sent regarding "${data.subject}". Please check your email.`,
+    sms: `${BRAND_NAME}: Reply sent regarding "${cleanValue(data.subject)}". Please check your email.`,
   }),
 };
 
