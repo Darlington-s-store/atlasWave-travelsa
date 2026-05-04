@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, Globe, MoreHorizontal, Eye, Pencil, Inbox, CheckCircle, Clock, XCircle, FileText, LayoutGrid, List, Plus, Trash2 } from "lucide-react";
+import { Search, Globe, MoreHorizontal, Eye, Pencil, Inbox, CheckCircle, Clock, XCircle, FileText, LayoutGrid, List, Plus, Trash2, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyStatusChange } from "@/lib/notifyStatusChange";
@@ -33,40 +33,69 @@ const KANBAN_COLUMNS = [
   { id: "rejected", label: "Rejected", color: "bg-destructive" },
 ];
 
+interface Application {
+  id: string;
+  user_id: string;
+  title: string;
+  type: string;
+  status: string;
+  details: string | Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+  reference_number?: string;
+  nationality?: string;
+  destination_country?: string;
+}
+
+interface ApplicationFormData {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  dob?: string;
+  nationality?: string;
+  destination?: string;
+  visaType?: string;
+  travelDate?: string;
+  returnDate?: string;
+  purpose?: string;
+  passportNumber?: string;
+  documents?: string[];
+}
+
 const VISA_TYPES = ["Tourist Visa", "Business Visa", "Student Visa", "Work Visa", "Transit Visa"];
 
 const AdminVisaApplications = () => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [apps, setApps] = useState<any[]>([]);
+  const [apps, setApps] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"table" | "kanban">("table");
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [viewingApp, setViewingApp] = useState<any>(null);
+  const [viewingApp, setViewingApp] = useState<Application | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingApp, setEditingApp] = useState<any>(null);
+  const [editingApp, setEditingApp] = useState<Application | null>(null);
   const [editStatus, setEditStatus] = useState("");
   const [editNotes, setEditNotes] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createForm, setCreateForm] = useState({ title: "", type: "Tourist Visa", details: "", status: "pending" });
 
-  useEffect(() => { fetchApps(); }, []);
-
-  const fetchApps = async () => {
+  const fetchApps = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase.from("applications").select("*").order("created_at", { ascending: false });
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    setApps(data || []);
+    setApps((data || []) as unknown as Application[]);
     setLoading(false);
-  };
+  }, [toast]);
+
+  useEffect(() => { fetchApps(); }, [fetchApps]);
 
   const handleUpdateApp = async () => {
     if (!editingApp) return;
     const previousStatus = editingApp.status;
-    const updates: any = { status: editStatus };
+    const updates: Record<string, unknown> = { status: editStatus };
     if (editNotes.trim()) updates.details = editNotes;
     const { error } = await supabase.from("applications").update(updates).eq("id", editingApp.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
@@ -217,10 +246,19 @@ const AdminVisaApplications = () => {
             <div className="flex items-center justify-center py-16"><p className="text-muted-foreground text-[13px]">Loading...</p></div>
           ) : (
             <KanbanBoard
-              items={filtered}
+              items={filtered.map(app => ({
+                ...app,
+                details: typeof app.details === 'object' ? JSON.stringify(app.details) : (app.details || null)
+              }))}
               columns={KANBAN_COLUMNS}
               onMoveItem={handleKanbanMove}
-              onItemClick={(item) => { setViewingApp(item); setViewDialogOpen(true); }}
+              onItemClick={(item) => { 
+                const originalApp = apps.find(a => a.id === item.id);
+                if (originalApp) {
+                  setViewingApp(originalApp); 
+                  setViewDialogOpen(true); 
+                }
+              }}
             />
           )
         )}
@@ -263,7 +301,13 @@ const AdminVisaApplications = () => {
                               <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => { setViewingApp(app); setViewDialogOpen(true); }}><Eye className="w-4 h-4 mr-2" /> View Details</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => { setEditingApp(app); setEditStatus(app.status); setEditNotes(app.details || ""); setEditDialogOpen(true); }}><Pencil className="w-4 h-4 mr-2" /> Update Status</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => { 
+                                  setEditingApp(app); 
+                                  setEditStatus(app.status); 
+                                  const detailsString = typeof app.details === "object" ? JSON.stringify(app.details, null, 2) : (app.details || "");
+                                  setEditNotes(detailsString); 
+                                  setEditDialogOpen(true); 
+                                }}><Pencil className="w-4 h-4 mr-2" /> Update Status</DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => handleDelete(app.id)} className="text-destructive"><Trash2 className="w-4 h-4 mr-2" /> Delete</DropdownMenuItem>
                               </DropdownMenuContent>
@@ -285,23 +329,106 @@ const AdminVisaApplications = () => {
 
       {/* View Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader><DialogTitle>Application Details</DialogTitle></DialogHeader>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-primary" />
+              Application Details
+            </DialogTitle>
+          </DialogHeader>
           {viewingApp && (
-            <div className="space-y-3 py-2 text-[13px]">
-              <div className="grid grid-cols-2 gap-3">
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Title</span><span className="font-semibold">{viewingApp.title}</span></div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Type</span>{viewingApp.type}</div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Status</span><span className={`text-[11px] font-bold px-2 py-0.5 rounded capitalize ${statusStyle[viewingApp.status]}`}>{viewingApp.status}</span></div>
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Submitted</span>{new Date(viewingApp.created_at).toLocaleDateString()}</div>
+            <div className="space-y-6 py-4">
+              {/* Header Info */}
+              <div className="flex flex-wrap items-center gap-3 border-b pb-4">
+                <div className="px-3 py-1 bg-primary/10 rounded-full text-[12px] font-bold text-primary">
+                  {viewingApp.reference_number || viewingApp.id.slice(0, 8)}
+                </div>
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold ${statusStyle[viewingApp.status] || ""}`}>
+                  {viewingApp.status}
+                </span>
+                <span className="text-muted-foreground text-[12px]">
+                  Submitted on {new Date(viewingApp.created_at).toLocaleDateString()}
+                </span>
               </div>
-              {viewingApp.details && (
-                <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Details / Notes</span><p className="text-[13px] bg-muted/30 rounded-lg p-3">{viewingApp.details}</p></div>
-              )}
-              <div><span className="text-muted-foreground block text-[11px] uppercase tracking-wider font-bold mb-0.5">Application ID</span><span className="font-mono text-[11px]">{viewingApp.id}</span></div>
+
+              {/* Parsed Details */}
+              {(() => {
+                let details: ApplicationFormData = {};
+                try {
+                  const rawDetails = viewingApp.details;
+                  if (typeof rawDetails === "string" && (rawDetails.startsWith("{") || rawDetails.startsWith("["))) {
+                    details = JSON.parse(rawDetails) as ApplicationFormData;
+                  } else if (typeof rawDetails === "object" && rawDetails !== null) {
+                    details = rawDetails as ApplicationFormData;
+                  }
+                } catch (e) {
+                  console.error("Failed to parse details", e);
+                }
+
+                if (Object.keys(details).length > 0) {
+                  return (
+                    <div className="grid gap-6">
+                      {/* Personal Section */}
+                      <section>
+                        <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3 flex items-center gap-2">
+                          <Users className="w-3.5 h-3.5" /> Personal Information
+                        </h4>
+                        <div className="grid grid-cols-2 gap-4 bg-muted/30 p-4 rounded-xl border border-border/40">
+                          <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Full Name</p><p className="text-[13px] font-medium">{details.fullName || "—"}</p></div>
+                          <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Nationality</p><p className="text-[13px] font-medium">{details.nationality || "—"}</p></div>
+                          <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Email</p><p className="text-[13px] font-medium">{details.email || "—"}</p></div>
+                          <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Phone</p><p className="text-[13px] font-medium">{details.phone || "—"}</p></div>
+                          <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">DOB</p><p className="text-[13px] font-medium">{details.dob || "—"}</p></div>
+                        </div>
+                      </section>
+
+                      {/* Travel Section */}
+                      <section>
+                        <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3 flex items-center gap-2">
+                          <Globe className="w-3.5 h-3.5" /> Travel & Visa Details
+                        </h4>
+                        <div className="grid grid-cols-2 gap-4 bg-muted/30 p-4 rounded-xl border border-border/40">
+                          <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Destination</p><p className="text-[13px] font-medium">{details.destination || "—"}</p></div>
+                          <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Visa Type</p><p className="text-[13px] font-medium">{details.visaType || viewingApp.type || "—"}</p></div>
+                          <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Travel Date</p><p className="text-[13px] font-medium">{details.travelDate || "—"}</p></div>
+                          <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Return Date</p><p className="text-[13px] font-medium">{details.returnDate || "—"}</p></div>
+                        </div>
+                      </section>
+
+                      {/* Documents Section */}
+                      {details.documents && Array.isArray(details.documents) && details.documents.length > 0 && (
+                        <section>
+                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3 flex items-center gap-2">
+                            <CheckCircle className="w-3.5 h-3.5" /> Provided Documents
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {details.documents.map((doc, i) => (
+                              <span key={i} className="px-3 py-1 bg-secondary/10 text-secondary border border-secondary/20 rounded-lg text-[12px] font-medium">
+                                {doc}
+                              </span>
+                            ))}
+                          </div>
+                        </section>
+                      )}
+                    </div>
+                  );
+                }
+                return (
+                  <div className="bg-muted/30 p-4 rounded-xl border border-border/40">
+                    <p className="text-[13px] whitespace-pre-wrap">{String(viewingApp.details || "No additional details available.")}</p>
+                  </div>
+                );
+              })()}
             </div>
           )}
-          <DialogFooter><DialogClose asChild><Button variant="outline">Close</Button></DialogClose></DialogFooter>
+          <DialogFooter className="border-t pt-4">
+            <DialogClose asChild><Button variant="outline" className="h-9 text-[13px]">Close</Button></DialogClose>
+            {viewingApp && (
+              <Button variant="default" className="h-9 text-[13px]" onClick={() => { setViewDialogOpen(false); setEditingApp(viewingApp); setEditStatus(viewingApp.status); setEditNotes(typeof viewingApp.details === 'string' ? viewingApp.details : JSON.stringify(viewingApp.details)); setEditDialogOpen(true); }}>
+                <Pencil className="w-4 h-4 mr-2" /> Update Status
+              </Button>
+            )}
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
