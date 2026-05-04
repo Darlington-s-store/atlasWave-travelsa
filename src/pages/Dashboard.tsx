@@ -80,6 +80,8 @@ interface Shipment {
   destination: string;
   status: string;
   progress: number;
+  weight?: string;
+  eta?: string;
   created_at: string;
 }
 
@@ -103,6 +105,8 @@ interface Document {
   name: string;
   category: string;
   file_type: string;
+  file_size?: string;
+  file_path?: string;
   created_at: string;
 }
 
@@ -410,6 +414,11 @@ function OverviewTab({
         </div>
         <div className="space-y-3">
           <h2 className="font-display text-lg font-bold text-foreground">Active Shipments</h2>
+          {shipments.filter((s) => s.status === "in-transit").length === 0 ? (
+            <div className="bg-background rounded-xl border p-8 text-center">
+              <Truck className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">No active shipments</p>
+            </div>
           ) : (
             shipments.filter((s) => s.status === "in-transit").slice(0, 3).map((s) => (
               <div key={s.id} className="bg-background rounded-xl border p-4">
@@ -1427,7 +1436,7 @@ function DocumentsTab({ documents, onRefresh, userId }: { documents: Document[];
 
 // --- SETTINGS TAB ---
 function SettingsTab({ user, form, setForm, editing, setEditing, handleSave, logout, navigate }: {
-  user: { fullName: string | null; email: string | null; id: string };
+  user: { fullName: string | null; email: string | null; id: string; phone?: string | null };
   form: { fullName: string; phone: string; email: string };
   setForm: React.Dispatch<React.SetStateAction<{ fullName: string; phone: string; email: string }>>;
   editing: boolean;
