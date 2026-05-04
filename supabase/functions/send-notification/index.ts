@@ -1,5 +1,6 @@
-// @ts-nocheck
+// @ts-expect-error
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// @ts-expect-error
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -335,7 +336,9 @@ async function resolveRecipients(payload: NotificationPayload) {
     return { recipientEmail, recipientPhone, recipientName };
   }
 
+  // @ts-expect-error
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  // @ts-expect-error
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
   if (!supabaseUrl || !serviceRoleKey) {
@@ -374,7 +377,9 @@ async function resolveRecipients(payload: NotificationPayload) {
   return { recipientEmail, recipientPhone, recipientName };
 }
 
+// @ts-expect-error
 async function sendEmail(resendApiKey: string, to: string, subject: string, html: string) {
+  // @ts-expect-error
   const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || "onboarding@resend.dev";
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -429,8 +434,11 @@ serve(async (req: Request) => {
     // ---------- Auth gate ----------
     // Allow either: (a) an authenticated user JWT, or (b) a trusted internal
     // call from another edge function presenting the service-role key.
+    // @ts-expect-error
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    // @ts-expect-error
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    // @ts-expect-error
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const authHeader = req.headers.get("Authorization") || "";
     const bearer = authHeader.replace(/^Bearer\s+/i, "").trim();
@@ -535,6 +543,7 @@ serve(async (req: Request) => {
     const results: Record<string, unknown> = {};
 
     if (wantsEmail) {
+      // @ts-expect-error
       const resendApiKey = Deno.env.get("RESEND_API_KEY");
       if (!resendApiKey) {
         throw new Error("RESEND_API_KEY is not configured");
@@ -544,11 +553,13 @@ serve(async (req: Request) => {
     }
 
     if (wantsSms) {
+      // @ts-expect-error
       const arkeselApiKey = Deno.env.get("ARKESEL_API_KEY");
       if (!arkeselApiKey) {
         throw new Error("ARKESEL_API_KEY is not configured");
       }
 
+      // @ts-expect-error
       const sender = Deno.env.get("ARKESEL_SENDER_ID") || DEFAULT_SMS_SENDER;
       results.sms = await sendSms(arkeselApiKey, sender, normalizePhoneNumber(recipientPhone!), template.sms);
     }
