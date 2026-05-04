@@ -46,9 +46,9 @@ const VideoGallery = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="pt-24 pb-16">
+      <main className="pb-16">
         {/* Hero */}
-        <section className="bg-primary py-16 md:py-24">
+        <section className="bg-primary pt-32 pb-16 md:pb-24">
           <div className="container text-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <Film className="w-12 h-12 text-accent mx-auto mb-4" />
