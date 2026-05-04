@@ -50,6 +50,8 @@ interface Application {
   created_at: string;
   updated_at: string;
   admin_notes?: string;
+  qualification?: string;
+  documents?: Record<string, string> | string[];
 }
 
 interface ApplicationFormData {
