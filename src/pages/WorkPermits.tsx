@@ -126,9 +126,6 @@ const WorkPermits = () => {
           </div>
           <div className="container relative z-10 text-center">
             <motion.div {...fadeUp} className="mx-auto max-w-2xl">
-              <span className="inline-block px-4 py-1.5 bg-accent/20 text-accent text-sm font-semibold rounded-full mb-6 border border-accent/30">
-                Immigration Services
-              </span>
               <h1 className="text-3xl sm:text-4xl md:text-6xl font-display font-bold text-primary-foreground leading-tight break-words">
                 Work Permits & <span className="text-gradient-accent">Immigration</span>
               </h1>

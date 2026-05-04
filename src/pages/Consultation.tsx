@@ -104,9 +104,6 @@ const Consultation = () => {
           </div>
           <div className="container relative z-10 text-center">
             <motion.div {...fadeUp} className="mx-auto max-w-2xl">
-              <span className="inline-block px-4 py-1.5 bg-accent/20 text-accent text-sm font-semibold rounded-full mb-6 border border-accent/30">
-                Expert Guidance
-              </span>
               <h1 className="text-4xl md:text-6xl font-display font-bold text-primary-foreground leading-tight">
                 Book a <span className="text-gradient-accent">Consultation</span>
               </h1>

@@ -275,9 +275,6 @@ const Payments = () => {
           </div>
           <div className="container relative z-10 text-center">
             <motion.div {...fadeUp} className="mx-auto max-w-2xl">
-              <span className="inline-block px-4 py-1.5 bg-accent/20 text-accent text-sm font-semibold rounded-full mb-6 border border-accent/30">
-                <CreditCard className="w-4 h-4 inline mr-2" />Payments
-              </span>
               <h1 className="text-4xl md:text-6xl font-display font-bold text-primary-foreground leading-tight">
                 Secure <span className="text-gradient-accent">Payments</span>
               </h1>
