@@ -222,7 +222,7 @@ const Dashboard = () => {
       supabase.from("documents").select("*").order("created_at", { ascending: false }),
       supabase.from("payments").select("*").order("created_at", { ascending: false }),
     ]);
-    setApplications(appsRes.data || []);
+    setApplications((appsRes.data || []) as unknown as Application[]);
     setBookings(bookRes.data || []);
     setShipments(shipRes.data || []);
     setConsultations(consRes.data || []);
