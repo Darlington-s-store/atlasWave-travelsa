@@ -836,6 +836,7 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
+          email: string | null
           updated_at: string
         }
         Insert: {

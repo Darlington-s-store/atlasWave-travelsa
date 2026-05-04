@@ -150,8 +150,13 @@ const AdminUsers = () => {
         roleMap[r.user_id].push(r.role);
       });
       setUsers((profiles || []).map(p => ({
-        id: p.id, full_name: p.full_name, phone: p.phone,
-        avatar_url: p.avatar_url, created_at: p.created_at, updated_at: p.updated_at,
+        id: p.id, 
+        full_name: p.full_name, 
+        phone: p.phone,
+        email: p.email || undefined,
+        avatar_url: p.avatar_url, 
+        created_at: p.created_at, 
+        updated_at: p.updated_at,
         roles: roleMap[p.id] || ["user"],
       })));
     } catch (err: unknown) {
@@ -577,7 +582,7 @@ const AdminUsers = () => {
                           </div>
                           <div>
                             <span className="font-semibold text-[13px] text-foreground block">{user.full_name || "Unnamed"}</span>
-                            <span className="text-[11px] text-muted-foreground">{user.id.slice(0, 8)}...</span>
+                            <span className="text-[11px] text-muted-foreground block">{user.email || user.id.slice(0, 8)}</span>
                           </div>
                         </div>
                       </TableCell>
