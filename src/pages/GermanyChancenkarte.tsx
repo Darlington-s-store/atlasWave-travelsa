@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRight, CheckCircle2, Upload, Calculator } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, CheckCircle2, Upload, Calculator, FileText } from "lucide-react";
 import { useState } from "react";
 
 const fadeUp = {
@@ -34,8 +35,29 @@ const GermanyChancenkarte = () => {
     firstName: "",
     lastName: "",
     email: "",
-    germanLevel: ""
+    germanLevel: "",
+    documents: {} as Record<string, string>
   });
+
+  const requirementsList = [
+    "Valid Passport",
+    "Recognized Foreign Qualification",
+    "Language Proficiency Certificate",
+    "Proof of Work Experience",
+    "Proof of Financial Means",
+    "Health Insurance Proof",
+  ];
+
+  const handleFileUpload = (req: string, fileName: string) => {
+    setForm(f => ({
+      ...f,
+      documents: {
+        ...f.documents,
+        [req]: fileName
+      }
+    }));
+    toast({ title: "File Selected", description: `${fileName} attached for ${req}` });
+  };
 
   const totalPoints = Object.values(selections).reduce((sum, p) => sum + p, 0);
   const eligible = totalPoints >= 6;
@@ -64,8 +86,10 @@ const GermanyChancenkarte = () => {
           email: form.email,
           germanLevel: form.germanLevel,
           points: totalPoints,
-          selections: selections
-        })
+          selections: selections,
+          documents: form.documents
+        }),
+        documents: form.documents
       });
 
       if (error) throw error;
@@ -226,10 +250,36 @@ const GermanyChancenkarte = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div><label className="text-sm font-medium text-foreground mb-1.5 block">Upload Documents</label>
-                      <div className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-secondary transition-colors cursor-pointer">
-                        <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                        <p className="text-sm text-muted-foreground">Upload CV & certificates</p>
+                    <div className="space-y-4 pt-4 border-t">
+                      <label className="text-sm font-medium text-foreground block">Required Documents for Opportunity Card</label>
+                      <div className="grid gap-3">
+                        {requirementsList.map((req) => (
+                          <div key={req} className="flex flex-col gap-2 p-4 rounded-xl border bg-muted/30">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium flex items-center gap-2 text-left">
+                                <FileText className="w-4 h-4 text-primary shrink-0" /> {req}
+                              </span>
+                              {form.documents[req] ? (
+                                <Badge className="bg-secondary/20 text-secondary border-secondary/30">Selected</Badge>
+                              ) : (
+                                <Badge variant="outline">Missing</Badge>
+                              )}
+                            </div>
+                            <div className="relative">
+                              <input
+                                type="file"
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleFileUpload(req, file.name);
+                                }}
+                              />
+                              <Button type="button" variant="outline" size="sm" className="w-full text-xs">
+                                <Upload className="w-3 h-3 mr-2" /> {form.documents[req] || "Choose File"}
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                     <Button variant="accent" size="lg" className="w-full" disabled={submitting}>

@@ -54,6 +54,8 @@ interface Application {
   health_issues?: string;
   duration_of_stay?: string;
   accommodation_address?: string;
+  qualification?: string;
+  documents?: Record<string, string>;
 }
 
 interface ApplicationFormData {
@@ -82,7 +84,8 @@ interface ApplicationFormData {
   criminalHistory?: string;
   immigrationViolations?: string;
   healthIssues?: string;
-  documents?: string[];
+  documents?: string[] | Record<string, string>;
+  qualification?: string;
   destination?: string;
 }
 
@@ -472,21 +475,50 @@ const AdminVisaApplications = () => {
                         </div>
                       </section>
 
-                      {/* Documents Section */}
-                      {details.documents && Array.isArray(details.documents) && details.documents.length > 0 && (
+                      {/* Work Permit specific fields */}
+                      {(viewingApp.qualification || (details as ApplicationFormData).qualification) && (
                         <section>
                           <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3 flex items-center gap-2">
-                            <CheckCircle className="w-3.5 h-3.5" /> Provided Documents
+                            <Briefcase className="w-3.5 h-3.5" /> Professional Qualification
                           </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {details.documents.map((doc, i) => (
-                              <span key={i} className="px-3 py-1 bg-secondary/10 text-secondary border border-secondary/20 rounded-lg text-[12px] font-medium">
-                                {doc}
-                              </span>
-                            ))}
+                          <div className="bg-muted/30 p-4 rounded-xl border border-border/40">
+                            <p className="text-[13px] font-bold capitalize">{viewingApp.qualification || (details as ApplicationFormData).qualification}</p>
                           </div>
                         </section>
                       )}
+
+                      {/* Documents Section */}
+                      {(() => {
+                        const docs = viewingApp.documents || (details as ApplicationFormData).documents;
+                        if (!docs) return null;
+
+                        return (
+                          <section>
+                            <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3 flex items-center gap-2">
+                              <CheckCircle className="w-3.5 h-3.5" /> Provided Documents
+                            </h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {Array.isArray(docs) ? (
+                                docs.map((doc, i) => (
+                                  <div key={i} className="flex items-center gap-2 p-3 bg-secondary/10 text-secondary border border-secondary/20 rounded-xl text-[12px] font-medium">
+                                    <FileText className="w-4 h-4" /> {doc}
+                                  </div>
+                                ))
+                              ) : (
+                                Object.entries(docs).map(([req, file]) => (
+                                  <div key={req} className="flex items-center justify-between p-3 bg-secondary/10 text-secondary border border-secondary/20 rounded-xl text-[12px] font-medium">
+                                    <div className="flex items-center gap-2">
+                                      <FileText className="w-4 h-4" />
+                                      <span>{req}</span>
+                                    </div>
+                                    <span className="text-[10px] opacity-70 truncate max-w-[100px]">{file as string}</span>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </section>
+                        );
+                      })()}
                     </div>
                   );
                 }

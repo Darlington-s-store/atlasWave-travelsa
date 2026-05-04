@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Link } from "react-router-dom";
 import { ArrowRight, CheckCircle2, FileText, Clock, Upload } from "lucide-react";
@@ -40,8 +41,20 @@ const SchengenWorkPermits = () => {
     phone: "",
     targetCountry: countries[0].name,
     qualification: "",
-    notes: ""
+    notes: "",
+    documents: {} as Record<string, string>
   });
+
+  const handleFileUpload = (req: string, fileName: string) => {
+    setForm(f => ({
+      ...f,
+      documents: {
+        ...f.documents,
+        [req]: fileName
+      }
+    }));
+    toast({ title: "File Selected", description: `${fileName} attached for ${req}` });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,8 +81,11 @@ const SchengenWorkPermits = () => {
           phone: form.phone,
           targetCountry: form.targetCountry,
           qualification: form.qualification,
-          notes: form.notes
-        })
+          notes: form.notes,
+          documents: form.documents
+        }),
+        qualification: form.qualification,
+        documents: form.documents
       });
 
       if (error) throw error;
@@ -224,11 +240,36 @@ const SchengenWorkPermits = () => {
                       onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                     />
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground mb-1.5 block">Upload Documents</label>
-                    <div className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-secondary transition-colors cursor-pointer">
-                      <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">Drag & drop or click to upload (PDF, JPG, PNG)</p>
+                  <div className="space-y-4">
+                    <label className="text-sm font-medium text-foreground block">Required Documents for {selectedCountry.name}</label>
+                    <div className="grid gap-3">
+                      {selectedCountry.requirements.map((req) => (
+                        <div key={req} className="flex flex-col gap-2 p-4 rounded-xl border bg-muted/30">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium flex items-center gap-2">
+                              <FileText className="w-4 h-4 text-primary" /> {req}
+                            </span>
+                            {form.documents[req] ? (
+                              <Badge className="bg-secondary/20 text-secondary border-secondary/30">Selected</Badge>
+                            ) : (
+                              <Badge variant="outline">Missing</Badge>
+                            )}
+                          </div>
+                          <div className="relative">
+                            <input
+                              type="file"
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleFileUpload(req, file.name);
+                              }}
+                            />
+                            <Button type="button" variant="outline" size="sm" className="w-full text-xs">
+                              <Upload className="w-3 h-3 mr-2" /> {form.documents[req] || "Choose File"}
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                   <Button variant="accent" size="lg" className="w-full" disabled={submitting}>

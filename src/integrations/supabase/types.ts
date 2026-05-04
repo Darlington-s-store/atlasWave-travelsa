@@ -129,6 +129,8 @@ export type Database = {
           health_issues: string | null
           duration_of_stay: string | null
           accommodation_address: string | null
+          qualification: string | null
+          documents: Json | null
         }
         Insert: {
           address?: string | null

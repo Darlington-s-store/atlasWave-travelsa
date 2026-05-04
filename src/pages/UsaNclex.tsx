@@ -4,8 +4,9 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowRight, CheckCircle2, Upload, Stethoscope, BookOpen, Award, Briefcase } from "lucide-react";
+import { ArrowRight, CheckCircle2, Upload, Stethoscope, BookOpen, Award, Briefcase, FileText } from "lucide-react";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -31,8 +32,29 @@ const UsaNclex = () => {
     qualification: "",
     experience: "",
     previousAttempt: "",
-    notes: ""
+    notes: "",
+    documents: {} as Record<string, string>
   });
+
+  const requirements = [
+    "Valid Passport",
+    "Nursing Degree/Diploma",
+    "Current Nursing License",
+    "Academic Transcripts",
+    "Proof of Identity",
+    "Professional References",
+  ];
+
+  const handleFileUpload = (req: string, fileName: string) => {
+    setForm(f => ({
+      ...f,
+      documents: {
+        ...f.documents,
+        [req]: fileName
+      }
+    }));
+    toast({ title: "File Selected", description: `${fileName} attached for ${req}` });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,8 +82,11 @@ const UsaNclex = () => {
           qualification: form.qualification,
           experience: form.experience,
           previousAttempt: form.previousAttempt,
-          notes: form.notes
-        })
+          notes: form.notes,
+          documents: form.documents
+        }),
+        qualification: form.qualification,
+        documents: form.documents
       });
 
       if (error) throw error;
@@ -230,10 +255,36 @@ const UsaNclex = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div><label className="text-sm font-medium text-foreground mb-1.5 block">Upload Nursing Certificate</label>
-                      <div className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-secondary transition-colors cursor-pointer">
-                        <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                        <p className="text-sm text-muted-foreground">Upload certificate (PDF, JPG)</p>
+                    <div className="space-y-4 pt-4 border-t">
+                      <label className="text-sm font-medium text-foreground block">Required Credentials for NCLEX Pathway</label>
+                      <div className="grid gap-3">
+                        {requirements.map((req) => (
+                          <div key={req} className="flex flex-col gap-2 p-4 rounded-xl border bg-muted/30">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium flex items-center gap-2 text-left">
+                                <FileText className="w-4 h-4 text-primary shrink-0" /> {req}
+                              </span>
+                              {form.documents[req] ? (
+                                <Badge className="bg-secondary/20 text-secondary border-secondary/30">Selected</Badge>
+                              ) : (
+                                <Badge variant="outline">Missing</Badge>
+                              )}
+                            </div>
+                            <div className="relative">
+                              <input
+                                type="file"
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleFileUpload(req, file.name);
+                                }}
+                              />
+                              <Button type="button" variant="outline" size="sm" className="w-full text-xs">
+                                <Upload className="w-3 h-3 mr-2" /> {form.documents[req] || "Choose File"}
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                     <div>
