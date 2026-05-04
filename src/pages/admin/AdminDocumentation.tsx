@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,23 +9,40 @@ import { Search, FolderOpen, Inbox, Trash2, Download, FileText } from "lucide-re
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+interface Document {
+  id: string;
+  user_id: string;
+  name: string;
+  category: string | null;
+  file_type: string;
+  file_size: string | null;
+  file_path: string | null;
+  created_at: string;
+  profiles?: {
+    full_name: string | null;
+  };
+}
+
 const AdminDocumentation = () => {
   const { toast } = useToast();
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  useEffect(() => { fetchDocuments(); }, []);
-
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("documents").select("*").order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("documents")
+      .select("*, profiles(full_name)")
+      .order("created_at", { ascending: false });
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    setDocuments(data || []);
+    setDocuments((data || []) as unknown as Document[]);
     setLoading(false);
-  };
+  }, [toast]);
 
-  const handleDelete = async (doc: any) => {
+  useEffect(() => { fetchDocuments(); }, [fetchDocuments]);
+
+  const handleDelete = async (doc: Document) => {
     if (doc.file_path) {
       await supabase.storage.from("user-documents").remove([doc.file_path]);
     }
@@ -35,7 +52,7 @@ const AdminDocumentation = () => {
     fetchDocuments();
   };
 
-  const handleDownload = async (doc: any) => {
+  const handleDownload = async (doc: Document) => {
     if (!doc.file_path) return;
     const { data } = await supabase.storage.from("user-documents").createSignedUrl(doc.file_path, 60);
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
@@ -93,9 +110,9 @@ const AdminDocumentation = () => {
                 <TableHeader>
                   <TableRow className="bg-muted/30 hover:bg-muted/30">
                     <TableHead className="text-[11px] uppercase tracking-wider font-bold">Document</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">Category</TableHead>
                     <TableHead className="text-[11px] uppercase tracking-wider font-bold">Type</TableHead>
-                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">Size</TableHead>
-                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">User ID</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider font-bold">User</TableHead>
                     <TableHead className="text-[11px] uppercase tracking-wider font-bold">Uploaded</TableHead>
                     <TableHead className="w-20"></TableHead>
                   </TableRow>
@@ -103,10 +120,16 @@ const AdminDocumentation = () => {
                 <TableBody>
                   {filtered.map(d => (
                     <TableRow key={d.id} className="hover:bg-muted/20 transition-colors">
-                      <TableCell className="font-semibold text-[13px]">{d.name}</TableCell>
+                      <TableCell>
+                        <p className="font-semibold text-[13px]">{d.name}</p>
+                        <p className="text-[11px] text-muted-foreground">{d.file_size || "—"}</p>
+                      </TableCell>
+                      <TableCell><Badge variant="secondary" className="text-[10px] capitalize">{d.category || "General"}</Badge></TableCell>
                       <TableCell><Badge variant="outline" className="text-[10px]">{d.file_type}</Badge></TableCell>
-                      <TableCell className="text-[13px] text-muted-foreground">{d.file_size || "—"}</TableCell>
-                      <TableCell className="text-[11px] text-muted-foreground font-mono">{d.user_id?.slice(0, 8)}...</TableCell>
+                      <TableCell>
+                        <p className="text-[13px] font-medium text-foreground">{d.profiles?.full_name || "Unknown User"}</p>
+                        <p className="text-[10px] text-muted-foreground font-mono">{d.user_id?.slice(0, 8)}</p>
+                      </TableCell>
                       <TableCell className="text-[13px] text-muted-foreground">{new Date(d.created_at).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <div className="flex gap-1">

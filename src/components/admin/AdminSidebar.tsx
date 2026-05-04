@@ -29,7 +29,7 @@ const navItems = [
   { title: "Customs", url: "/admin/customs", icon: MapPin },
   { title: "Deals", url: "/admin/deals", icon: Tag },
   { title: "Destinations", url: "/admin/destinations", icon: Map },
-  { title: "Documentation", url: "/admin/documentation", icon: FileText },
+  { title: "Documents", url: "/admin/documentation", icon: FileText },
   { title: "Flights", url: "/admin/flights", icon: Plane },
   { title: "Hotels", url: "/admin/hotels", icon: Hotel },
  { title: "Messages", url: "/admin/messages", icon: MessageSquare },
