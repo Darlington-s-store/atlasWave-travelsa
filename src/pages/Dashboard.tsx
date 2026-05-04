@@ -353,7 +353,18 @@ const Dashboard = () => {
         </header>
 
         <main className="mt-16 flex-1 p-4 sm:p-6 lg:p-8">
-          {activeTab === "overview" && <OverviewTab applications={applications} bookings={bookings} shipments={shipments} consultations={consultations} userName={user?.fullName || "User"} greeting={greeting()} dataLoading={dataLoading} />}
+          {activeTab === "overview" && (
+            <OverviewTab 
+              applications={applications} 
+              bookings={bookings} 
+              shipments={shipments} 
+              consultations={consultations} 
+              userName={user?.fullName || "User"} 
+              greeting={greeting()} 
+              dataLoading={dataLoading} 
+              setActiveTab={setActiveTab}
+            />
+          )}
           {activeTab === "applications" && <ApplicationsTab applications={applications} onRefresh={fetchAllData} userId={user?.id || ""} />}
           {activeTab === "appointments" && <AppointmentsTab consultations={consultations} onRefresh={fetchAllData} userId={user?.id || ""} />}
           {activeTab === "payments" && <PaymentsTab payments={payments} onRefresh={fetchAllData} userId={user?.id || ""} />}
@@ -379,7 +390,8 @@ function OverviewTab({
   consultations, 
   userName, 
   greeting, 
-  dataLoading 
+  dataLoading,
+  setActiveTab
 }: { 
   applications: Application[]; 
   bookings: Booking[]; 
@@ -388,6 +400,7 @@ function OverviewTab({
   userName: string; 
   greeting: string; 
   dataLoading: boolean; 
+  setActiveTab: (tab: string) => void;
 }) {
   const firstName = userName.split(" ")[0];
   const activeApps = applications.filter((a) => a.status === "pending" || a.status === "in-review").length;
