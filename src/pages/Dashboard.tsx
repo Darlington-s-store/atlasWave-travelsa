@@ -78,8 +78,10 @@ interface ApplicationFormData {
   criminalHistory?: string;
   immigrationViolations?: string;
   healthIssues?: string;
-  documents?: string[];
+  documents?: string[] | Record<string, string>;
+  qualification?: string;
   destination?: string;
+  program?: string;
 }
 
 interface Booking {
@@ -533,17 +535,27 @@ function ApplicationsTab({ applications, onRefresh, userId }: { applications: Ap
             let detailsSummary = "";
             try {
               const rawDetails = app.details;
+              let parsed: ApplicationFormData = {};
+              
               if (typeof rawDetails === "string" && (rawDetails.startsWith("{") || rawDetails.startsWith("["))) {
-                const parsed = JSON.parse(rawDetails) as ApplicationFormData;
-                detailsSummary = `${parsed.fullName || ""} · ${parsed.nationality || ""} → ${parsed.destination || ""}`;
+                parsed = JSON.parse(rawDetails);
               } else if (typeof rawDetails === "object" && rawDetails !== null) {
-                const parsed = rawDetails as ApplicationFormData;
-                detailsSummary = `${parsed.fullName || ""} · ${parsed.nationality || ""} → ${parsed.destination || ""}`;
+                parsed = rawDetails as ApplicationFormData;
+              }
+
+              if (parsed && Object.keys(parsed).length > 0) {
+                const parts = [];
+                if (parsed.fullName) parts.push(parsed.fullName);
+                if (parsed.program) parts.push(parsed.program);
+                if (parsed.nationality) parts.push(parsed.nationality);
+                if (parsed.destination) parts.push(`→ ${parsed.destination}`);
+                
+                detailsSummary = parts.length > 0 ? parts.join(" · ") : (app.type || "Application");
               } else {
-                detailsSummary = String(app.details || "No details provided.");
+                detailsSummary = typeof rawDetails === 'string' ? rawDetails : (app.title || "No details provided.");
               }
             } catch (e) {
-              detailsSummary = String(app.details || "No details provided.");
+              detailsSummary = app.title || "No details provided.";
             }
 
             return (
@@ -628,121 +640,136 @@ function ApplicationsTab({ applications, onRefresh, userId }: { applications: Ap
                       details = rawDetails as ApplicationFormData;
                     }
                   } catch (e) {
-                    return (
-                      <div>
-                        <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Submission Details</h4>
-                        <div className="bg-muted/30 p-4 rounded-xl border text-sm text-foreground whitespace-pre-wrap">
-                          {String(viewingApp.details || "No details provided.")}
-                        </div>
-                      </div>
-                    );
+                    console.error("Failed to parse details", e);
                   }
 
-                  if (Object.keys(details).length === 0) {
-                    return (
-                      <div>
-                        <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Submission Details</h4>
-                        <div className="bg-muted/30 p-4 rounded-xl border text-sm text-foreground">
-                          {String(viewingApp.details || "No details provided.")}
-                        </div>
-                      </div>
-                    );
-                  }
+                  const hasDetails = Object.keys(details).length > 0;
 
                   return (
                     <div className="space-y-6">
-                      {(details.fullName || details.nationality || details.dob || details.gender || details.passportNumber) && (
+                      {!hasDetails && viewingApp.details && typeof viewingApp.details === 'string' && (
                         <div>
-                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Personal Information</h4>
-                          <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-2 gap-4">
-                            {details.fullName && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Full Name</p><p className="text-sm font-medium">{details.fullName}</p></div>}
-                            {details.nationality && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Nationality</p><p className="text-sm font-medium">{details.nationality}</p></div>}
-                            {details.dob && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">DOB</p><p className="text-sm font-medium">{details.dob}</p></div>}
-                            {details.gender && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Gender</p><p className="text-sm font-medium">{details.gender}</p></div>}
-                            {details.passportNumber && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Passport #</p><p className="text-sm font-medium">{details.passportNumber}</p></div>}
+                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Submission Notes</h4>
+                          <div className="bg-muted/30 p-4 rounded-xl border text-sm text-foreground whitespace-pre-wrap">
+                            {viewingApp.details}
                           </div>
                         </div>
                       )}
 
-                      {(details.email || details.phone || details.residentialAddress) && (
-                        <div>
-                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Contact Details</h4>
-                          <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-2 gap-4">
-                            {details.email && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Email</p><p className="text-sm font-medium">{details.email}</p></div>}
-                            {details.phone && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Phone</p><p className="text-sm font-medium">{details.phone}</p></div>}
-                            {details.residentialAddress && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Address</p><p className="text-sm font-medium">{details.residentialAddress}</p></div>}
-                          </div>
-                        </div>
-                      )}
+                      {hasDetails && (
+                        <>
+                          {(details.fullName || details.nationality || details.dob || details.gender || details.passportNumber) && (
+                            <div>
+                              <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Personal Information</h4>
+                              <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-2 gap-4">
+                                {details.fullName && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Full Name</p><p className="text-sm font-medium">{details.fullName}</p></div>}
+                                {details.nationality && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Nationality</p><p className="text-sm font-medium">{details.nationality}</p></div>}
+                                {details.dob && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">DOB</p><p className="text-sm font-medium">{details.dob}</p></div>}
+                                {details.gender && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Gender</p><p className="text-sm font-medium">{details.gender}</p></div>}
+                                {details.passportNumber && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Passport #</p><p className="text-sm font-medium">{details.passportNumber}</p></div>}
+                              </div>
+                            </div>
+                          )}
 
-                      {(details.jobTitle || details.employerName || details.monthlyIncome) && (
-                        <div>
-                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Occupation & Education</h4>
-                          <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-2 gap-4">
-                            {details.jobTitle && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Job Title</p><p className="text-sm font-medium">{details.jobTitle}</p></div>}
-                            {details.employerName && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Employer/School</p><p className="text-sm font-medium">{details.employerName}</p></div>}
-                            {details.monthlyIncome && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Income</p><p className="text-sm font-medium">{details.monthlyIncome}</p></div>}
-                          </div>
-                        </div>
-                      )}
+                          {(details.email || details.phone || details.residentialAddress) && (
+                            <div>
+                              <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Contact Details</h4>
+                              <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-2 gap-4">
+                                {details.email && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Email</p><p className="text-sm font-medium">{details.email}</p></div>}
+                                {details.phone && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Phone</p><p className="text-sm font-medium">{details.phone}</p></div>}
+                                {details.residentialAddress && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Address</p><p className="text-sm font-medium">{details.residentialAddress}</p></div>}
+                              </div>
+                            </div>
+                          )}
 
-                      {(details.purpose || details.travelDate || details.returnDate || details.durationOfStay || details.accommodationAddress) && (
-                        <div>
-                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Travel Details</h4>
-                          <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-2 gap-4">
-                            {details.purpose && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Purpose</p><p className="text-sm font-medium">{details.purpose}</p></div>}
-                            {details.travelDate && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Travel Date</p><p className="text-sm font-medium">{details.travelDate}</p></div>}
-                            {details.returnDate && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Return Date</p><p className="text-sm font-medium">{details.returnDate}</p></div>}
-                            {details.durationOfStay && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Duration</p><p className="text-sm font-medium">{details.durationOfStay}</p></div>}
-                            {details.accommodationAddress && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Accommodation</p><p className="text-sm font-medium">{details.accommodationAddress}</p></div>}
-                          </div>
-                        </div>
-                      )}
+                          {(details.jobTitle || details.employerName || details.monthlyIncome || details.qualification) && (
+                            <div>
+                              <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Professional & Academic</h4>
+                              <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-2 gap-4">
+                                {(details.qualification || viewingApp.qualification) && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Qualification</p><p className="text-sm font-medium capitalize">{viewingApp.qualification || details.qualification}</p></div>}
+                                {details.jobTitle && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Job Title</p><p className="text-sm font-medium">{details.jobTitle}</p></div>}
+                                {details.employerName && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Employer/School</p><p className="text-sm font-medium">{details.employerName}</p></div>}
+                                {details.monthlyIncome && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Income</p><p className="text-sm font-medium">{details.monthlyIncome}</p></div>}
+                              </div>
+                            </div>
+                          )}
 
-                      {(details.sponsor || details.bankBalance || details.incomeSource) && (
-                        <div>
-                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Financial Information</h4>
-                          <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-2 gap-4">
-                            {details.sponsor && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Sponsor</p><p className="text-sm font-medium">{details.sponsor}</p></div>}
-                            {details.bankBalance && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Bank Balance</p><p className="text-sm font-medium">{details.bankBalance}</p></div>}
-                            {details.incomeSource && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Income Source</p><p className="text-sm font-medium">{details.incomeSource}</p></div>}
-                          </div>
-                        </div>
-                      )}
+                          {(details.purpose || details.travelDate || details.returnDate || details.durationOfStay || details.accommodationAddress) && (
+                            <div>
+                              <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Travel Details</h4>
+                              <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-2 gap-4">
+                                {details.purpose && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Purpose</p><p className="text-sm font-medium">{details.purpose}</p></div>}
+                                {details.travelDate && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Travel Date</p><p className="text-sm font-medium">{details.travelDate}</p></div>}
+                                {details.returnDate && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Return Date</p><p className="text-sm font-medium">{details.returnDate}</p></div>}
+                                {details.durationOfStay && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Duration</p><p className="text-sm font-medium">{details.durationOfStay}</p></div>}
+                                {details.accommodationAddress && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Accommodation</p><p className="text-sm font-medium">{details.accommodationAddress}</p></div>}
+                              </div>
+                            </div>
+                          )}
 
-                      {(details.previousCountries || details.previousRefusals) && (
-                        <div>
-                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Travel History</h4>
-                          <div className="bg-muted/30 p-4 rounded-xl border space-y-3">
-                            {details.previousCountries && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Countries Visited</p><p className="text-sm font-medium">{details.previousCountries}</p></div>}
-                            {details.previousRefusals && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Previous Refusals?</p><p className="text-sm font-medium">{details.previousRefusals}</p></div>}
-                            {details.refusalDetails && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Refusal Details</p><p className="text-sm font-medium">{details.refusalDetails}</p></div>}
-                          </div>
-                        </div>
-                      )}
+                          {(details.sponsor || details.bankBalance || details.incomeSource) && (
+                            <div>
+                              <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Financial Information</h4>
+                              <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-2 gap-4">
+                                {details.sponsor && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Sponsor</p><p className="text-sm font-medium">{details.sponsor}</p></div>}
+                                {details.bankBalance && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Bank Balance</p><p className="text-sm font-medium">{details.bankBalance}</p></div>}
+                                {details.incomeSource && <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Income Source</p><p className="text-sm font-medium">{details.incomeSource}</p></div>}
+                              </div>
+                            </div>
+                          )}
 
-                      {(details.criminalHistory || details.immigrationViolations || details.healthIssues) && (
-                        <div>
-                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Security & Health</h4>
-                          <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-1 gap-3">
-                            {details.criminalHistory && <div className="flex justify-between items-center"><p className="text-[11px] text-muted-foreground font-semibold">Criminal History</p><Badge variant="outline">{details.criminalHistory}</Badge></div>}
-                            {details.immigrationViolations && <div className="flex justify-between items-center"><p className="text-[11px] text-muted-foreground font-semibold">Immigration Violations</p><Badge variant="outline">{details.immigrationViolations}</Badge></div>}
-                            {details.healthIssues && <div className="flex justify-between items-center"><p className="text-[11px] text-muted-foreground font-semibold">Serious Health Issues</p><Badge variant="outline">{details.healthIssues}</Badge></div>}
-                          </div>
-                        </div>
-                      )}
+                          {(details.previousCountries || details.previousRefusals) && (
+                            <div>
+                              <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Travel History</h4>
+                              <div className="bg-muted/30 p-4 rounded-xl border space-y-3">
+                                {details.previousCountries && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Countries Visited</p><p className="text-sm font-medium">{details.previousCountries}</p></div>}
+                                {details.previousRefusals && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Previous Refusals?</p><p className="text-sm font-medium">{details.previousRefusals}</p></div>}
+                                {details.refusalDetails && <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Refusal Details</p><p className="text-sm font-medium">{details.refusalDetails}</p></div>}
+                              </div>
+                            </div>
+                          )}
 
-                      {details.documents && Array.isArray(details.documents) && details.documents.length > 0 && (
-                        <div>
-                          <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Submitted Documents</h4>
-                          <div className="bg-muted/30 p-4 rounded-xl border flex flex-wrap gap-2">
-                            {details.documents.map((doc, idx) => (
-                              <Badge key={idx} variant="outline" className="bg-background/50">
-                                <FileText className="w-3 h-3 mr-1 text-primary" /> {doc}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
+                          {(details.criminalHistory || details.immigrationViolations || details.healthIssues) && (
+                            <div>
+                              <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Security & Health</h4>
+                              <div className="bg-muted/30 p-4 rounded-xl border grid grid-cols-1 gap-3">
+                                {details.criminalHistory && <div className="flex justify-between items-center"><p className="text-[11px] text-muted-foreground font-semibold">Criminal History</p><Badge variant="outline">{details.criminalHistory}</Badge></div>}
+                                {details.immigrationViolations && <div className="flex justify-between items-center"><p className="text-[11px] text-muted-foreground font-semibold">Immigration Violations</p><Badge variant="outline">{details.immigrationViolations}</Badge></div>}
+                                {details.healthIssues && <div className="flex justify-between items-center"><p className="text-[11px] text-muted-foreground font-semibold">Serious Health Issues</p><Badge variant="outline">{details.healthIssues}</Badge></div>}
+                              </div>
+                            </div>
+                          )}
+
+                          {(() => {
+                            const docs = viewingApp.documents || details.documents;
+                            if (!docs) return null;
+
+                            return (
+                              <div>
+                                <h4 className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground mb-3">Provided Documents</h4>
+                                <div className="bg-muted/30 p-4 rounded-xl border flex flex-wrap gap-2">
+                                  {Array.isArray(docs) ? (
+                                    docs.map((doc, idx) => (
+                                      <Badge key={idx} variant="outline" className="bg-background/50">
+                                        <FileText className="w-3 h-3 mr-1 text-primary" /> {doc}
+                                      </Badge>
+                                    ))
+                                  ) : (
+                                    Object.entries(docs).map(([req, file], idx) => (
+                                      <Badge key={idx} variant="outline" className="bg-background/50 flex flex-col items-start gap-0.5 p-2 h-auto">
+                                        <span className="text-[9px] text-muted-foreground uppercase font-bold">{req}</span>
+                                        <div className="flex items-center gap-1.5">
+                                          <FileText className="w-3 h-3 text-primary" />
+                                          <span className="text-[11px]">{file as string}</span>
+                                        </div>
+                                      </Badge>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </>
                       )}
 
                       {viewingApp.admin_notes && (
