@@ -136,7 +136,7 @@ const Login = () => {
               type="button"
               onClick={async () => {
                 const { error } = await lovable.auth.signInWithOAuth("google", {
-                  redirect_uri: window.location.origin,
+                  redirect_uri: PRODUCTION_URL,
                 });
                 if (error) toast({ title: "Google sign-in failed", description: String(error), variant: "destructive" });
               }}
@@ -150,7 +150,7 @@ const Login = () => {
               type="button"
               onClick={async () => {
                 const { error } = await lovable.auth.signInWithOAuth("apple", {
-                  redirect_uri: window.location.origin,
+                  redirect_uri: PRODUCTION_URL,
                 });
                 if (error) toast({ title: "Apple sign-in failed", description: String(error), variant: "destructive" });
               }}
