@@ -16,7 +16,7 @@ const StudyAbroad = () => (
     <Header />
     <main>
       <PageHero
-        eyebrow="Study Abroad"
+        badge="Study Abroad"
         title="Your global education journey starts here"
         description="From university selection to visa approval, we walk with you every step of the way."
       />

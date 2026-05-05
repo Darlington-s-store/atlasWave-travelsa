@@ -17,7 +17,7 @@ const WorkAndPay = () => (
     <Header />
     <main>
       <PageHero
-        eyebrow="Work & Pay"
+        badge="Work & Pay"
         title="Skilled-worker placement made simple"
         description="Earn while you settle. We handle the placement, the paperwork and the journey."
       />
