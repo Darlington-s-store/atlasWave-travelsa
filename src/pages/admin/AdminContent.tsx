@@ -70,7 +70,8 @@ const AdminContent = () => {
   const [services, setServices] = useState<SiteContent[]>([]);
   const [svcDialogOpen, setSvcDialogOpen] = useState(false);
   const [editingSvc, setEditingSvc] = useState<SiteContent | null>(null);
-  const [svcForm, setSvcForm] = useState({ title: "", description: "", icon: "FileText", active: true });
+  const [svcForm, setSvcForm] = useState({ title: "", description: "", icon: "FileText", link: "", image_url: "", active: true });
+  const [svcImageFile, setSvcImageFile] = useState<File | null>(null);
 
   // Testimonials state
   const [testimonials, setTestimonials] = useState<SiteContent[]>([]);
@@ -317,16 +318,22 @@ const AdminContent = () => {
   };
 
   // ---- Services ----
-  const openSvcCreate = () => { setSvcForm({ title: "", description: "", icon: "FileText", active: true }); setEditingSvc(null); setSvcDialogOpen(true); };
+  const openSvcCreate = () => { setSvcForm({ title: "", description: "", icon: "FileText", link: "", image_url: "", active: true }); setSvcImageFile(null); setEditingSvc(null); setSvcDialogOpen(true); };
   const openSvcEdit = (s: SiteContent) => {
     setEditingSvc(s);
-    setSvcForm({ title: s.value.title || "", description: s.value.description || "", icon: s.value.icon || "FileText", active: s.value.active !== "false" });
+    setSvcForm({ title: s.value.title || "", description: s.value.description || "", icon: s.value.icon || "FileText", link: s.value.link || "", image_url: s.value.image_url || "", active: s.value.active !== "false" });
+    setSvcImageFile(null);
     setSvcDialogOpen(true);
   };
   const handleSvcSave = async () => {
     if (!svcForm.title.trim()) { toast({ title: "Title required", variant: "destructive" }); return; }
     setSaving(true);
-    const value = { ...svcForm, active: String(svcForm.active) };
+    let imageUrl = svcForm.image_url;
+    if (svcImageFile) {
+      const path = await uploadImage(svcImageFile, "services");
+      if (path) imageUrl = path;
+    }
+    const value = { ...svcForm, image_url: imageUrl, active: String(svcForm.active) };
     if (editingSvc) {
       await supabase.from("site_content").update({ value, updated_at: new Date().toISOString() }).eq("id", editingSvc.id);
       toast({ title: "Service Updated" });
@@ -809,10 +816,23 @@ const AdminContent = () => {
               <Select value={svcForm.icon} onValueChange={v => setSvcForm(f => ({ ...f, icon: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Plane">Plane</SelectItem><SelectItem value="Globe">Globe</SelectItem><SelectItem value="Package">Package</SelectItem>
-                  <SelectItem value="FileText">FileText</SelectItem><SelectItem value="Briefcase">Briefcase</SelectItem><SelectItem value="GraduationCap">GraduationCap</SelectItem>
+                  <SelectItem value="Plane">Plane</SelectItem><SelectItem value="Hotel">Hotel</SelectItem><SelectItem value="Globe">Globe</SelectItem><SelectItem value="Package">Package</SelectItem>
+                  <SelectItem value="FileText">FileText</SelectItem><SelectItem value="FileCheck">FileCheck</SelectItem><SelectItem value="Briefcase">Briefcase</SelectItem><SelectItem value="GraduationCap">GraduationCap</SelectItem>
+                  <SelectItem value="Truck">Truck</SelectItem><SelectItem value="Ship">Ship</SelectItem><SelectItem value="CreditCard">CreditCard</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2"><Label>Link (optional)</Label><Input value={svcForm.link} onChange={e => setSvcForm(f => ({ ...f, link: e.target.value }))} placeholder="/study-abroad" /></div>
+            <div className="space-y-2">
+              <Label>Service Image</Label>
+              <div className="flex items-center gap-3">
+                {svcForm.image_url && !svcImageFile && <img src={getStorageUrl(svcForm.image_url) || svcForm.image_url} alt="" className="w-14 h-14 object-cover rounded border" />}
+                <label className="flex items-center gap-2 px-3 py-2 rounded-md border bg-muted/50 cursor-pointer hover:bg-muted transition-colors text-sm">
+                  <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">{svcImageFile ? svcImageFile.name : "Upload Image"}</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={e => setSvcImageFile(e.target.files?.[0] || null)} />
+                </label>
+              </div>
             </div>
             <div className="flex items-center gap-3"><Switch checked={svcForm.active} onCheckedChange={v => setSvcForm(f => ({ ...f, active: v }))} /><Label>{svcForm.active ? "Active" : "Draft"}</Label></div>
           </div>

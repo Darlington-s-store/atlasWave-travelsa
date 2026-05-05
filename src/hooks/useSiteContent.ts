@@ -38,6 +38,7 @@ export interface ServiceContent {
   description: string;
   icon: string;
   link?: string;
+  image_url?: string;
   active: string;
 }
 

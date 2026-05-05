@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { lovable } from "@/integrations/lovable/index";
+import { PRODUCTION_URL } from "@/lib/siteConfig";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -83,7 +84,7 @@ const Signup = () => {
               type="button"
               onClick={async () => {
                 const { error } = await lovable.auth.signInWithOAuth("google", {
-                  redirect_uri: window.location.origin,
+                  redirect_uri: PRODUCTION_URL,
                 });
                 if (error) toast({ title: "Google sign-in failed", description: String(error), variant: "destructive" });
               }}
@@ -97,7 +98,7 @@ const Signup = () => {
               type="button"
               onClick={async () => {
                 const { error } = await lovable.auth.signInWithOAuth("apple", {
-                  redirect_uri: window.location.origin,
+                  redirect_uri: PRODUCTION_URL,
                 });
                 if (error) toast({ title: "Apple sign-in failed", description: String(error), variant: "destructive" });
               }}

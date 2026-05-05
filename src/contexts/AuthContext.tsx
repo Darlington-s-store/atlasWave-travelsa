@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 import { getAuthErrorMessage, normalizeEmail } from "@/lib/authErrors";
 import { createNotification } from "@/lib/createNotification";
+import { PRODUCTION_URL } from "@/lib/siteConfig";
 
 export interface UserProfile {
   id: string;
@@ -140,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password: data.password,
       options: {
         data: { full_name: data.fullName, phone: data.phone },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: PRODUCTION_URL,
       },
     });
     if (error) return { success: false, error: getAuthErrorMessage(error, "signup") || error.message };

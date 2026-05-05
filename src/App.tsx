@@ -66,6 +66,8 @@ import AdminMessages from "./pages/admin/AdminMessages";
 import Destinations from "./pages/Destinations";
 import DestinationDetail from "./pages/DestinationDetail";
 import VisaApplication from "./pages/VisaApplication";
+import StudyAbroad from "./pages/StudyAbroad";
+import WorkAndPay from "./pages/WorkAndPay";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -103,6 +105,8 @@ const AppRoutes = () => {
         <Route path="/work-permits/usa-nclex" element={<UsaNclex />} />
         <Route path="/work-permits/credential-evaluation" element={<CredentialEvaluation />} />
         <Route path="/credential-evaluation" element={<CredentialEvaluation />} />
+        <Route path="/study-abroad" element={<StudyAbroad />} />
+        <Route path="/work-and-pay" element={<WorkAndPay />} />
         <Route path="/documentation" element={<Documentation />} />
         <Route path="/consultation" element={<Consultation />} />
         <Route path="/contact" element={<Contact />} />

@@ -37,6 +37,7 @@ export type Database = {
       }
       application_documents: {
         Row: {
+          admin_note: string | null
           application_id: string
           created_at: string
           doc_type: string
@@ -48,8 +49,11 @@ export type Database = {
           mime_type: string | null
           status: string
           user_id: string
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
+          admin_note?: string | null
           application_id: string
           created_at?: string
           doc_type: string
@@ -61,8 +65,11 @@ export type Database = {
           mime_type?: string | null
           status?: string
           user_id: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
+          admin_note?: string | null
           application_id?: string
           created_at?: string
           doc_type?: string
@@ -74,6 +81,8 @@ export type Database = {
           mime_type?: string | null
           status?: string
           user_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: [
           {
@@ -87,21 +96,29 @@ export type Database = {
       }
       applications: {
         Row: {
+          accommodation_address: string | null
           address: string | null
           admin_notes: string | null
           assigned_to: string | null
+          bank_balance: string | null
           city: string | null
           country: string | null
           created_at: string
+          criminal_history: string | null
           date_of_birth: string | null
           destination_country: string | null
           details: string | null
+          documents: Json | null
+          duration_of_stay: string | null
           email: string | null
           employer: string | null
           fee_amount: number
           first_name: string | null
           gender: string | null
+          health_issues: string | null
           id: string
+          immigration_violations: string | null
+          income_source: string | null
           intended_travel_date: string | null
           last_name: string | null
           nationality: string | null
@@ -110,44 +127,44 @@ export type Database = {
           passport_number: string | null
           payment_status: string
           phone: string | null
+          previous_refusals: string | null
           priority: string
           purpose: string | null
+          qualification: string | null
           reference_number: string | null
           return_date: string | null
+          sponsor: string | null
           status: string
           submitted_at: string | null
           title: string
           type: string
           updated_at: string
           user_id: string
-          sponsor: string | null
-          bank_balance: string | null
-          income_source: string | null
-          previous_refusals: string | null
-          criminal_history: string | null
-          immigration_violations: string | null
-          health_issues: string | null
-          duration_of_stay: string | null
-          accommodation_address: string | null
-          qualification: string | null
-          documents: Json | null
         }
         Insert: {
+          accommodation_address?: string | null
           address?: string | null
           admin_notes?: string | null
           assigned_to?: string | null
+          bank_balance?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
+          criminal_history?: string | null
           date_of_birth?: string | null
           destination_country?: string | null
           details?: string | null
+          documents?: Json | null
+          duration_of_stay?: string | null
           email?: string | null
           employer?: string | null
           fee_amount?: number
           first_name?: string | null
           gender?: string | null
+          health_issues?: string | null
           id?: string
+          immigration_violations?: string | null
+          income_source?: string | null
           intended_travel_date?: string | null
           last_name?: string | null
           nationality?: string | null
@@ -156,42 +173,44 @@ export type Database = {
           passport_number?: string | null
           payment_status?: string
           phone?: string | null
+          previous_refusals?: string | null
           priority?: string
           purpose?: string | null
+          qualification?: string | null
           reference_number?: string | null
           return_date?: string | null
+          sponsor?: string | null
           status?: string
           submitted_at?: string | null
           title: string
           type: string
           updated_at?: string
           user_id: string
-          sponsor?: string | null
-          bank_balance?: string | null
-          income_source?: string | null
-          previous_refusals?: string | null
-          criminal_history?: string | null
-          immigration_violations?: string | null
-          health_issues?: string | null
-          duration_of_stay?: string | null
-          accommodation_address?: string | null
         }
         Update: {
+          accommodation_address?: string | null
           address?: string | null
           admin_notes?: string | null
           assigned_to?: string | null
+          bank_balance?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
+          criminal_history?: string | null
           date_of_birth?: string | null
           destination_country?: string | null
           details?: string | null
+          documents?: Json | null
+          duration_of_stay?: string | null
           email?: string | null
           employer?: string | null
           fee_amount?: number
           first_name?: string | null
           gender?: string | null
+          health_issues?: string | null
           id?: string
+          immigration_violations?: string | null
+          income_source?: string | null
           intended_travel_date?: string | null
           last_name?: string | null
           nationality?: string | null
@@ -200,25 +219,19 @@ export type Database = {
           passport_number?: string | null
           payment_status?: string
           phone?: string | null
+          previous_refusals?: string | null
           priority?: string
           purpose?: string | null
+          qualification?: string | null
           reference_number?: string | null
           return_date?: string | null
+          sponsor?: string | null
           status?: string
           submitted_at?: string | null
           title?: string
           type?: string
           updated_at?: string
           user_id?: string
-          sponsor?: string | null
-          bank_balance?: string | null
-          income_source?: string | null
-          previous_refusals?: string | null
-          criminal_history?: string | null
-          immigration_violations?: string | null
-          health_issues?: string | null
-          duration_of_stay?: string | null
-          accommodation_address?: string | null
         }
         Relationships: []
       }
@@ -833,15 +846,16 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
           phone: string | null
-          email: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id: string
           phone?: string | null
@@ -850,6 +864,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
