@@ -37,6 +37,7 @@ export type Database = {
       }
       application_documents: {
         Row: {
+          admin_note: string | null
           application_id: string
           created_at: string
           doc_type: string
@@ -48,8 +49,11 @@ export type Database = {
           mime_type: string | null
           status: string
           user_id: string
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
+          admin_note?: string | null
           application_id: string
           created_at?: string
           doc_type: string
@@ -61,8 +65,11 @@ export type Database = {
           mime_type?: string | null
           status?: string
           user_id: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
+          admin_note?: string | null
           application_id?: string
           created_at?: string
           doc_type?: string
@@ -74,6 +81,8 @@ export type Database = {
           mime_type?: string | null
           status?: string
           user_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: [
           {
