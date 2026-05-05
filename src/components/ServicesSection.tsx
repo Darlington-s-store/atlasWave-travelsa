@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { useSiteContent, type ServiceContent } from "@/hooks/useSiteContent";
+import { useSiteContent, getStorageUrl, type ServiceContent } from "@/hooks/useSiteContent";
 
 const iconMap = {
   Plane,
@@ -80,40 +80,51 @@ const ServicesSection = () => {
               >
                 <Link
                   to={link}
-                  className={`group block h-full rounded-2xl border transition-all duration-300 ${
+                  className={`group block h-full overflow-hidden rounded-2xl border transition-all duration-300 ${
                     isHighlighted
-                      ? "border-accent/40 bg-accent/8 p-7 shadow-lg hover:shadow-accent/20 hover:border-accent/60 sm:p-8"
-                      : "border-card/60 bg-card/40 p-6 shadow-sm hover:shadow-md hover:border-accent/30 sm:p-7"
+                      ? "border-accent/40 bg-accent/8 shadow-lg hover:shadow-accent/20 hover:border-accent/60"
+                      : "border-card/60 bg-card/40 shadow-sm hover:shadow-md hover:border-accent/30"
                   }`}
                 >
-                  <div
-                    className={`${
-                      isHighlighted ? "mb-5" : "mb-4"
-                    } flex h-14 w-14 items-center justify-center rounded-xl transition-all ${
-                      isHighlighted
-                        ? "bg-accent/20 text-accent"
-                        : "bg-accent/10 text-accent/70 group-hover:bg-accent/15 group-hover:text-accent"
-                    }`}
-                  >
-                    <Icon className="h-7 w-7" />
-                  </div>
-                  <h3
-                    className={`${
-                      isHighlighted ? "text-lg" : "text-base"
-                    } font-display font-semibold text-card-foreground transition-colors group-hover:text-accent`}
-                  >
-                    {service.title}
-                  </h3>
-                  <p
-                    className={`${isHighlighted ? "mt-3" : "mt-2"} text-sm leading-relaxed text-muted-foreground/90`}
-                  >
-                    {service.description}
-                  </p>
-                  {!isHighlighted && (
-                    <span className="mt-3 inline-block text-xs font-semibold uppercase tracking-wider text-accent/70 group-hover:text-accent transition-colors">
-                      {category}
-                    </span>
+                  {service.image_url && (
+                    <div className="relative h-40 w-full overflow-hidden">
+                      <img
+                        src={getStorageUrl(service.image_url) || service.image_url}
+                        alt={service.title}
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-card/80 via-card/10 to-transparent" />
+                    </div>
                   )}
+                  <div className={isHighlighted ? "p-7 sm:p-8" : "p-6 sm:p-7"}>
+                    <div
+                      className={`${
+                        isHighlighted ? "mb-5" : "mb-4"
+                      } flex h-14 w-14 items-center justify-center rounded-xl transition-all ${
+                        isHighlighted
+                          ? "bg-accent/20 text-accent"
+                          : "bg-accent/10 text-accent/70 group-hover:bg-accent/15 group-hover:text-accent"
+                      }`}
+                    >
+                      <Icon className="h-7 w-7" />
+                    </div>
+                    <h3
+                      className={`${
+                        isHighlighted ? "text-lg" : "text-base"
+                      } font-display font-semibold text-card-foreground transition-colors group-hover:text-accent`}
+                    >
+                      {service.title}
+                    </h3>
+                    <p className={`${isHighlighted ? "mt-3" : "mt-2"} text-sm leading-relaxed text-muted-foreground/90`}>
+                      {service.description}
+                    </p>
+                    {!isHighlighted && (
+                      <span className="mt-3 inline-block text-xs font-semibold uppercase tracking-wider text-accent/70 group-hover:text-accent transition-colors">
+                        {category}
+                      </span>
+                    )}
+                  </div>
                 </Link>
               </motion.div>
             );
