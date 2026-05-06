@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, MoreHorizontal, Eye, Pencil, Inbox, Users, Shield, UserMinus, ArrowLeft, FileText, CreditCard, Calendar, Package, Mail, Phone, Clock } from "lucide-react";
+import { Search, MoreHorizontal, Eye, Pencil, Inbox, Users, Shield, UserMinus, ArrowLeft, FileText, CreditCard, Calendar, Package, Mail, Phone, Clock, KeyRound } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, DEFAULT_CURRENCY } from "@/lib/currency";
@@ -207,6 +207,17 @@ const AdminUsers = () => {
     const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", role as "admin" | "moderator" | "user");
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Role Removed" }); fetchUsers();
+  };
+
+  const handleResetPassword = async (user: UserRow) => {
+    if (!window.confirm(`Reset password for ${user.full_name || user.email || "this user"}? They will receive the new password via email and SMS.`)) return;
+    toast({ title: "Resetting password..." });
+    const { data, error } = await supabase.functions.invoke("admin-reset-user-password", { body: { userId: user.id } });
+    if (error || (data as { error?: string })?.error) {
+      toast({ title: "Reset failed", description: (data as { error?: string })?.error || error?.message || "Unknown error", variant: "destructive" });
+      return;
+    }
+    toast({ title: "Password reset", description: "User has been notified by email and SMS." });
   };
 
   const handleEditUser = async () => {
@@ -602,6 +613,7 @@ const AdminUsers = () => {
                             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openUserDetail(user); }}><Eye className="w-4 h-4 mr-2" /> View Full Profile</DropdownMenuItem>
                             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setManagingUser(user); setEditForm({ full_name: user.full_name || "", phone: user.phone || "" }); setEditDialogOpen(true); }}><Pencil className="w-4 h-4 mr-2" /> Edit Profile</DropdownMenuItem>
                             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setManagingUser(user); setSelectedRole("user"); setRoleDialogOpen(true); }}><Shield className="w-4 h-4 mr-2" /> Manage Roles</DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleResetPassword(user); }}><KeyRound className="w-4 h-4 mr-2" /> Reset Password</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
