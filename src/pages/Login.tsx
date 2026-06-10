@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { useWebAuthn } from "@/hooks/useWebAuthn";
+import { useBiometricsEnabled } from "@/hooks/useAppSetting";
 import { Fingerprint } from "lucide-react";
 import logo from "@/assets/logo.jpeg";
 
@@ -19,6 +20,7 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const { isSupported, authenticating, authenticate, hasAnyCredential } = useWebAuthn();
+  const { enabled: biometricsAllowed } = useBiometricsEnabled();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +29,16 @@ const Login = () => {
     const result = await login(email, password);
     setLoading(false);
     if (result.success) {
+      // Refresh the stored biometric refresh-token if this user already enrolled on this device
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id && session.refresh_token) {
+          const stored = JSON.parse(localStorage.getItem("webauthn_credentials") || "{}");
+          if (stored[session.user.id]) {
+            localStorage.setItem(`biometric_session_${session.user.id}`, JSON.stringify({ refresh_token: session.refresh_token }));
+          }
+        }
+      } catch { /* ignore */ }
       toast({ title: "Welcome back!", description: "You've been logged in successfully." });
       navigate("/dashboard");
     } else {
@@ -45,8 +57,12 @@ const Login = () => {
     const storedSession = localStorage.getItem(`biometric_session_${userId}`);
     if (storedSession) {
       const { refresh_token } = JSON.parse(storedSession);
-      const { error } = await supabase.auth.refreshSession({ refresh_token });
+      const { data, error } = await supabase.auth.refreshSession({ refresh_token });
       if (!error) {
+        // Persist the rotated refresh token so future biometric logins keep working
+        if (data.session?.refresh_token) {
+          localStorage.setItem(`biometric_session_${userId}`, JSON.stringify({ refresh_token: data.session.refresh_token }));
+        }
         toast({ title: "Welcome back!", description: "Signed in with biometrics." });
         navigate("/dashboard");
         return;
@@ -90,7 +106,7 @@ const Login = () => {
             <p className="text-muted-foreground mt-2">Enter your credentials to access your account</p>
           </div>
 
-          {isSupported && hasAnyCredential() && (
+          {isSupported && biometricsAllowed && hasAnyCredential() && (
             <div className="mb-6">
               <Button
                 variant="outline"
