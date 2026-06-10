@@ -14,6 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "@/hooks/use-toast";
 import { useWebAuthn } from "@/hooks/useWebAuthn";
+import { useBiometricsEnabled } from "@/hooks/useAppSetting";
 import {
   LayoutDashboard, FileText, CalendarDays, Package, FolderOpen, Settings,
   User, LogOut, Upload, Edit, CheckCircle, Clock, AlertCircle, XCircle,
@@ -1731,6 +1732,7 @@ function SettingsTab({ user, form, setForm, editing, setEditing, handleSave, log
   const [settingsTab, setSettingsTab] = useState("personal");
   const [notifications, setNotifications] = useState({ email: true, desktop: true, sms: false });
   const { isSupported, registering, register, hasRegisteredCredential, removeCredential } = useWebAuthn();
+  const { enabled: biometricsAllowed } = useBiometricsEnabled();
   const biometricRegistered = user ? hasRegisteredCredential(user.id) : false;
 
   const handleBiometricToggle = async () => {
@@ -1861,29 +1863,35 @@ function SettingsTab({ user, form, setForm, editing, setEditing, handleSave, log
                 <div className="bg-background rounded-xl border p-6 space-y-4">
                   <h3 className="font-display font-semibold text-foreground">Biometric Authentication</h3>
                   <p className="text-sm text-muted-foreground">Use fingerprint or face recognition for faster sign-in on this device.</p>
-                  <div className="flex items-center justify-between py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Fingerprint className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground text-sm">
-                          {biometricRegistered ? "Biometric login enabled" : "Enable biometric login"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {biometricRegistered ? "Tap to disable" : "Set up fingerprint or face recognition"}
-                        </p>
-                      </div>
+                  {!biometricsAllowed ? (
+                    <div className="rounded-lg bg-muted/60 border border-border/60 p-4 text-xs text-muted-foreground">
+                      Biometric login is currently disabled by the administrator. Contact support if you need it enabled for your account.
                     </div>
-                    <Button
-                      variant={biometricRegistered ? "outline" : "default"}
-                      size="sm"
-                      onClick={handleBiometricToggle}
-                      disabled={registering}
-                    >
-                      {registering ? "Setting up..." : biometricRegistered ? "Disable" : "Enable"}
-                    </Button>
-                  </div>
+                  ) : (
+                    <div className="flex items-center justify-between py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Fingerprint className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground text-sm">
+                            {biometricRegistered ? "Biometric login enabled" : "Enable biometric login"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {biometricRegistered ? "Tap to disable" : "Set up fingerprint or face recognition"}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant={biometricRegistered ? "outline" : "default"}
+                        size="sm"
+                        onClick={handleBiometricToggle}
+                        disabled={registering}
+                      >
+                        {registering ? "Setting up..." : biometricRegistered ? "Disable" : "Enable"}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
