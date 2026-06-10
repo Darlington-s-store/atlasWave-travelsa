@@ -6,13 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Globe, CreditCard, Bell, Shield, Save, Wrench, AlertTriangle } from "lucide-react";
+import { Globe, CreditCard, Bell, Shield, Save, Wrench, AlertTriangle, Fingerprint } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useBiometricsEnabled } from "@/hooks/useAppSetting";
 
 const AdminSettings = () => {
   const { toast } = useToast();
+  const { enabled: biometricsEnabled, setEnabled: setBiometricsEnabled } = useBiometricsEnabled();
   const [settings, setSettings] = useState({
     companyName: "AtlastWave Travel and Tour",
     email: "admin@atlastwave.com",
@@ -185,6 +187,24 @@ const AdminSettings = () => {
               <div className="flex items-center justify-between">
                 <div><p className="text-[13px] font-semibold text-foreground">Require Email Verification</p><p className="text-[11px] text-muted-foreground">Users must verify email before login</p></div>
                 <Switch checked={settings.requireEmailVerification} onCheckedChange={v => setSettings(s => ({ ...s, requireEmailVerification: v }))} />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div className="flex items-start gap-2">
+                  <Fingerprint className="w-4 h-4 mt-0.5 text-primary" />
+                  <div>
+                    <p className="text-[13px] font-semibold text-foreground">Biometric Authentication</p>
+                    <p className="text-[11px] text-muted-foreground">Allow users to enable fingerprint / Face ID sign-in on their devices.</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={biometricsEnabled}
+                  onCheckedChange={async (v) => {
+                    const ok = await setBiometricsEnabled(v);
+                    if (ok) toast({ title: v ? "Biometric login enabled" : "Biometric login disabled" });
+                    else toast({ title: "Could not save", variant: "destructive" });
+                  }}
+                />
               </div>
             </CardContent>
           </Card>
